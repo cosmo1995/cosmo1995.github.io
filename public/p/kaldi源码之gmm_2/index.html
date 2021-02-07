@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='kaldi source code of gmm--2'><title>Kaldi源码之gmm_2</title>
+
+<link rel='canonical' href='https://example.com/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/'>
+
+<link rel="stylesheet" href="/scss/style.min.css"><meta property='og:title' content='Kaldi源码之gmm_2'>
+<meta property='og:description' content='kaldi source code of gmm--2'>
+<meta property='og:url' content='https://example.com/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/'>
+<meta property='og:site_name' content='Cosmo'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='kaldi' /><meta property='article:tag' content='gmm' /><meta property='article:published_time' content='2019-04-06T00:00:00&#43;00:00'/><meta property='article:modified_time' content='2019-04-06T00:00:00&#43;00:00'/>
+<meta name="twitter:title" content="Kaldi源码之gmm_2">
+<meta name="twitter:description" content="kaldi source code of gmm--2">
+    </head>
+    <body class="">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.body.dataset.scheme = 'dark';
+        } else {
+            document.body.dataset.scheme = 'light';
+        }
+    })();
+</script><div class="container main-container flex on-phone--column extended article-page with-toolbar">
+            <aside class="sidebar left-sidebar sticky">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header class="site-info">
+        
+            <figure class="site-avatar">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu874715197ebd8e5cb58e412c943f3434_12926_300x0_resize_q75_box.jpg" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+
+                
+            </figure>
+        
+        <h1 class="site-name"><a href="https://example.com">Cosmo</a></h1>
+        <h2 class="site-description">Why not ask the Magic Conch</h2>
+    </header>
+
+    <ol class="menu" id="main-menu">
+        
+        
+        
+
+        <li >
+            <a href='/'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>Home</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/about'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>About</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/archives'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>Archives</span>
+            </a>
+        </li>
+        
+
+        
+            <li id="dark-mode-toggle">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <span>Dark Mode</span>
+            </li>
+        
+    </ol>
+</aside>
+
+            <main class="main full-width">
+    <div id="article-toolbar">
+        <a href="https://example.com" class="back-home">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="15 6 9 12 15 18" />
+</svg>
+
+
+
+            <span>Back</span>
+        </a>
+    </div>
+
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/kaldi/" style="background-color: #2a9d8f; color: #fff;">
+                kaldi
+            </a>
+        
+    </header>
+    
+
+    <h2 class="article-title">
+        <a href="/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/">Kaldi源码之gmm_2</a>
+    </h2>
+
+    
+    <h3 class="article-subtitle">
+        kaldi source code of gmm--2
+    </h3>
+    <footer class="article-time">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+        <time class="article-time--published">Apr 06, 2019</time>
+    </footer></div>
+</header>
+
+    <section class="article-content">
+    <p>estimate-full-gmm和estimate-diag-gmm用来对GMM进行极大似然估计(MLE)，二者仅在协方差矩阵数据结构不同，下面均以estimate-full-gmm为例。</p>
+<!-- raw HTML omitted -->
+<h2 id="gmm">GMM</h2>
+<p>GMM的分布函数为</p>
+<p>$$
+p(x|\mu,\Sigma) = \sum_{m=1}^{M} c_m \mathcal{N} (x;\mu_m,\Sigma_m)
+$$</p>
+<p>其中$c_m$为第$m$个component的混合系数,$\sum_{m=1}^M c_m =1 $。</p>
+<p>定义指示函数$1_{[z_t=m]}$，如果$x_t$来自第m个component，则$1_{[z_t=m]} = 1$，否则$1_{[z_t=m]} = 0$。</p>
+<p>现在假设$1_{[z_t=m]}$已知，即$x_t$属于哪一个component是已知的话，我们就可以统计每一个component对应的帧数：</p>
+<p>$$
+N_m=\sum^N_{t=1} 1_{[z_t=m]}
+$$</p>
+<p>那么GMM参数可以估计为：</p>
+<p>$$
+\begin {aligned}
+&amp;c_m = \frac{\sum_{t=1}^N 1_{[z_t=m]}}{N} = \frac{N_m}{N} \cr
+&amp;\mu_m= \frac{\sum_{t=1}^N 1_{[z_t=m]} \mathbf{x_t}}{N_m} \cr
+&amp;\Sigma_m= \frac{\sum_{t=1}^N 1_{[z_t=m]}(\mathbf{x_t}-\mu_m)(\mathbf{x_t}-\mu_m)^T}{N_m}
+&amp;\end {aligned}
+$$</p>
+<p>然而$1_{[z_t=m]}$是未知的，我们并不知道每一帧$x_t$属于哪一个component。但是，我们可以计算后验概率$P(m|x_t)$，即第m个
+component生成$x_t$的概率。
+$$
+P(m|x_t) = \frac{P(x_t|m)P(m)} {P(x_t)} = \frac{P(x_t|m)P(m)} {\sum^M_{n=1}P(x_t|n)P(n)}
+$$</p>
+<p>其中后验概率$P(m|\mathbf{x_t})$也称为component occupation probability或者responsibility。</p>
+<p>此时，我们可以通过后验概率$P(m|x_t)$计算每一个component对应的&quot;soft counts&quot;: $N_m^*$</p>
+<p>$$
+N_m^* = \sum_{t=1}^N P(m|x_t)
+$$</p>
+<p>我们可以想象为对每一帧$x_t$，以$P(m|x_t)$的概率分配到第m个component上。这种分配是一种soft assignment，区别于k-means的hard assignment。</p>
+<p>在得到后验概率$P(m|x_t)$，参数可以估计为：</p>
+<p>$$
+\begin {aligned}
+&amp;c_m = \frac{\sum_{t=1}^N P(m|x_t)}{N} = \frac{N_m^*} {N} \cr
+&amp;\mu_m= \frac{\sum_{t=1}^N P(m|x_t) x_t}{\sum_{t=1}^N P(m|x_t)} = \frac {\sum_{t=1}^N P(m|x_t) x_t}{N_m^*} \cr
+&amp;\Sigma_m= \frac{\sum_{t=1}^N P(m|x_t)(x_t-\mu_m)(x_t-\mu_m)^T}{\sum_{t=1}^N P(m|x_t)} = \frac{\sum_{t=1}^N P(m|x_t)(x_t-\mu_m)(x_t-\mu_m)^T}{N_m^*}
+&amp;\end {aligned}
+$$</p>
+<p>由于：</p>
+<p>$$
+P(m|x_t) = \frac{P(x_t|m)P(m)} {P(x_t)} = \frac{P(x_t|m)P(m)} {\sum^M_{n=1}P(x_t|n)P(n)}
+$$</p>
+<p>因此，为了计算$P(m|x_t)$，必须知道$P(m)$和$P(x_t|m)$，其中$P(m)$为每一个component的先验概率，即为GMM参数中的$c_m$；$P(x_t|m)$为每一个component的分布函数，即为$\mathcal{N} (x;\mu_m,\Sigma_m)$，因此必须知道GMM的参数。反过来，GMM的参数又得在知道$P(m|x_t)$后通过极大似然来估计。问题此时陷入了一个死循环。</p>
+<p>此时可以通过EM算法来解决该问题，首先初始化GMM参数，在E步通过现有的参数计算$P(m|x_t)$，在M步通过计算的$P(m|x_t)$来更新GMM的参数，然后不断迭代直至收敛。</p>
+<h2 id="em算法">EM算法</h2>
+<p>EM算法是一种迭代算法，用于含有隐变量(Hidden variable)的概率模型参数的最大似然估计。</p>
+<ul>
+<li>先初始化参数</li>
+<li>E-step：依据当前参数，通过贝叶斯公式计算$x_t$的后验概率$P(m|x_t)$。</li>
+</ul>
+<p>$$
+\begin {aligned}
+P(m|x_t) &amp;= \frac{P(x_t|m)P(m)} {\sum^M_{n=1}P(x_t|n)P(n)} \cr
+&amp;=\frac{c_m \mathcal{N}(x_t;\mu_m,\Sigma_m)}{\sum_{n=1}^M c_n \mathcal{N}(_t;\mu_n,\Sigma_n)}
+\end {aligned}
+$$</p>
+<p>通过<code>gmm.ComponentPosteriors</code>函数，首先计算第m个component的loglike,然后进行softmax归一化即得到posterior。</p>
+<!-- raw HTML omitted -->
+<ul>
+<li>M-step：计算新一轮迭代的模型参数</li>
+</ul>
+<p>$$
+\begin {aligned}
+c_m &amp;= \frac{\sum_{t=1}^N P(m|x_t)}{N} \cr
+\mu_m &amp;= \frac{\sum_{t=1}^N P(m|x_t) x_t}{\sum_{t=1}^N P(m|x_t)} \cr
+\Sigma_m &amp;= \frac{\sum_{t=1}^N P(m|x_t)(x_t-\mu_m)(x_t-\mu_m)^T}{\sum_{t=1}^N P(m|x_t)} \cr
+&amp;\end {aligned}
+$$</p>
+<ul>
+<li>重复计算 E-step 和 M-step 直至收敛</li>
+</ul>
+<h3 id="类mlestimatefullgmm-accumfullgmm">类MlEstimateFullGmm (AccumFullGmm)</h3>
+<pre><code>Vector&lt;double&gt; occupancy_;
+Matrix&lt;double&gt; mean_accumulator_;
+std::vector&lt;SpMatrix&lt;double&gt; &gt; covariance_accumulator_;
+</code></pre><p>类中定义了参数更新时所需的三个累积量，其中occupancy_可以视为GMM每个component对应的&quot;帧数&quot;。</p>
+<h3 id="accumulateforcomponent">AccumulateForComponent</h3>
+<p>对于单个component而言，上述三个累积量为：</p>
+<p>$$
+\begin {aligned}
+occupancy_m &amp;= \sum_{t=1}^N P(m|x_t) \cr
+mean_accumulator_m &amp;= \sum_{t=1}^N P(m|x_t) x_t \cr
+covariance_accumulator_m &amp;= \sum_{t=1}^N P(m|x_t) x_t x_t^T
+\end {aligned}
+$$</p>
+<h3 id="accumulatefromposteriors">AccumulateFromPosteriors</h3>
+<p>计算GMM的累积量，原理和<code>AccumulateForComponent</code>一致，只是计算的对象变为了GMM的所有分量。</p>
+<h3 id="accumulatefromfull--accumulatefromdiag">AccumulateFromFull &amp; AccumulateFromDiag</h3>
+<p>首先通过<code>gmm.ComponentPosteriors</code>计算GMM每一个component的后验，然后调用<code>AccumulateFromPosteriors</code>计算GMM的累积量。</p>
+<h3 id="update">Update</h3>
+<p>根据上诉三个累积值更新GMM参数：</p>
+<p>$$
+\begin {aligned}
+&amp;c_m=\frac{occupancy_m}{N} \cr
+&amp;\mu_m=\frac{mean_accumulator_m} {occupancy_m} \cr
+&amp;\Sigma_m=\frac{covariance_accumulator_m} {occupancy_m} - \mu_m \mu_m^T
+&amp;\end {aligned}
+$$</p>
+<!-- raw HTML omitted -->
+<p>$$
+\begin {aligned}
+注：
+\Sigma_m &amp;= \frac{\sum_{t=1}^N P(m|\mathbf{x_t})(\mathbf{x_t}-\mu_m)(\mathbf{x_t}-\mu_m)^T}{\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
+&amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) (\mathbf{x_t} \mathbf{x_t^T} - \mathbf{x_t} \mu_m^T -\mu_m\mathbf{x_t^T} + \mu_m \mu_m^T)} {\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
+&amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} \mathbf{x_t^T} - \mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} - \mu_m \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t^T} + \mu_m \mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) }  {\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
+&amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} \mathbf{x_t^T} - \mu_m^T \mu_m \sum_{t=1}^N P(m|\mathbf{x_t}) - \mu_m\mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) + \mu_m \mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) }  {\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
+&amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} \mathbf{x_t^T} - \mu_m \mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) }  {\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
+&amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} \mathbf{x_t^T}}  {\sum_{t=1}^N P(m|\mathbf{x_t})} - \mu_m \mu_m^T \cr
+\end {aligned}
+$$</p>
+<h3 id="estimate-am-diag-gmm">estimate-am-diag-gmm</h3>
+<p>$$
+\begin{matrix}
+diag-gmm \xrightarrow{update \ by} estimate-diag-gmm  \cr
+\downarrow{1\rightarrow*}  \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \downarrow{1\rightarrow*} \cr
+am-diag-gmm  \xrightarrow{update \ by} estimate-am-diag-gmm
+\end{matrix}
+$$</p>
+<p><code>estimate-am-diag-gmm</code>中定义了一个gmm_estimators向量，用于对整个声学模型的所有GMM进行更新。</p>
+<pre><code>for (size_t i = 0; i &lt; gmm_estimators_.size(); i++) {
+  gmm_estimators_[i]-&gt;Update(config, flags, &amp;(am_gmm-&gt;GetPdf(i)), p_obj,
+        p_count);
+...
+</code></pre><h2 id="reference">Reference</h2>
+<ul>
+<li><a href="http://www.inf.ed.ac.uk/teaching/courses/asr/2019-20/asr02-hmmgmm.pdf">http://www.inf.ed.ac.uk/teaching/courses/asr/2019-20/asr02-hmmgmm.pdf</a></li>
+<li><a href="https://www.cs.toronto.edu/~urtasun/courses/CSC411_Fall16/13_mog.pdf">https://www.cs.toronto.edu/~urtasun/courses/CSC411_Fall16/13_mog.pdf</a></li>
+<li><a href="https://kivy-cn.github.io/Stanford-CS-229-CN/#/Markdown/cs229-notes7b">https://kivy-cn.github.io/Stanford-CS-229-CN/#/Markdown/cs229-notes7b</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/30483076">https://zhuanlan.zhihu.com/p/30483076</a></li>
+<li><a href="https://notes.funcwj.cn/2017/05/28/kaldi-gmm/">https://notes.funcwj.cn/2017/05/28/kaldi-gmm/</a></li>
+</ul>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/kaldi/">kaldi</a>
+        
+            <a href="/tags/gmm/">gmm</a>
+        
+    </section>
+
+
+    </footer>
+
+    
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css"
+    integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"
+    integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4"
+    crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"
+    integrity="sha384-mll67QQFJfxn0IYznZYonOWZ644AWYC+Pt2cHqMaRhXVrursRwvLnLaebdGIlYNa" crossorigin="anonymous"
+    onload="StackLaTeX()"></script>
+
+<script>
+    function StackLaTeX() {
+        renderMathInElement(document.querySelector(`.article-content`), {
+            delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true }
+            ]
+        });
+    }
+</script>
+    
+</article>
+
+    <aside class="related-contents--wrapper">
+    
+    
+        <h2 class="section-title">Related contents</h2>
+        <div class="related-contents">
+            <div class="flex article-list--tile">
+                
+                    
+<article class="">
+    <a href="/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_1/">
+        
+        
+
+        <div class="article-details">
+            <h2 class="article-title">Kaldi源码之gmm_1</h2>
+        </div>
+    </a>
+</article>
+                
+            </div>
+        </div>
+    
+</aside>
+
+
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2021 Cosmo
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="2.0.1">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css">
+            </main>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js"
+    integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin="anonymous"></script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

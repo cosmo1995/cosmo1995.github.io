@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>gmm on Cosmo</title>
+    <link>https://example.com/tags/gmm/</link>
+    <description>Recent content in gmm on Cosmo</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 06 Apr 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://example.com/tags/gmm/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Kaldi源码之gmm_2</title>
+      <link>https://example.com/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/</link>
+      <pubDate>Sat, 06 Apr 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://example.com/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/</guid>
+      <description>estimate-full-gmm和estimate-diag-gmm用来对GMM进行极大似然估计(MLE)，二者仅在协方差矩阵数据结构不同，下面均以estimate-full-gmm为例。
+GMM GMM的分布函数为
+$$ p(x|\mu,\Sigma) = \sum_{m=1}^{M} c_m \mathcal{N} (x;\mu_m,\Sigma_m) $$
+其中$c_m$为第$m$个component的混合系数,$\sum_{m=1}^M c_m =1 $。
+定义指示函数$1_{[z_t=m]}$，如果$x_t$来自第m个component，则$1_{[z_t=m]} = 1$，否则$1_{[z_t=m]} = 0$。
+现在假设$1_{[z_t=m]}$已知，即$x_t$属于哪一个component是已知的话，我们就可以统计每一个component对应的帧数：
+$$ N_m=\sum^N_{t=1} 1_{[z_t=m]} $$
+那么GMM参数可以估计为：
+$$ \begin {aligned} &amp;amp;c_m = \frac{\sum_{t=1}^N 1_{[z_t=m]}}{N} = \frac{N_m}{N} \cr &amp;amp;\mu_m= \frac{\sum_{t=1}^N 1_{[z_t=m]} \mathbf{x_t}}{N_m} \cr &amp;amp;\Sigma_m= \frac{\sum_{t=1}^N 1_{[z_t=m]}(\mathbf{x_t}-\mu_m)(\mathbf{x_t}-\mu_m)^T}{N_m} &amp;amp;\end {aligned} $$
+然而$1_{[z_t=m]}$是未知的，我们并不知道每一帧$x_t$属于哪一个component。但是，我们可以计算后验概率$P(m|x_t)$，即第m个 component生成$x_t$的概率。 $$ P(m|x_t) = \frac{P(x_t|m)P(m)} {P(x_t)} = \frac{P(x_t|m)P(m)} {\sum^M_{n=1}P(x_t|n)P(n)} $$
+其中后验概率$P(m|\mathbf{x_t})$也称为component occupation probability或者responsibility。
+此时，我们可以通过后验概率$P(m|x_t)$计算每一个component对应的&amp;quot;soft counts&amp;quot;: $N_m^*$
+$$ N_m^* = \sum_{t=1}^N P(m|x_t) $$</description>
+    </item>
+    
+    <item>
+      <title>Kaldi源码之gmm_1</title>
+      <link>https://example.com/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_1/</link>
+      <pubDate>Fri, 08 Mar 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://example.com/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_1/</guid>
+      <description>full-gmm和diag-gmm定义了GMM对象，两者不同之处在于协方差矩阵$\Sigma$的表达形式。diag-gmm为了减少计算量，认为输入特征的各个维度间是彼此独立的， 此时协方差矩阵变成对角矩阵，对角元素即为方差。
+am-diag-gmm中定义了一个向量densities_，向量中存储的是diag-gmm对象，am-diag-gmm针对的是声学模型中的所有GMM。
+full-gmm &amp;amp; diag-gmm 在FullGmm类中，成员变量为
+Vector&amp;lt;BaseFloat&amp;gt; gconsts_; bool valid_gconsts_; Vector&amp;lt;BaseFloat&amp;gt; weights_; std::vector&amp;lt;SpMatrix&amp;lt;BaseFloat&amp;gt; &amp;gt; inv_covars_; Matrix&amp;lt;BaseFloat&amp;gt; means_invcovars_; 在DiagGmm类中，成员变量为
+Vector&amp;lt;BaseFloat&amp;gt; gconsts_; bool valid_gconsts_; Vector&amp;lt;BaseFloat&amp;gt; weights_; Matrix&amp;lt;SpMatrix&amp;lt;BaseFloat&amp;gt; &amp;gt; inv_covars_; Matrix&amp;lt;BaseFloat&amp;gt; means_invcovars_; full-gmm和diag-gmm中并没有直接定义均值向量$\mu$和协方差矩阵$\Sigma$，而是定义了协方差矩阵的逆矩阵inv_covars——$\Sigma^{-1}$，以及均值向量和协方差逆矩阵的乘积向量means_invcovars——$\mu^T\Sigma^{-1}$。
+在full-gmm中inv_covars中存储的是$\Sigma^{-1}$的下三角矩阵，而diag-gmm中存储的则为$\Sigma^{-1}$的对角向量。
+注：
+PackedMatrix：压缩矩阵，仅存储矩阵的下三角部分，对于$n\times n$的矩阵仅需存储$ \frac{n(n+1)}{2} $个元素
+SpMatrix： SymmetricPackedMatrix 对称矩阵，继承自PackedMatrix
+TpMatrix： TriangularPackedMatrix 三角矩阵，继承自PackedMatrix
+由于对称矩阵和三角矩阵都只需存储矩阵的上三角或者下三角，因此可以使用PackedMatrix节约存储空间。
+gconsts_ GMM的概率密度函数$(pdf)$为：
+$$ \begin {aligned} f(x;\mu,\Sigma) &amp;amp;= \sum_{m=1}^{M} c_m \mathcal{N} (x;\mu_m,\Sigma_m) \cr &amp;amp;= \sum_{m=1}^{M}\frac{c_m}{(2\pi)^{\frac{D}{2}}{\lvert{\Sigma_m}\rvert}^{\frac{1}{2}}}exp[-\frac{1}{2}(x -\mu_m)^T\Sigma^{-1}_m(\mathbf x-\mu_m)] \end {aligned} $$
+其中，$c_m$为GMM第$m$个分量(component)的混合系数，${\Sigma_m}$是协方差矩阵，${\mu_m}$是均值向量，$D$是数据的维度，并且有$\sum_{m=1}^M {c_m}= 1$。
+对于离散语音数据，$f(\mathbf x;\mu,\Sigma)即P(\mathbf x|\mu,\Sigma)$，$loglike$为
+$$ log P(x|\mu,\Sigma) = \sum_{t=1}^N log \sum_{m=1}^{M} c_m \mathcal{N} (x_t;\mu_m,\Sigma_m) $$</description>
+    </item>
+    
+  </channel>
+</rss>

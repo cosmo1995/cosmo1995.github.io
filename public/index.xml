@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Cosmo</title>
+        <link>https://example.com/</link>
+        <description>Recent content on Cosmo</description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>en-us</language>
+        <lastBuildDate>Tue, 28 May 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://example.com/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>Kaldi源码之gmm_2</title>
+        <link>https://example.com/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/</link>
+        <pubDate>Sat, 06 Apr 2019 00:00:00 +0000</pubDate>
+        
+        <guid>https://example.com/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/</guid>
+        <description>&lt;p&gt;estimate-full-gmm和estimate-diag-gmm用来对GMM进行极大似然估计(MLE)，二者仅在协方差矩阵数据结构不同，下面均以estimate-full-gmm为例。&lt;/p&gt;
+&lt;!-- raw HTML omitted --&gt;
+&lt;h2 id=&#34;gmm&#34;&gt;GMM&lt;/h2&gt;
+&lt;p&gt;GMM的分布函数为&lt;/p&gt;
+&lt;p&gt;$$
+p(x|\mu,\Sigma) = \sum_{m=1}^{M} c_m \mathcal{N} (x;\mu_m,\Sigma_m)
+$$&lt;/p&gt;
+&lt;p&gt;其中$c_m$为第$m$个component的混合系数,$\sum_{m=1}^M c_m =1 $。&lt;/p&gt;
+&lt;p&gt;定义指示函数$1_{[z_t=m]}$，如果$x_t$来自第m个component，则$1_{[z_t=m]} = 1$，否则$1_{[z_t=m]} = 0$。&lt;/p&gt;
+&lt;p&gt;现在假设$1_{[z_t=m]}$已知，即$x_t$属于哪一个component是已知的话，我们就可以统计每一个component对应的帧数：&lt;/p&gt;
+&lt;p&gt;$$
+N_m=\sum^N_{t=1} 1_{[z_t=m]}
+$$&lt;/p&gt;
+&lt;p&gt;那么GMM参数可以估计为：&lt;/p&gt;
+&lt;p&gt;$$
+\begin {aligned}
+&amp;amp;c_m = \frac{\sum_{t=1}^N 1_{[z_t=m]}}{N} = \frac{N_m}{N} \cr
+&amp;amp;\mu_m= \frac{\sum_{t=1}^N 1_{[z_t=m]} \mathbf{x_t}}{N_m} \cr
+&amp;amp;\Sigma_m= \frac{\sum_{t=1}^N 1_{[z_t=m]}(\mathbf{x_t}-\mu_m)(\mathbf{x_t}-\mu_m)^T}{N_m}
+&amp;amp;\end {aligned}
+$$&lt;/p&gt;
+&lt;p&gt;然而$1_{[z_t=m]}$是未知的，我们并不知道每一帧$x_t$属于哪一个component。但是，我们可以计算后验概率$P(m|x_t)$，即第m个
+component生成$x_t$的概率。
+$$
+P(m|x_t) = \frac{P(x_t|m)P(m)} {P(x_t)} = \frac{P(x_t|m)P(m)} {\sum^M_{n=1}P(x_t|n)P(n)}
+$$&lt;/p&gt;
+&lt;p&gt;其中后验概率$P(m|\mathbf{x_t})$也称为component occupation probability或者responsibility。&lt;/p&gt;
+&lt;p&gt;此时，我们可以通过后验概率$P(m|x_t)$计算每一个component对应的&amp;quot;soft counts&amp;quot;: $N_m^*$&lt;/p&gt;
+&lt;p&gt;$$
+N_m^* = \sum_{t=1}^N P(m|x_t)
+$$&lt;/p&gt;
+&lt;p&gt;我们可以想象为对每一帧$x_t$，以$P(m|x_t)$的概率分配到第m个component上。这种分配是一种soft assignment，区别于k-means的hard assignment。&lt;/p&gt;
+&lt;p&gt;在得到后验概率$P(m|x_t)$，参数可以估计为：&lt;/p&gt;
+&lt;p&gt;$$
+\begin {aligned}
+&amp;amp;c_m = \frac{\sum_{t=1}^N P(m|x_t)}{N} = \frac{N_m^*} {N} \cr
+&amp;amp;\mu_m= \frac{\sum_{t=1}^N P(m|x_t) x_t}{\sum_{t=1}^N P(m|x_t)} = \frac {\sum_{t=1}^N P(m|x_t) x_t}{N_m^*} \cr
+&amp;amp;\Sigma_m= \frac{\sum_{t=1}^N P(m|x_t)(x_t-\mu_m)(x_t-\mu_m)^T}{\sum_{t=1}^N P(m|x_t)} = \frac{\sum_{t=1}^N P(m|x_t)(x_t-\mu_m)(x_t-\mu_m)^T}{N_m^*}
+&amp;amp;\end {aligned}
+$$&lt;/p&gt;
+&lt;p&gt;由于：&lt;/p&gt;
+&lt;p&gt;$$
+P(m|x_t) = \frac{P(x_t|m)P(m)} {P(x_t)} = \frac{P(x_t|m)P(m)} {\sum^M_{n=1}P(x_t|n)P(n)}
+$$&lt;/p&gt;
+&lt;p&gt;因此，为了计算$P(m|x_t)$，必须知道$P(m)$和$P(x_t|m)$，其中$P(m)$为每一个component的先验概率，即为GMM参数中的$c_m$；$P(x_t|m)$为每一个component的分布函数，即为$\mathcal{N} (x;\mu_m,\Sigma_m)$，因此必须知道GMM的参数。反过来，GMM的参数又得在知道$P(m|x_t)$后通过极大似然来估计。问题此时陷入了一个死循环。&lt;/p&gt;
+&lt;p&gt;此时可以通过EM算法来解决该问题，首先初始化GMM参数，在E步通过现有的参数计算$P(m|x_t)$，在M步通过计算的$P(m|x_t)$来更新GMM的参数，然后不断迭代直至收敛。&lt;/p&gt;
+&lt;h2 id=&#34;em算法&#34;&gt;EM算法&lt;/h2&gt;
+&lt;p&gt;EM算法是一种迭代算法，用于含有隐变量(Hidden variable)的概率模型参数的最大似然估计。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;先初始化参数&lt;/li&gt;
+&lt;li&gt;E-step：依据当前参数，通过贝叶斯公式计算$x_t$的后验概率$P(m|x_t)$。&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;$$
+\begin {aligned}
+P(m|x_t) &amp;amp;= \frac{P(x_t|m)P(m)} {\sum^M_{n=1}P(x_t|n)P(n)} \cr
+&amp;amp;=\frac{c_m \mathcal{N}(x_t;\mu_m,\Sigma_m)}{\sum_{n=1}^M c_n \mathcal{N}(_t;\mu_n,\Sigma_n)}
+\end {aligned}
+$$&lt;/p&gt;
+&lt;p&gt;通过&lt;code&gt;gmm.ComponentPosteriors&lt;/code&gt;函数，首先计算第m个component的loglike,然后进行softmax归一化即得到posterior。&lt;/p&gt;
+&lt;!-- raw HTML omitted --&gt;
+&lt;ul&gt;
+&lt;li&gt;M-step：计算新一轮迭代的模型参数&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;$$
+\begin {aligned}
+c_m &amp;amp;= \frac{\sum_{t=1}^N P(m|x_t)}{N} \cr
+\mu_m &amp;amp;= \frac{\sum_{t=1}^N P(m|x_t) x_t}{\sum_{t=1}^N P(m|x_t)} \cr
+\Sigma_m &amp;amp;= \frac{\sum_{t=1}^N P(m|x_t)(x_t-\mu_m)(x_t-\mu_m)^T}{\sum_{t=1}^N P(m|x_t)} \cr
+&amp;amp;\end {aligned}
+$$&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;重复计算 E-step 和 M-step 直至收敛&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id=&#34;类mlestimatefullgmm-accumfullgmm&#34;&gt;类MlEstimateFullGmm (AccumFullGmm)&lt;/h3&gt;
+&lt;pre&gt;&lt;code&gt;Vector&amp;lt;double&amp;gt; occupancy_;
+Matrix&amp;lt;double&amp;gt; mean_accumulator_;
+std::vector&amp;lt;SpMatrix&amp;lt;double&amp;gt; &amp;gt; covariance_accumulator_;
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;类中定义了参数更新时所需的三个累积量，其中occupancy_可以视为GMM每个component对应的&amp;quot;帧数&amp;quot;。&lt;/p&gt;
+&lt;h3 id=&#34;accumulateforcomponent&#34;&gt;AccumulateForComponent&lt;/h3&gt;
+&lt;p&gt;对于单个component而言，上述三个累积量为：&lt;/p&gt;
+&lt;p&gt;$$
+\begin {aligned}
+occupancy_m &amp;amp;= \sum_{t=1}^N P(m|x_t) \cr
+mean_accumulator_m &amp;amp;= \sum_{t=1}^N P(m|x_t) x_t \cr
+covariance_accumulator_m &amp;amp;= \sum_{t=1}^N P(m|x_t) x_t x_t^T
+\end {aligned}
+$$&lt;/p&gt;
+&lt;h3 id=&#34;accumulatefromposteriors&#34;&gt;AccumulateFromPosteriors&lt;/h3&gt;
+&lt;p&gt;计算GMM的累积量，原理和&lt;code&gt;AccumulateForComponent&lt;/code&gt;一致，只是计算的对象变为了GMM的所有分量。&lt;/p&gt;
+&lt;h3 id=&#34;accumulatefromfull--accumulatefromdiag&#34;&gt;AccumulateFromFull &amp;amp; AccumulateFromDiag&lt;/h3&gt;
+&lt;p&gt;首先通过&lt;code&gt;gmm.ComponentPosteriors&lt;/code&gt;计算GMM每一个component的后验，然后调用&lt;code&gt;AccumulateFromPosteriors&lt;/code&gt;计算GMM的累积量。&lt;/p&gt;
+&lt;h3 id=&#34;update&#34;&gt;Update&lt;/h3&gt;
+&lt;p&gt;根据上诉三个累积值更新GMM参数：&lt;/p&gt;
+&lt;p&gt;$$
+\begin {aligned}
+&amp;amp;c_m=\frac{occupancy_m}{N} \cr
+&amp;amp;\mu_m=\frac{mean_accumulator_m} {occupancy_m} \cr
+&amp;amp;\Sigma_m=\frac{covariance_accumulator_m} {occupancy_m} - \mu_m \mu_m^T
+&amp;amp;\end {aligned}
+$$&lt;/p&gt;
+&lt;!-- raw HTML omitted --&gt;
+&lt;p&gt;$$
+\begin {aligned}
+注：
+\Sigma_m &amp;amp;= \frac{\sum_{t=1}^N P(m|\mathbf{x_t})(\mathbf{x_t}-\mu_m)(\mathbf{x_t}-\mu_m)^T}{\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
+&amp;amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) (\mathbf{x_t} \mathbf{x_t^T} - \mathbf{x_t} \mu_m^T -\mu_m\mathbf{x_t^T} + \mu_m \mu_m^T)} {\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
+&amp;amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} \mathbf{x_t^T} - \mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} - \mu_m \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t^T} + \mu_m \mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) }  {\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
+&amp;amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} \mathbf{x_t^T} - \mu_m^T \mu_m \sum_{t=1}^N P(m|\mathbf{x_t}) - \mu_m\mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) + \mu_m \mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) }  {\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
+&amp;amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} \mathbf{x_t^T} - \mu_m \mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) }  {\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
+&amp;amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} \mathbf{x_t^T}}  {\sum_{t=1}^N P(m|\mathbf{x_t})} - \mu_m \mu_m^T \cr
+\end {aligned}
+$$&lt;/p&gt;
+&lt;h3 id=&#34;estimate-am-diag-gmm&#34;&gt;estimate-am-diag-gmm&lt;/h3&gt;
+&lt;p&gt;$$
+\begin{matrix}
+diag-gmm \xrightarrow{update \ by} estimate-diag-gmm  \cr
+\downarrow{1\rightarrow*}  \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \downarrow{1\rightarrow*} \cr
+am-diag-gmm  \xrightarrow{update \ by} estimate-am-diag-gmm
+\end{matrix}
+$$&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;estimate-am-diag-gmm&lt;/code&gt;中定义了一个gmm_estimators向量，用于对整个声学模型的所有GMM进行更新。&lt;/p&gt;
+&lt;pre&gt;&lt;code&gt;for (size_t i = 0; i &amp;lt; gmm_estimators_.size(); i++) {
+  gmm_estimators_[i]-&amp;gt;Update(config, flags, &amp;amp;(am_gmm-&amp;gt;GetPdf(i)), p_obj,
+        p_count);
+...
+&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&#34;reference&#34;&gt;Reference&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.inf.ed.ac.uk/teaching/courses/asr/2019-20/asr02-hmmgmm.pdf&#34;&gt;http://www.inf.ed.ac.uk/teaching/courses/asr/2019-20/asr02-hmmgmm.pdf&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.cs.toronto.edu/~urtasun/courses/CSC411_Fall16/13_mog.pdf&#34;&gt;https://www.cs.toronto.edu/~urtasun/courses/CSC411_Fall16/13_mog.pdf&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://kivy-cn.github.io/Stanford-CS-229-CN/#/Markdown/cs229-notes7b&#34;&gt;https://kivy-cn.github.io/Stanford-CS-229-CN/#/Markdown/cs229-notes7b&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://zhuanlan.zhihu.com/p/30483076&#34;&gt;https://zhuanlan.zhihu.com/p/30483076&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://notes.funcwj.cn/2017/05/28/kaldi-gmm/&#34;&gt;https://notes.funcwj.cn/2017/05/28/kaldi-gmm/&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        </item>
+        <item>
+        <title>Kaldi源码之gmm_1</title>
+        <link>https://example.com/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_1/</link>
+        <pubDate>Fri, 08 Mar 2019 00:00:00 +0000</pubDate>
+        
+        <guid>https://example.com/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_1/</guid>
+        <description>&lt;p&gt;&lt;code&gt;full-gmm&lt;/code&gt;和&lt;code&gt;diag-gmm&lt;/code&gt;定义了GMM对象，两者不同之处在于协方差矩阵$\Sigma$的表达形式。&lt;code&gt;diag-gmm&lt;/code&gt;为了减少计算量，认为输入特征的各个维度间是彼此独立的，
+此时协方差矩阵变成对角矩阵，对角元素即为方差。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;am-diag-gmm&lt;/code&gt;中定义了一个向量densities_，向量中存储的是diag-gmm对象，&lt;code&gt;am-diag-gmm&lt;/code&gt;针对的是声学模型中的所有GMM。&lt;/p&gt;
+&lt;h2 id=&#34;full-gmm--diag-gmm&#34;&gt;full-gmm &amp;amp; diag-gmm&lt;/h2&gt;
+&lt;p&gt;在&lt;code&gt;FullGmm&lt;/code&gt;类中，成员变量为&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span class=&#34;n&#34;&gt;Vector&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;BaseFloat&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;gconsts_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;kt&#34;&gt;bool&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;valid_gconsts_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;Vector&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;BaseFloat&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;weights_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;vector&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;SpMatrix&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;BaseFloat&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;inv_covars_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;Matrix&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;BaseFloat&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;means_invcovars_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;在&lt;code&gt;DiagGmm&lt;/code&gt;类中，成员变量为&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span class=&#34;n&#34;&gt;Vector&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;BaseFloat&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;gconsts_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;kt&#34;&gt;bool&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;valid_gconsts_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;Vector&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;BaseFloat&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;weights_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;Matrix&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;SpMatrix&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;BaseFloat&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;inv_covars_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;Matrix&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;BaseFloat&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;means_invcovars_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;full-gmm&lt;/code&gt;和&lt;code&gt;diag-gmm&lt;/code&gt;中并没有直接定义均值向量$\mu$和协方差矩阵$\Sigma$，而是定义了协方差矩阵的逆矩阵&lt;code&gt;inv_covars&lt;/code&gt;——$\Sigma^{-1}$，以及均值向量和协方差逆矩阵的乘积向量&lt;code&gt;means_invcovars&lt;/code&gt;——$\mu^T\Sigma^{-1}$。&lt;/p&gt;
+&lt;p&gt;在&lt;code&gt;full-gmm&lt;/code&gt;中&lt;code&gt;inv_covars&lt;/code&gt;中存储的是$\Sigma^{-1}$的下三角矩阵，而&lt;code&gt;diag-gmm&lt;/code&gt;中存储的则为$\Sigma^{-1}$的对角向量。&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;注：&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;PackedMatrix：压缩矩阵，仅存储矩阵的下三角部分，对于$n\times n$的矩阵仅需存储$ \frac{n(n+1)}{2} $个元素&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;SpMatrix： SymmetricPackedMatrix 对称矩阵，继承自PackedMatrix&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;TpMatrix： TriangularPackedMatrix 三角矩阵，继承自PackedMatrix&lt;/em&gt;&lt;/p&gt;
+&lt;p&gt;&lt;em&gt;由于对称矩阵和三角矩阵都只需存储矩阵的上三角或者下三角，因此可以使用PackedMatrix节约存储空间。&lt;/em&gt;&lt;/p&gt;
+&lt;h4 id=&#34;gconsts_&#34;&gt;gconsts_&lt;/h4&gt;
+&lt;p&gt;GMM的概率密度函数$(pdf)$为：&lt;/p&gt;
+&lt;p&gt;$$
+\begin {aligned}
+f(x;\mu,\Sigma) 
+&amp;amp;= \sum_{m=1}^{M} c_m \mathcal{N} (x;\mu_m,\Sigma_m) \cr
+&amp;amp;= \sum_{m=1}^{M}\frac{c_m}{(2\pi)^{\frac{D}{2}}{\lvert{\Sigma_m}\rvert}^{\frac{1}{2}}}exp[-\frac{1}{2}(x -\mu_m)^T\Sigma^{-1}_m(\mathbf x-\mu_m)]
+\end {aligned}
+$$&lt;/p&gt;
+&lt;p&gt;其中，$c_m$为GMM第$m$个分量(component)的混合系数，${\Sigma_m}$是协方差矩阵，${\mu_m}$是均值向量，$D$是数据的维度，并且有$\sum_{m=1}^M {c_m}= 1$。&lt;/p&gt;
+&lt;p&gt;对于离散语音数据，$f(\mathbf x;\mu,\Sigma)即P(\mathbf x|\mu,\Sigma)$，$loglike$为&lt;/p&gt;
+&lt;p&gt;$$
+log P(x|\mu,\Sigma) = \sum_{t=1}^N log \sum_{m=1}^{M} c_m \mathcal{N} (x_t;\mu_m,\Sigma_m)
+$$&lt;/p&gt;
+&lt;p&gt;其中$N$为帧数。&lt;/p&gt;
+&lt;p&gt;首先针对某一帧$x_t$，考虑单个分量，$loglike$为：&lt;/p&gt;
+&lt;p&gt;$$
+\begin {aligned}
+log c_m \mathcal{N} (x_t|\mu_m,\Sigma_m) 
+&amp;amp;= log \frac{c_m}{(2\pi)^{\frac{D}{2}}{\lvert{\Sigma_m}\rvert}^{\frac{1}{2}}}exp[-\frac{1}{2}(x_t-\mu_m)^T\Sigma_m^{-1}(x_t-\mu_m)] \cr
+&amp;amp;= logc_m-\frac{D}{2}log2\pi-\frac{1}{2}log\lvert{\Sigma_m}\rvert-\frac{1}{2}{x_t^T}\Sigma_m^{-1}x_t-\frac{1}{2}\mu_m^T\Sigma_m^{-1}\mu_m+\mu_m^T\Sigma_m^{-1}x_t
+\end {aligned}
+$$&lt;/p&gt;
+&lt;p&gt;去除和$x$相关的项，得到常量：&lt;/p&gt;
+&lt;p&gt;$$
+logc_m-\frac{D}{2}log2\pi-\frac{1}{2}log\lvert{\Sigma_m}\rvert-\frac{1}{2}\mu_m^T\Sigma_m^{-1}\mu_m
+$$&lt;/p&gt;
+&lt;p&gt;即为&lt;code&gt;gconsts_&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;在得到GMM中每个分量的$loglike$后，在进行$log(sum(exp()))$即可得到GMM的$loglike$，再对每一帧进行求和即可得到所有帧的$loglike$。&lt;/p&gt;
+&lt;h4 id=&#34;函数&#34;&gt;函数&lt;/h4&gt;
+&lt;h4 id=&#34;computegconsts&#34;&gt;ComputeGconsts&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;full-gmm&lt;/code&gt;和&lt;code&gt;diag-gmm&lt;/code&gt;中计算&lt;code&gt;gconsts_&lt;/code&gt;的基本原理一致。&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;full-gmm&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span class=&#34;n&#34;&gt;BaseFloat&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;offset&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;-&lt;/span&gt;&lt;span class=&#34;mf&#34;&gt;0.5&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;M_LOG_2PI&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;dim&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;BaseFloat&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;gc&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;log&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;weights_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mix&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;))&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;offset&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;BaseFloat&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;logdet&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;covar&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;LogPosDefDet&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;()&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;gc&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;-=&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;0.5&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;logdet&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;VecSpVec&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;means_invcovars_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Row&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mix&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;),&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;covar&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;means_invcovars_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Row&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mix&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)))&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;offset&lt;/code&gt;为$-\frac{D}{2}log2\pi$，&lt;code&gt;LogPosDefDet&lt;/code&gt;即求解$log\lvert{\Sigma_m}\rvert$的过程，由于协方差矩阵$\Sigma_m$是对称(半)正定矩阵，因此可以对$\Sigma_m$进行Cholesky分解:
+$$
+\Sigma_m =  LL^T
+$$&lt;/p&gt;
+&lt;p&gt;其中$L$为下三角矩阵。故：&lt;/p&gt;
+&lt;p&gt;$$
+\lvert{\Sigma_m}\rvert = \lvert LL^T \rvert = \lvert L \rvert \lvert L^T \rvert = \prod_{i=1}^n{L^2_{ii}}
+$$&lt;/p&gt;
+&lt;p&gt;$$
+log\lvert{\Sigma_m}\rvert = 2 \sum_{i=1}^n{log L_{ii}}
+$$&lt;/p&gt;
+&lt;p&gt;也就是说，$log\lvert{ {\Sigma_m}}\rvert$的值等价于对${ {\Sigma_m}}$的Cholesky分解的L矩阵对角线元素之和的2倍。&lt;/p&gt;
+&lt;p&gt;$$
+\begin {aligned}
+\mu_m^T\Sigma_m^{-1} \Sigma_m {(\mu_m^T \Sigma_m^{-1}})^T 
+&amp;amp;=\mu_m^T\Sigma_m^{-1}\Sigma_m\Sigma_m^{-1}\mu_m \cr
+&amp;amp;=\mu_m^T\Sigma_m^{-1}\mu_m \cr
+\end {aligned}
+$$&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;diag-gmm&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt; &lt;span class=&#34;n&#34;&gt;BaseFloat&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;offset&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;-&lt;/span&gt;&lt;span class=&#34;mf&#34;&gt;0.5&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;M_LOG_2PI&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;dim&lt;/span&gt;
+ &lt;span class=&#34;n&#34;&gt;BaseFloat&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;gc&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;log&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;weights_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mix&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;))&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;offset&lt;/span&gt;
+ &lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;int32&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;d&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;d&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;dim&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;d&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;++&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+   &lt;span class=&#34;n&#34;&gt;gc&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+=&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;0.5&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;log&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;inv_vars_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mix&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;d&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;))&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;-&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;0.5&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;means_invvars_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mix&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;d&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;means_invvars_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mix&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;d&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;/&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;inv_vars_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mix&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;d&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+ &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;由于 $|\Sigma|*|\Sigma^{-1}|=1$，故$log|\Sigma| = -log|\Sigma^{-1}|$；并且$\Sigma^{-1}$为对角阵，$log|\Sigma^{-1}| =\sum_{i=1}^D log\Sigma_{ii}$&lt;/p&gt;
+&lt;p&gt;在&lt;code&gt;full-gmm&lt;/code&gt;和&lt;code&gt;diag-gmm&lt;/code&gt;中，$$gc=logc_m -\frac{D}{2}log2\pi - \frac{1}{2}(log\lvert{{\Sigma_m}}\rvert + {\mu_m^T}{\Sigma_m^{-1}}{\mu_m})$$，和上述推导值一致。&lt;/p&gt;
+&lt;h4 id=&#34;split--merge&#34;&gt;Split &amp;amp;&amp;amp; Merge&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;split&lt;/code&gt;和&lt;code&gt;merge&lt;/code&gt;分别用来分裂/合并GMM的分量以增加/减少分量数，最终达到目标分量数。&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;split&lt;/code&gt;函数通过遍历GMM的所有分量，每次对权重最大的分量进行分裂，权重均分为两份，然后对split后的GMM重新计算&lt;code&gt;gconsts_&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;若分裂前分量的参数为$\lbrace c_1,\Sigma^{-1}_1,\mu_1^T\Sigma^{-1}_1 \rbrace$ ，分裂后分量的参数变为$$\lbrace c_1^{&#39;},{\Sigma^{-1}_1}^{&#39;},{\mu_1^T\Sigma^{-1}_1}^{&#39;} \rbrace$$和$\lbrace c_2,\Sigma^{-1}_2,\mu_2^T\Sigma^{-1}_2 \rbrace$，则有:&lt;/p&gt;
+&lt;p&gt;$$
+\begin {aligned}
+&amp;amp;c^{&#39;}_1=c_2=\frac{c_1}{2} \cr
+&amp;amp;{\Sigma^{-1}_1}^{&#39;}=\Sigma^{-1}_2=\Sigma^{-1}_1 \cr
+&amp;amp;{\mu_1^T\Sigma^{-1}_1}^{&#39;}={\mu_1^T\Sigma^{-1}_1} - perturb_factor \cdot rand_vector \cr
+&amp;amp;{\mu_2^T\Sigma^{-1}_2}={\mu_1^T\Sigma^{-1}_1} + perturb_factor \cdot rand_vector
+\end {aligned}
+$$&lt;/p&gt;
+&lt;p&gt;&lt;code&gt;merge&lt;/code&gt;函数的原理是层次聚类，首先统计每一对分量合并前后$loglike$减小的值&lt;code&gt;delta_like&lt;/code&gt;，然后依次选取&lt;code&gt;delta_like&lt;/code&gt;最小的一对分量进行合并，合并后更新delta_like并重新计算GMM的&lt;code&gt;gconsts_&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;在merge的过程中，若分量1的参数为$\lbrace \mu_1,\Sigma_1,c_1 \rbrace$，分量2的参数为$\lbrace \mu_2,\Sigma_2,c_2 \rbrace$，合并分量1和分量2后的分量参数为$\lbrace \mu_3,\Sigma_3,c_3 \rbrace$，则有:
+$$
+\begin {aligned}
+令：&amp;amp;p_1=\frac{c_1}{c_1+c_2},p_2=\frac{c_2}{c_1+c_2} \cr
+则：&amp;amp;c_3=c_1+c_2 \cr
+&amp;amp;\mu_3=p_1\mu_1+p_2\mu_2 \cr
+&amp;amp;\Sigma_3=p_1(\mu_1\mu_1^{T}+\Sigma_1)+p_2(\mu_2\mu_2^{T}+\Sigma_2)-\mu_3\mu_3^{T}
+\end {aligned}
+$$&lt;/p&gt;
+&lt;p&gt;求得$\mu_3,\Sigma_3$后，再计算$\Sigma_3^{-1}$和$\mu_3^T\Sigma_3^{-1}$，并更新&lt;code&gt;delta_like&lt;/code&gt;和&lt;code&gt;gconsts_&lt;/code&gt;。&lt;/p&gt;
+&lt;h4 id=&#34;componentloglikelihood&#34;&gt;ComponentLogLikelihood&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;ComponentLogLikelihood&lt;/code&gt;计算单个高斯分量的log-likelihood，前面&lt;code&gt;gconsts_&lt;/code&gt;计算了log-likelihood的常量部分，该函数加上和特征$x$相关的部分得到最终的log-likelihood值。
+$$
+loglike_m=gconsts_m + \mu_m^T\Sigma_m^{-1}x - \frac{1}{2}x^T\Sigma_m^{-1}x
+$$&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt; &lt;span class=&#34;n&#34;&gt;loglike&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;VecVec&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;means_invcovars_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Row&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;comp_id&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;),&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+ &lt;span class=&#34;n&#34;&gt;loglike&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;-=&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;0.5&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;VecSpVec&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;inv_covars_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;comp_id&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;],&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+ &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;loglike&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;gconsts_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;comp_id&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;loglikelihoods&#34;&gt;LogLikelihoods&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;LogLikelihoods&lt;/code&gt;计算每一个分量的log-likelihood值，原理和&lt;code&gt;ComponentLogLikelihood&lt;/code&gt;基本一致，不同的是在计算$x^T\Sigma_m^{-1}x$时，转为求两个对称矩阵相乘的迹，进而转为对两个对称矩阵做点乘运算，从而利用cblas优化运算。
+$$
+x^T\Sigma_m^{-1}x = tr(xx^T\Sigma_m^{-1}) = xx^T \cdot \Sigma_m^{-1}
+$$&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span class=&#34;n&#34;&gt;SpMatrix&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;BaseFloat&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data_sq&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;dim&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;data_sq&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;AddVec2&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mf&#34;&gt;1.0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;data_sq&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ScaleDiag&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mf&#34;&gt;0.5&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;loglikes&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;AddMatVec&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;mf&#34;&gt;1.0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;means_invcovars_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;kNoTrans&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;mf&#34;&gt;1.0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;int32&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;num_comp&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;NumGauss&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;for&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;int32&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;mix&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;mix&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;num_comp&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;++&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mix&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;{&lt;/span&gt;
+  &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;loglikes&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mix&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;-=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;TraceSpSpLower&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;data_sq&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;inv_covars_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;mix&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]);&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;data_sq即为$xx^T$，TraceSpSpLower求解两个对称矩阵乘积的迹。&lt;/p&gt;
+&lt;h4 id=&#34;loglikelihood&#34;&gt;LogLikelihood&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;LogLikelihood&lt;/code&gt;计算给定GMM的log-likelihood值，即对上面&lt;code&gt;LogLikelihoods&lt;/code&gt;的计算结果进行$$log(sum(exp()))$$。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span class=&#34;n&#34;&gt;LogLikelihoods&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;loglikes&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;BaseFloat&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;log_sum&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;loglikes&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;LogSumExp&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;log_sum&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;componentposteriors&#34;&gt;ComponentPosteriors&lt;/h4&gt;
+&lt;p&gt;&lt;code&gt;ComponentPosteriors&lt;/code&gt;输出component的后验概率，首先调用&lt;code&gt;LogLikelihoods&lt;/code&gt;计算每一个分量的log-likelihood值，然后进行softmax归一化得到每一个分量的posterior。&lt;/p&gt;
+&lt;p&gt;根据贝叶斯公式可以计算第$t$帧语音$x_t$是来自第$m$个分量的后验概率$\gamma_m(t)$：&lt;/p&gt;
+&lt;p&gt;$$
+\begin {aligned}
+\gamma_m(t) &amp;amp;= p(z_t=m|x_t;c,\mu,\Sigma) \cr
+&amp;amp;= \frac{p(x_t|z_t=m;\mu,\Sigma)p(z_t=m;c)}{\sum_{n=1}^M p(x_t|z_t=n;\mu,\Sigma)p(z_t=n;c) } \cr
+&amp;amp;=\frac{c_m \mathcal{N}(x_t;\mu_m,\Sigma_m)}{\sum_{n=1}^M c_n \mathcal{N}(x_t;\mu_n,\Sigma_n)}
+\end {aligned}
+$$&lt;/p&gt;
+&lt;p&gt;由于第$m$个分量的$loglike$为：&lt;/p&gt;
+&lt;p&gt;$$
+loglike(\mu_m,\Sigma_m ,c_m|x_t) = log c_m \mathcal{N}(x_t;\mu_m,\Sigma_m) 
+$$&lt;/p&gt;
+&lt;p&gt;$$
+故：\gamma_m(t) = \frac{exp(loglike(\mu_m,\Sigma_m,c_m|x_t))} {\sum_{n=1}^M exp(loglike(\mu_n,\Sigma_n,c_n|x_t))}
+$$&lt;/p&gt;
+&lt;p&gt;因此，对每一个分量的loglike应用Softmax即可得到该分量的posterior。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span class=&#34;n&#34;&gt;LogLikelihoods&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;data&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;loglikes&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;BaseFloat&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;log_sum&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;loglikes&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ApplySoftMax&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;span class=&#34;p&#34;&gt;...&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;posterior&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;-&amp;gt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;CopyFromVec&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;loglikes&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
+&lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;log_sum&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;am-diag-gmm&#34;&gt;am-diag-gmm&lt;/h2&gt;
+&lt;p&gt;&lt;code&gt;am-diag-gmm&lt;/code&gt;中定义了一个&lt;code&gt;CountStats&lt;/code&gt;结构体，结构体中定义了三个变量，分别为pdf(GMM)索引、GMM中分量数和GMM对应的occupancy。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span class=&#34;n&#34;&gt;int32&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;pdf_index&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;int32&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;num_components&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;span class=&#34;n&#34;&gt;BaseFloat&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;occupancy&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;occupancy实际为GMM对应的state_occs的pow次幂，state_occs中则存储了GMM对应的“帧数”，即该GMM每一个分量对应的“帧数”之和，这里的帧数均为“soft count”。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span class=&#34;n&#34;&gt;state_occs&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;i&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;gmm_accs&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;GetAccs&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;i&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;).&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;occupancy&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;().&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;Sum&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;();&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h4 id=&#34;computetargetnumpdfs&#34;&gt;ComputeTargetNumPdfs&lt;/h4&gt;
+&lt;p&gt;该函数目标是计算每一个GMM的目标分量数。首先将每一个GMM的对应的&lt;code&gt;CountStats&lt;/code&gt;结构体按照occupancy/component的大小存储到优先队列中，其中&lt;code&gt;num_components&lt;/code&gt;为1。然后依次取优先队列中GMM，其对应的分量数+1，直至所有GMM的分量总数达到目标分量数。最后，更新每一个GMM的分量数存储到targets向量中。&lt;/p&gt;
+&lt;h4 id=&#34;splitbycount--mergebycount&#34;&gt;SplitByCount &amp;amp; MergeByCount&lt;/h4&gt;
+&lt;p&gt;两个函数通过分裂或者合并分量使得每一个GMM的分量数等于其目标分量数。首先调用&lt;code&gt;ComputeTargetNumPdfs&lt;/code&gt;计算每一个GMM的目标分量数，然后遍历GMM，若当前GMM的分量数小于目标分量数，则split；大于目标分量数则merge。&lt;/p&gt;
+&lt;h4 id=&#34;clustergaussianstoubm&#34;&gt;ClusterGaussiansToUbm&lt;/h4&gt;
+&lt;p&gt;待续。。。&lt;/p&gt;
+&lt;h2 id=&#34;reference&#34;&gt;Reference&lt;/h2&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.kaldi-asr.org/doc/classkaldi_1_1FullGmm.html&#34;&gt;http://www.kaldi-asr.org/doc/classkaldi_1_1FullGmm.html&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://blog.csdn.net/wd18508423052/article/details/94052701&#34;&gt;https://blog.csdn.net/wd18508423052/article/details/94052701&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
+</description>
+        </item>
+        
+    </channel>
+</rss>
