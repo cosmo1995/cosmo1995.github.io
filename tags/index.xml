@@ -2,26 +2,26 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Tags on Cosmo</title>
-    <link>https://example.com/tags/</link>
+    <link>https://cosmo1995.github.io/tags/</link>
     <description>Recent content in Tags on Cosmo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 06 Apr 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://example.com/tags/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 06 Apr 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>gmm</title>
-      <link>https://example.com/tags/gmm/</link>
+      <link>https://cosmo1995.github.io/tags/gmm/</link>
       <pubDate>Sat, 06 Apr 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://example.com/tags/gmm/</guid>
+      <guid>https://cosmo1995.github.io/tags/gmm/</guid>
       <description></description>
     </item>
     
     <item>
       <title>kaldi</title>
-      <link>https://example.com/tags/kaldi/</link>
+      <link>https://cosmo1995.github.io/tags/kaldi/</link>
       <pubDate>Sat, 06 Apr 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://example.com/tags/kaldi/</guid>
+      <guid>https://cosmo1995.github.io/tags/kaldi/</guid>
       <description></description>
     </item>
     

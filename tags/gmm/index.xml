@@ -2,17 +2,17 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>gmm on Cosmo</title>
-    <link>https://example.com/tags/gmm/</link>
+    <link>https://cosmo1995.github.io/tags/gmm/</link>
     <description>Recent content in gmm on Cosmo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 06 Apr 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://example.com/tags/gmm/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sat, 06 Apr 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/tags/gmm/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Kaldi源码之gmm_2</title>
-      <link>https://example.com/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/</link>
+      <link>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/</link>
       <pubDate>Sat, 06 Apr 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://example.com/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/</guid>
+      <guid>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/</guid>
       <description>estimate-full-gmm和estimate-diag-gmm用来对GMM进行极大似然估计(MLE)，二者仅在协方差矩阵数据结构不同，下面均以estimate-full-gmm为例。
 GMM GMM的分布函数为
 $$ p(x|\mu,\Sigma) = \sum_{m=1}^{M} c_m \mathcal{N} (x;\mu_m,\Sigma_m) $$
@@ -30,10 +30,10 @@ $$ N_m^* = \sum_{t=1}^N P(m|x_t) $$</description>
     
     <item>
       <title>Kaldi源码之gmm_1</title>
-      <link>https://example.com/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_1/</link>
+      <link>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_1/</link>
       <pubDate>Fri, 08 Mar 2019 00:00:00 +0000</pubDate>
       
-      <guid>https://example.com/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_1/</guid>
+      <guid>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_1/</guid>
       <description>full-gmm和diag-gmm定义了GMM对象，两者不同之处在于协方差矩阵$\Sigma$的表达形式。diag-gmm为了减少计算量，认为输入特征的各个维度间是彼此独立的， 此时协方差矩阵变成对角矩阵，对角元素即为方差。
 am-diag-gmm中定义了一个向量densities_，向量中存储的是diag-gmm对象，am-diag-gmm针对的是声学模型中的所有GMM。
 full-gmm &amp;amp; diag-gmm 在FullGmm类中，成员变量为
