@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>kaldi on Cosmo</title>
-    <link>https://cosmo1995.github.io/tags/kaldi/</link>
-    <description>Recent content in kaldi on Cosmo</description>
+    <title>decison tree on Cosmo</title>
+    <link>https://cosmo1995.github.io/tags/decison-tree/</link>
+    <description>Recent content in decison tree on Cosmo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 08 Sep 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/tags/kaldi/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 08 Sep 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/tags/decison-tree/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Kaldi源码之决策树4_构建决策树</title>
       <link>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%914_%E6%9E%84%E5%BB%BA%E5%86%B3%E7%AD%96%E6%A0%91/</link>
@@ -64,71 +64,6 @@ AccumulateTreeStats void AccumulateTreeStats(const TransitionModel &amp;amp;tran
 一般我们会将具有相同中间音素的triphone的同一个位置的所有状态构建一个决策树，如果有63个monophone，那么我们会构建189个决策树(kaldi中这189个决策树会放在一个大的决策树下)。下图为所有中间音素为&amp;quot;zh&amp;quot;的triphone第3个HMM state进行决策树聚类的例子。
 决策树的似然等于每一个叶子结点的似然之和。若$L$为决策树某一个结点的似然，则有 $$ L=\sum_{t \in T}{\sum_{s \in S}\gamma_s(t) logP(x_t;\mu_S,\Sigma_S)} $$ 其中$S$为该结点对应的状态集，$T$为状态集$S$对应的所有帧，$\gamma_s(t)$为帧$x_t$由状态$s$生成的后验概率，$P$为概率分布。
 若$P$为高斯分布，则有 $$ \begin {aligned} log P (x_t;\mu_S,\Sigma_S) &amp;amp;= log \frac{1}{(2\pi)^{\frac{D}{2}}{\lvert{\Sigma_S}\rvert}^{\frac{1}{2}}}exp[-\frac{1}{2}(x_t-\mu_S)^T\Sigma_S^{-1}(x_t-\mu_S)] \cr &amp;amp;= -\frac{1}{2}[Dlog2\pi + log\lvert{\Sigma_S}\rvert + (x_t-\mu_S)^T\Sigma_S^{-1}(x_t-\mu_S)] \end {aligned} $$ 那么有： $$ \begin {aligned} L &amp;amp;= -\frac{1}{2} (log[(2\pi)^D|\Sigma_S|] + D) \cdot \sum_{s \in S}\sum_{t \in T} \gamma_s(t) \cr &amp;amp;= -\frac{1}{2}(Dlog(2\pi) + \sum_{i=1}^D{log\Sigma_{ii}} + D) \cdot \sum_{s \in S}\sum_{t \in T} \gamma_s(t) \end {aligned} $$</description>
-    </item>
-    
-    <item>
-      <title>Kaldi源码之hmm</title>
-      <link>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bhmm/</link>
-      <pubDate>Wed, 08 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bhmm/</guid>
-      <description>kaldi中TransitionModel用来更新HMM的转移概率，通过hmm-topology描述每个phone的拓扑结构，包括phone对应的state和以及state之间的初始转移概率。通过transition-model定义了transition的基本单元transition-state和转移路径transition-id。
-hmm-topology 以yesno的topo为例，yesno中有三个音素：SIL、Y、N ，phone id 分别为1、2、3。其中SIL有0~4共5个状态，5为non-emitting。yes/no均含有0~2共3个状态，3为non-emitting。topo中还定义了每个phone对应的状态之间的初始转移概率。
-Kaldi通过HmmTopology类表示topo结构，在HmmTopology中定义了HmmState结构体来描述HMM-state，包含HMM-state对应的pdf-class和转移的目标状态、初始转移概率。
-struct HmmState { int32 pdf_class; std::vector&amp;lt;std::pair&amp;lt;int32, BaseFloat&amp;gt; &amp;gt; transitions; ... } typedef std::vector&amp;lt;HmmState&amp;gt; TopologyEntry; TopologyEntry中包含一个phone对应的所有HMM-state以及这些HMM-state之间的转移路径和转移概率，即一个phone的完整topo结构。
-hmm-topology的成员变量为：
-std::vector&amp;lt;int32&amp;gt; phones_; std::vector&amp;lt;int32&amp;gt; phone2idx_; std::vector&amp;lt;TopologyEntry&amp;gt; entries_; hmm-topology类包含了上图中完整的topo信息，包括所有音素、每个音素对应的HMM-state和HMM-state间的转移路径和转移概率。
-transition-model transition中相关的概念：
- phone：音素，id是从1开始的整数。 HMM-state：每个音素的state的id，从0开始的整数。 pdf-id：每个state相对应的GMM概率密度函数id，这个值是全局唯一从0开始的整数。在triphone中，pdf-id会替换为决策树聚类后的实际pdf-id。pdf-id又可以分为forward-pdf-id和self-loop-pdf-id，默认pdf-id=forward-pdf-id=self-loop-pdf-id。 transition-state：抽象出来的转移状态，对于monophone，和HMM-state一一对应；对于triphone，对应于上下文音素绑定的状态。用(phone,HMM-state,pdf-id)表示，从1开始。 transition-index：表示一个transition-state的转移路径的index，在每个状态内从0开始的整数。 transition-id：所有transition-state的转移路径的id，全局唯一从1开始的整数，跟(transition-state,transition-index)一一对应。  通过show-transitions可以查看这些变量的具体值，如下表。
-transition-model中定义了triples,state2id_和id2state，分别表示transition-state对应的triples，每个transition-state对应的的第一个transition-id，每个transition-id对应的transition-state。
-std::vector&amp;lt;Triple&amp;gt; triples_; // indexed by transition-state - 1 std::vector&amp;lt;int32&amp;gt; state2id_; // indexed by transition-state std::vector&amp;lt;int32&amp;gt; id2state_; // indexed by transition-id ... 通过这三个变量，transition-model中实现了一系列transition概念的转换，包括：
-(phone, HMM-state, pdf-id) &amp;lt;&amp;mdash;&amp;gt; transition-state
-(transition-state, transition-index) &amp;lt;&amp;mdash;&amp;gt; transition-id</description>
-    </item>
-    
-    <item>
-      <title>Kaldi源码之gmm_2</title>
-      <link>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/</link>
-      <pubDate>Sat, 06 Apr 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/</guid>
-      <description>estimate-full-gmm和estimate-diag-gmm用来对GMM进行极大似然估计(MLE)，二者仅在协方差矩阵数据结构不同，下面均以estimate-full-gmm为例。
-GMM GMM的分布函数为
-$$ p(x|\mu,\Sigma) = \sum_{m=1}^{M} c_m \mathcal{N} (x;\mu_m,\Sigma_m) $$
-其中$c_m$为第$m$个component的混合系数,$\sum_{m=1}^M c_m =1 $。
-定义指示函数$1_{[z_t=m]}$，如果$x_t$来自第m个component，则$1_{[z_t=m]} = 1$，否则$1_{[z_t=m]} = 0$。
-现在假设$1_{[z_t=m]}$已知，即$x_t$属于哪一个component是已知的话，我们就可以统计每一个component对应的帧数：
-$$ N_m=\sum^N_{t=1} 1_{[z_t=m]} $$
-那么GMM参数可以估计为：
-$$ \begin {aligned} &amp;amp;c_m = \frac{\sum_{t=1}^N 1_{[z_t=m]}}{N} = \frac{N_m}{N} \cr &amp;amp;\mu_m= \frac{\sum_{t=1}^N 1_{[z_t=m]} \mathbf{x_t}}{N_m} \cr &amp;amp;\Sigma_m= \frac{\sum_{t=1}^N 1_{[z_t=m]}(\mathbf{x_t}-\mu_m)(\mathbf{x_t}-\mu_m)^T}{N_m} &amp;amp;\end {aligned} $$
-然而$1_{[z_t=m]}$是未知的，我们并不知道每一帧$x_t$属于哪一个component。但是，我们可以计算后验概率$P(m|x_t)$，即第m个 component生成$x_t$的概率。 $$ P(m|x_t) = \frac{P(x_t|m)P(m)} {P(x_t)} = \frac{P(x_t|m)P(m)} {\sum^M_{n=1}P(x_t|n)P(n)} $$
-其中后验概率$P(m|\mathbf{x_t})$也称为component occupation probability或者responsibility。
-此时，我们可以通过后验概率$P(m|x_t)$计算每一个component对应的&amp;quot;soft counts&amp;quot;: $N_m^*$
-$$ N_m^* = \sum_{t=1}^N P(m|x_t) $$</description>
-    </item>
-    
-    <item>
-      <title>Kaldi源码之gmm_1</title>
-      <link>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_1/</link>
-      <pubDate>Fri, 08 Mar 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_1/</guid>
-      <description>full-gmm和diag-gmm定义了GMM对象，两者不同之处在于协方差矩阵$\Sigma$的表达形式。diag-gmm为了减少计算量，认为输入特征的各个维度间是彼此独立的， 此时协方差矩阵变成对角矩阵，对角元素即为方差。
-am-diag-gmm中定义了一个向量densities_，向量中存储的是diag-gmm对象，am-diag-gmm针对的是声学模型中的所有GMM。
-full-gmm &amp;amp; diag-gmm 在FullGmm类中，成员变量为
-Vector&amp;lt;BaseFloat&amp;gt; gconsts_; bool valid_gconsts_; Vector&amp;lt;BaseFloat&amp;gt; weights_; std::vector&amp;lt;SpMatrix&amp;lt;BaseFloat&amp;gt; &amp;gt; inv_covars_; Matrix&amp;lt;BaseFloat&amp;gt; means_invcovars_; 在DiagGmm类中，成员变量为
-Vector&amp;lt;BaseFloat&amp;gt; gconsts_; bool valid_gconsts_; Vector&amp;lt;BaseFloat&amp;gt; weights_; Matrix&amp;lt;SpMatrix&amp;lt;BaseFloat&amp;gt; &amp;gt; inv_covars_; Matrix&amp;lt;BaseFloat&amp;gt; means_invcovars_; full-gmm和diag-gmm中并没有直接定义均值向量$\mu$和协方差矩阵$\Sigma$，而是定义了协方差矩阵的逆矩阵inv_covars——$\Sigma^{-1}$，以及均值向量和协方差逆矩阵的乘积向量means_invcovars——$\mu^T\Sigma^{-1}$。
-在full-gmm中inv_covars中存储的是$\Sigma^{-1}$的下三角矩阵，而diag-gmm中存储的则为$\Sigma^{-1}$的对角向量。
-注：
-PackedMatrix：压缩矩阵，仅存储矩阵的下三角部分，对于$n\times n$的矩阵仅需存储$ \frac{n(n+1)}{2} $个元素
-SpMatrix： SymmetricPackedMatrix 对称矩阵，继承自PackedMatrix
-TpMatrix： TriangularPackedMatrix 三角矩阵，继承自PackedMatrix
-由于对称矩阵和三角矩阵都只需存储矩阵的上三角或者下三角，因此可以使用PackedMatrix节约存储空间。
-gconsts_ GMM的概率密度函数$(pdf)$为：
-$$ \begin {aligned} f(x;\mu,\Sigma) &amp;amp;= \sum_{m=1}^{M} c_m \mathcal{N} (x;\mu_m,\Sigma_m) \cr &amp;amp;= \sum_{m=1}^{M}\frac{c_m}{(2\pi)^{\frac{D}{2}}{\lvert{\Sigma_m}\rvert}^{\frac{1}{2}}}exp[-\frac{1}{2}(x -\mu_m)^T\Sigma^{-1}_m(\mathbf x-\mu_m)] \end {aligned} $$
-其中，$c_m$为GMM第$m$个分量(component)的混合系数，${\Sigma_m}$是协方差矩阵，${\mu_m}$是均值向量，$D$是数据的维度，并且有$\sum_{m=1}^M {c_m}= 1$。
-对于离散语音数据，$f(\mathbf x;\mu,\Sigma)即P(\mathbf x|\mu,\Sigma)$，$loglike$为
-$$ log P(x|\mu,\Sigma) = \sum_{t=1}^N log \sum_{m=1}^{M} c_m \mathcal{N} (x_t;\mu_m,\Sigma_m) $$</description>
     </item>
     
   </channel>

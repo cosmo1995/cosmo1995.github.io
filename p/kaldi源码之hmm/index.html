@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="en-us">
     <head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='kaldi source code of gmm--2'><title>Kaldi源码之gmm_2</title>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='kaldi source code of hmm'><title>Kaldi源码之hmm</title>
 
-<link rel='canonical' href='https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/'>
+<link rel='canonical' href='https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bhmm/'>
 
-<link rel="stylesheet" href="/scss/style.min.css"><meta property='og:title' content='Kaldi源码之gmm_2'>
-<meta property='og:description' content='kaldi source code of gmm--2'>
-<meta property='og:url' content='https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/'>
+<link rel="stylesheet" href="/scss/style.min.css"><meta property='og:title' content='Kaldi源码之hmm'>
+<meta property='og:description' content='kaldi source code of hmm'>
+<meta property='og:url' content='https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bhmm/'>
 <meta property='og:site_name' content='Cosmo'>
-<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='kaldi' /><meta property='article:tag' content='gmm' /><meta property='article:published_time' content='2019-04-06T00:00:00&#43;00:00'/><meta property='article:modified_time' content='2019-04-06T00:00:00&#43;00:00'/>
-<meta name="twitter:title" content="Kaldi源码之gmm_2">
-<meta name="twitter:description" content="kaldi source code of gmm--2">
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='kaldi' /><meta property='article:tag' content='hmm' /><meta property='article:published_time' content='2019-05-08T00:00:00&#43;00:00'/><meta property='article:modified_time' content='2019-05-08T00:00:00&#43;00:00'/>
+<meta name="twitter:title" content="Kaldi源码之hmm">
+<meta name="twitter:description" content="kaldi source code of hmm">
     </head>
     <body class="">
     <script>
@@ -176,12 +176,12 @@
     
 
     <h2 class="article-title">
-        <a href="/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/">Kaldi源码之gmm_2</a>
+        <a href="/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bhmm/">Kaldi源码之hmm</a>
     </h2>
 
     
     <h3 class="article-subtitle">
-        kaldi source code of gmm--2
+        kaldi source code of hmm
     </h3>
     <footer class="article-time">
         <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -192,143 +192,78 @@
 
 
 
-        <time class="article-time--published">Apr 06, 2019</time>
+        <time class="article-time--published">May 08, 2019</time>
     </footer></div>
 </header>
 
     <section class="article-content">
-    <p>estimate-full-gmm和estimate-diag-gmm用来对GMM进行极大似然估计(MLE)，二者仅在协方差矩阵数据结构不同，下面均以estimate-full-gmm为例。</p>
-<!-- raw HTML omitted -->
-<h2 id="gmm">GMM</h2>
-<p>GMM的分布函数为</p>
-<p>$$
-p(x|\mu,\Sigma) = \sum_{m=1}^{M} c_m \mathcal{N} (x;\mu_m,\Sigma_m)
-$$</p>
-<p>其中$c_m$为第$m$个component的混合系数,$\sum_{m=1}^M c_m =1 $。</p>
-<p>定义指示函数$1_{[z_t=m]}$，如果$x_t$来自第m个component，则$1_{[z_t=m]} = 1$，否则$1_{[z_t=m]} = 0$。</p>
-<p>现在假设$1_{[z_t=m]}$已知，即$x_t$属于哪一个component是已知的话，我们就可以统计每一个component对应的帧数：</p>
-<p>$$
-N_m=\sum^N_{t=1} 1_{[z_t=m]}
-$$</p>
-<p>那么GMM参数可以估计为：</p>
-<p>$$
-\begin {aligned}
-&amp;c_m = \frac{\sum_{t=1}^N 1_{[z_t=m]}}{N} = \frac{N_m}{N} \cr
-&amp;\mu_m= \frac{\sum_{t=1}^N 1_{[z_t=m]} \mathbf{x_t}}{N_m} \cr
-&amp;\Sigma_m= \frac{\sum_{t=1}^N 1_{[z_t=m]}(\mathbf{x_t}-\mu_m)(\mathbf{x_t}-\mu_m)^T}{N_m}
-&amp;\end {aligned}
-$$</p>
-<p>然而$1_{[z_t=m]}$是未知的，我们并不知道每一帧$x_t$属于哪一个component。但是，我们可以计算后验概率$P(m|x_t)$，即第m个
-component生成$x_t$的概率。
-$$
-P(m|x_t) = \frac{P(x_t|m)P(m)} {P(x_t)} = \frac{P(x_t|m)P(m)} {\sum^M_{n=1}P(x_t|n)P(n)}
-$$</p>
-<p>其中后验概率$P(m|\mathbf{x_t})$也称为component occupation probability或者responsibility。</p>
-<p>此时，我们可以通过后验概率$P(m|x_t)$计算每一个component对应的&quot;soft counts&quot;: $N_m^*$</p>
-<p>$$
-N_m^* = \sum_{t=1}^N P(m|x_t)
-$$</p>
-<p>我们可以想象为对每一帧$x_t$，以$P(m|x_t)$的概率分配到第m个component上。这种分配是一种soft assignment，区别于k-means的hard assignment。</p>
-<p>在得到后验概率$P(m|x_t)$，参数可以估计为：</p>
-<p>$$
-\begin {aligned}
-&amp;c_m = \frac{\sum_{t=1}^N P(m|x_t)}{N} = \frac{N_m^*} {N} \cr
-&amp;\mu_m= \frac{\sum_{t=1}^N P(m|x_t) x_t}{\sum_{t=1}^N P(m|x_t)} = \frac {\sum_{t=1}^N P(m|x_t) x_t}{N_m^*} \cr
-&amp;\Sigma_m= \frac{\sum_{t=1}^N P(m|x_t)(x_t-\mu_m)(x_t-\mu_m)^T}{\sum_{t=1}^N P(m|x_t)} = \frac{\sum_{t=1}^N P(m|x_t)(x_t-\mu_m)(x_t-\mu_m)^T}{N_m^*}
-&amp;\end {aligned}
-$$</p>
-<p>由于：</p>
-<p>$$
-P(m|x_t) = \frac{P(x_t|m)P(m)} {P(x_t)} = \frac{P(x_t|m)P(m)} {\sum^M_{n=1}P(x_t|n)P(n)}
-$$</p>
-<p>因此，为了计算$P(m|x_t)$，必须知道$P(m)$和$P(x_t|m)$，其中$P(m)$为每一个component的先验概率，即为GMM参数中的$c_m$；$P(x_t|m)$为每一个component的分布函数，即为$\mathcal{N} (x;\mu_m,\Sigma_m)$，因此必须知道GMM的参数。反过来，GMM的参数又得在知道$P(m|x_t)$后通过极大似然来估计。问题此时陷入了一个死循环。</p>
-<p>此时可以通过EM算法来解决该问题，首先初始化GMM参数，在E步通过现有的参数计算$P(m|x_t)$，在M步通过计算的$P(m|x_t)$来更新GMM的参数，然后不断迭代直至收敛。</p>
-<h2 id="em算法">EM算法</h2>
-<p>EM算法是一种迭代算法，用于含有隐变量(Hidden variable)的概率模型参数的最大似然估计。</p>
+    <p>kaldi中TransitionModel用来更新HMM的转移概率，通过hmm-topology描述每个phone的拓扑结构，包括phone对应的state和以及state之间的初始转移概率。通过transition-model定义了transition的基本单元transition-state和转移路径transition-id。</p>
+<h2 id="hmm-topology">hmm-topology</h2>
+<p>以yesno的topo为例，yesno中有三个音素：SIL、Y、N ，phone id 分别为1、2、3。其中SIL有0~4共5个状态，5为non-emitting。yes/no均含有0~2共3个状态，3为non-emitting。topo中还定义了每个phone对应的状态之间的初始转移概率。</p>
+<p><img src="https://s1.ax1x.com/2020/06/12/tOIIy9.jpg" alt="tOIIy9.jpg"  /></p>
+<p>Kaldi通过HmmTopology类表示topo结构，在HmmTopology中定义了<code>HmmState</code>结构体来描述HMM-state，包含HMM-state对应的pdf-class和转移的目标状态、初始转移概率。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="k">struct</span> <span class="nc">HmmState</span> <span class="p">{</span>
+  <span class="n">int32</span> <span class="n">pdf_class</span><span class="p">;</span>
+  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">int32</span><span class="p">,</span> <span class="n">BaseFloat</span><span class="o">&gt;</span> <span class="o">&gt;</span> <span class="n">transitions</span><span class="p">;</span>
+  <span class="p">...</span>
+<span class="p">}</span>
+</code></pre></div><div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="k">typedef</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">HmmState</span><span class="o">&gt;</span> <span class="n">TopologyEntry</span><span class="p">;</span>
+</code></pre></div><p><code>TopologyEntry</code>中包含一个phone对应的所有HMM-state以及这些HMM-state之间的转移路径和转移概率，即一个phone的完整topo结构。</p>
+<p>hmm-topology的成员变量为：</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="n">phones_</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="n">phone2idx_</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">TopologyEntry</span><span class="o">&gt;</span> <span class="n">entries_</span><span class="p">;</span>
+</code></pre></div><p>hmm-topology类包含了上图中完整的topo信息，包括所有音素、每个音素对应的HMM-state和HMM-state间的转移路径和转移概率。</p>
+<h2 id="transition-model">transition-model</h2>
+<p>transition中相关的概念：</p>
 <ul>
-<li>先初始化参数</li>
-<li>E-step：依据当前参数，通过贝叶斯公式计算$x_t$的后验概率$P(m|x_t)$。</li>
+<li>phone：音素，id是从1开始的整数。</li>
+<li>HMM-state：每个音素的state的id，从0开始的整数。</li>
+<li>pdf-id：每个state相对应的GMM概率密度函数id，这个值是全局唯一从0开始的整数。在triphone中，pdf-id会替换为决策树聚类后的实际pdf-id。pdf-id又可以分为forward-pdf-id和self-loop-pdf-id，默认pdf-id=forward-pdf-id=self-loop-pdf-id。</li>
+<li>transition-state：抽象出来的转移状态，对于monophone，和HMM-state一一对应；对于triphone，对应于上下文音素绑定的状态。用(phone,HMM-state,pdf-id)表示，从1开始。</li>
+<li>transition-index：表示一个transition-state的转移路径的index，在每个状态内从0开始的整数。</li>
+<li>transition-id：所有transition-state的转移路径的id，全局唯一从1开始的整数，跟(transition-state,transition-index)一一对应。</li>
 </ul>
+<p>通过<code>show-transitions</code>可以查看这些变量的具体值，如下表。</p>
+<p><img src="https://s1.ax1x.com/2020/06/12/tXSXMq.png" alt="tXSXMq.png"  /></p>
+<p>transition-model中定义了triples,state2id_和id2state，分别表示transition-state对应的triples，每个transition-state对应的的第一个transition-id，每个transition-id对应的transition-state。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Triple</span><span class="o">&gt;</span> <span class="n">triples_</span><span class="p">;</span>   <span class="c1">// indexed by transition-state - 1
+</span><span class="c1"></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="n">state2id_</span><span class="p">;</span>   <span class="c1">// indexed by transition-state
+</span><span class="c1"></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="n">id2state_</span><span class="p">;</span>   <span class="c1">// indexed by transition-id
+</span><span class="c1"></span><span class="p">...</span>
+</code></pre></div><p>通过这三个变量，transition-model中实现了一系列transition概念的转换，包括：</p>
+<p>(phone, HMM-state, pdf-id)        &lt;&mdash;&gt;   transition-state<br>
+(transition-state, transition-index)  &lt;&mdash;&gt;   transition-id</p>
+<h4 id="accumulate">Accumulate</h4>
+<p>和GMM一样，HMM也有累积值用于参数更新，HMM的累积值比较简单，即每一个transition-id对应的帧数或者weights。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="kt">void</span> <span class="nf">Accumulate</span><span class="p">(</span><span class="n">BaseFloat</span> <span class="n">prob</span><span class="p">,</span> <span class="n">int32</span> <span class="n">trans_id</span><span class="p">,</span> <span class="n">Vector</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">stats</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+  <span class="p">(</span><span class="o">*</span><span class="n">stats</span><span class="p">)(</span><span class="n">trans_id</span><span class="p">)</span> <span class="o">+=</span> <span class="n">prob</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div><p>HMM的累积值和GMM的三个累积值一起写入到acc文件中。一个acc文件实例：</p>
+<pre><code> [ 0 5404 267 563 4 2336 7 298 1 14 4942 1 571 25 16 4069 26 ...... 18 4 2]
+ &lt;NUMPDFS&gt; 1336 &lt;GMMACCS&gt; &lt;VECSIZE&gt; 39 &lt;NUMCOMPONENTS&gt; 5 &lt;FLAGS&gt; 15 &lt;OCCUPANCY&gt;  [ 1561.451 779.4418 1555.19 1559.775 782.1424 ]
+ &lt;MEANACCS&gt;  [
+   -28744.81 -7369.43 3880.741 15083.26 13627.56 10871.53 .... 
+   -14880.82 -4227.551 1365.723 6937.694 6367.03 4801.088 ...
+   ... ]
+ &lt;DIAGVARACCS&gt;  [
+   768666.9 205197.4 161435.7 286381.9 285285.2 266058 ...
+   ... ]
+ &lt;/GMMACCS&gt; &lt;GMMACCS&gt; &lt;VECSIZE&gt; 39 &lt;NUMCOMPONENTS&gt; 2 &lt;FLAGS&gt; 15 &lt;OCCUPANCY&gt; [ 16.8601 18.1399 ]
+ &lt;MEANACCS&gt;  [
+  ...
+</code></pre><p>第一行为HMM累积值向量，即每一个transiton-id对应的帧数，向量的长度比transiton-id个数多1，第一位固定为0。下面则为每一个GMM的累积值&lt;OCCUPANCY&gt;、&lt;MEANACCS&gt;和&lt;DIAGVARACCS&gt;。</p>
+<h2 id="update">Update</h2>
+<p>由于已知观测序列和状态序列，HMM的参数更新过程为监督学习过程，因此根据伯努利大数定律的结论&quot;频率的极限是概率&quot;可以求出HMM的转移概率。</p>
 <p>$$
-\begin {aligned}
-P(m|x_t) &amp;= \frac{P(x_t|m)P(m)} {\sum^M_{n=1}P(x_t|n)P(n)} \cr
-&amp;=\frac{c_m \mathcal{N}(x_t;\mu_m,\Sigma_m)}{\sum_{n=1}^M c_n \mathcal{N}(_t;\mu_n,\Sigma_n)}
-\end {aligned}
+a_{ij} = \frac{A_{ij}}{\sum_{j=1}^N{A_{ij}}}
 $$</p>
-<p>通过<code>gmm.ComponentPosteriors</code>函数，首先计算第m个component的loglike,然后进行softmax归一化即得到posterior。</p>
-<!-- raw HTML omitted -->
+<p>其中$a_{ij}$为状态$i$到状态$j$的转移概率，$A_{ij}$为状态$i$到状态$j$的转移的频数。</p>
+<p>Kaldi从累积量stat中获取和transiton-state对应的每一个transition-id的帧数。</p>
+<h2 id="reference">Reference</h2>
 <ul>
-<li>M-step：计算新一轮迭代的模型参数</li>
-</ul>
-<p>$$
-\begin {aligned}
-c_m &amp;= \frac{\sum_{t=1}^N P(m|x_t)}{N} \cr
-\mu_m &amp;= \frac{\sum_{t=1}^N P(m|x_t) x_t}{\sum_{t=1}^N P(m|x_t)} \cr
-\Sigma_m &amp;= \frac{\sum_{t=1}^N P(m|x_t)(x_t-\mu_m)(x_t-\mu_m)^T}{\sum_{t=1}^N P(m|x_t)} \cr
-&amp;\end {aligned}
-$$</p>
-<ul>
-<li>重复计算 E-step 和 M-step 直至收敛</li>
-</ul>
-<h3 id="类mlestimatefullgmm-accumfullgmm">类MlEstimateFullGmm (AccumFullGmm)</h3>
-<pre><code>Vector&lt;double&gt; occupancy_;
-Matrix&lt;double&gt; mean_accumulator_;
-std::vector&lt;SpMatrix&lt;double&gt; &gt; covariance_accumulator_;
-</code></pre><p>类中定义了参数更新时所需的三个累积量，其中occupancy_可以视为GMM每个component对应的&quot;帧数&quot;。</p>
-<h3 id="accumulateforcomponent">AccumulateForComponent</h3>
-<p>对于单个component而言，上述三个累积量为：</p>
-<p>$$
-\begin {aligned}
-occupancy_m &amp;= \sum_{t=1}^N P(m|x_t) \cr
-mean_accumulator_m &amp;= \sum_{t=1}^N P(m|x_t) x_t \cr
-covariance_accumulator_m &amp;= \sum_{t=1}^N P(m|x_t) x_t x_t^T
-\end {aligned}
-$$</p>
-<h3 id="accumulatefromposteriors">AccumulateFromPosteriors</h3>
-<p>计算GMM的累积量，原理和<code>AccumulateForComponent</code>一致，只是计算的对象变为了GMM的所有分量。</p>
-<h3 id="accumulatefromfull--accumulatefromdiag">AccumulateFromFull &amp; AccumulateFromDiag</h3>
-<p>首先通过<code>gmm.ComponentPosteriors</code>计算GMM每一个component的后验，然后调用<code>AccumulateFromPosteriors</code>计算GMM的累积量。</p>
-<h3 id="update">Update</h3>
-<p>根据上诉三个累积值更新GMM参数：</p>
-<p>$$
-\begin {aligned}
-&amp;c_m=\frac{occupancy_m}{N} \cr
-&amp;\mu_m=\frac{mean_accumulator_m} {occupancy_m} \cr
-&amp;\Sigma_m=\frac{covariance_accumulator_m} {occupancy_m} - \mu_m \mu_m^T
-&amp;\end {aligned}
-$$</p>
-<!-- raw HTML omitted -->
-<p>$$
-\begin {aligned}
-注：
-\Sigma_m &amp;= \frac{\sum_{t=1}^N P(m|\mathbf{x_t})(\mathbf{x_t}-\mu_m)(\mathbf{x_t}-\mu_m)^T}{\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
-&amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) (\mathbf{x_t} \mathbf{x_t^T} - \mathbf{x_t} \mu_m^T -\mu_m\mathbf{x_t^T} + \mu_m \mu_m^T)} {\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
-&amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} \mathbf{x_t^T} - \mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} - \mu_m \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t^T} + \mu_m \mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) }  {\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
-&amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} \mathbf{x_t^T} - \mu_m^T \mu_m \sum_{t=1}^N P(m|\mathbf{x_t}) - \mu_m\mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) + \mu_m \mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) }  {\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
-&amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} \mathbf{x_t^T} - \mu_m \mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) }  {\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
-&amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} \mathbf{x_t^T}}  {\sum_{t=1}^N P(m|\mathbf{x_t})} - \mu_m \mu_m^T \cr
-\end {aligned}
-$$</p>
-<h3 id="estimate-am-diag-gmm">estimate-am-diag-gmm</h3>
-<p>$$
-\begin{matrix}
-diag-gmm \xrightarrow{update \ by} estimate-diag-gmm  \cr
-\downarrow{1\rightarrow*}  \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \downarrow{1\rightarrow*} \cr
-am-diag-gmm  \xrightarrow{update \ by} estimate-am-diag-gmm
-\end{matrix}
-$$</p>
-<p><code>estimate-am-diag-gmm</code>中定义了一个gmm_estimators向量，用于对整个声学模型的所有GMM进行更新。</p>
-<pre><code>for (size_t i = 0; i &lt; gmm_estimators_.size(); i++) {
-  gmm_estimators_[i]-&gt;Update(config, flags, &amp;(am_gmm-&gt;GetPdf(i)), p_obj,
-        p_count);
-...
-</code></pre><h2 id="reference">Reference</h2>
-<ul>
-<li><a href="http://www.inf.ed.ac.uk/teaching/courses/asr/2019-20/asr02-hmmgmm.pdf">http://www.inf.ed.ac.uk/teaching/courses/asr/2019-20/asr02-hmmgmm.pdf</a></li>
-<li><a href="https://www.cs.toronto.edu/~urtasun/courses/CSC411_Fall16/13_mog.pdf">https://www.cs.toronto.edu/~urtasun/courses/CSC411_Fall16/13_mog.pdf</a></li>
-<li><a href="https://kivy-cn.github.io/Stanford-CS-229-CN/#/Markdown/cs229-notes7b">https://kivy-cn.github.io/Stanford-CS-229-CN/#/Markdown/cs229-notes7b</a></li>
-<li><a href="https://zhuanlan.zhihu.com/p/30483076">https://zhuanlan.zhihu.com/p/30483076</a></li>
-<li><a href="https://notes.funcwj.cn/2017/05/28/kaldi-gmm/">https://notes.funcwj.cn/2017/05/28/kaldi-gmm/</a></li>
+<li><a href="https://blog.csdn.net/david_tym/article/details/98994879">https://blog.csdn.net/david_tym/article/details/98994879</a></li>
+<li><a href="http://www.kaldi-asr.org/doc/classkaldi_1_1HmmTopology.html">http://www.kaldi-asr.org/doc/classkaldi_1_1HmmTopology.html</a></li>
 </ul>
 
 </section>
@@ -340,7 +275,7 @@ $$</p>
         
             <a href="/tags/kaldi/">kaldi</a>
         
-            <a href="/tags/gmm/">gmm</a>
+            <a href="/tags/hmm/">hmm</a>
         
     </section>
 

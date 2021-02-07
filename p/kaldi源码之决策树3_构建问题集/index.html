@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='kaldi source code of decision tree_3'><title>Kaldi源码之决策树3_构建问题集</title>
+
+<link rel='canonical' href='https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%913_%E6%9E%84%E5%BB%BA%E9%97%AE%E9%A2%98%E9%9B%86/'>
+
+<link rel="stylesheet" href="/scss/style.min.css"><meta property='og:title' content='Kaldi源码之决策树3_构建问题集'>
+<meta property='og:description' content='kaldi source code of decision tree_3'>
+<meta property='og:url' content='https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%913_%E6%9E%84%E5%BB%BA%E9%97%AE%E9%A2%98%E9%9B%86/'>
+<meta property='og:site_name' content='Cosmo'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='kaldi' /><meta property='article:tag' content='decison tree' /><meta property='article:published_time' content='2019-08-08T00:00:00&#43;00:00'/><meta property='article:modified_time' content='2019-08-08T00:00:00&#43;00:00'/>
+<meta name="twitter:title" content="Kaldi源码之决策树3_构建问题集">
+<meta name="twitter:description" content="kaldi source code of decision tree_3">
+    </head>
+    <body class="">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.body.dataset.scheme = 'dark';
+        } else {
+            document.body.dataset.scheme = 'light';
+        }
+    })();
+</script><div class="container main-container flex on-phone--column extended article-page with-toolbar">
+            <aside class="sidebar left-sidebar sticky">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header class="site-info">
+        
+            <figure class="site-avatar">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu874715197ebd8e5cb58e412c943f3434_12926_300x0_resize_q75_box.jpg" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+
+                
+            </figure>
+        
+        <h1 class="site-name"><a href="https://cosmo1995.github.io/">Cosmo</a></h1>
+        <h2 class="site-description">Why not ask the Magic Conch</h2>
+    </header>
+
+    <ol class="menu" id="main-menu">
+        
+        
+        
+
+        <li >
+            <a href='/'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>Home</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/about'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>About</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/archives'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>Archives</span>
+            </a>
+        </li>
+        
+
+        
+            <li id="dark-mode-toggle">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <span>Dark Mode</span>
+            </li>
+        
+    </ol>
+</aside>
+
+            <main class="main full-width">
+    <div id="article-toolbar">
+        <a href="https://cosmo1995.github.io/" class="back-home">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="15 6 9 12 15 18" />
+</svg>
+
+
+
+            <span>Back</span>
+        </a>
+    </div>
+
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/kaldi/" style="background-color: #2a9d8f; color: #fff;">
+                kaldi
+            </a>
+        
+    </header>
+    
+
+    <h2 class="article-title">
+        <a href="/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%913_%E6%9E%84%E5%BB%BA%E9%97%AE%E9%A2%98%E9%9B%86/">Kaldi源码之决策树3_构建问题集</a>
+    </h2>
+
+    
+    <h3 class="article-subtitle">
+        kaldi source code of decision tree_3
+    </h3>
+    <footer class="article-time">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+        <time class="article-time--published">Aug 08, 2019</time>
+    </footer></div>
+</header>
+
+    <section class="article-content">
+    <p>前面我们已经通过<code>acc-tree-stats</code>累积好了构建决策树所需的统计量，要建立一颗决策树，我们还需要构建问题集。在HTK中，问题集是人工定义的；而在kaldi中，问题集是通过训练数据自动生成的。kaldi中，通过<code>cluster-phones</code>生成问题集。</p>
+<h2 id="cluster-phones">cluster-phones</h2>
+<ul>
+<li>作用：多个音素或多个音素集进行聚类。</li>
+<li>输入：决策树相关统计量treeacc，多个音素集sets.int</li>
+<li>输出：自动生成的问题集（每个问题由多个音素组成）</li>
+<li>示例：</li>
+</ul>
+<div class="highlight"><pre class="chroma"><code class="language-shell" data-lang="shell">cluster-phones <span class="nv">$context_opts</span> <span class="nv">$dir</span>/treeacc <span class="nv">$lang</span>/phones/sets.int <span class="se">\
+</span><span class="se"></span>    <span class="nv">$dir</span>/questions.int
+</code></pre></div><ul>
+<li>过程：</li>
+</ul>
+<ol>
+<li><code>context_opts</code>指定context-width和central-position，默认的三音素参数N=3，P=1；从treeacc中读取统计量到<code>BuildTreeStatsType stats</code>；从sets.int读取phone set 保存到<code>phone_sets</code>；读取<code>pdf_class_list</code>，该变量指定构建问题集所考虑的HMM状态，默认为1，也就是只考虑三状态HMM的中间状态。</li>
+<li>若指定的mode为<code>questions</code>，调用<code>AutomaticallyObtainQuestions()</code>自动生成问题集保存到<code>phone_sets_out</code>；若指定的model为<code>k-means</code>，调用<code>KMeansClusterPhones()</code>。</li>
+<li>将上述函数自动生成的phone_sets_out写到<code>questions.int</code>。</li>
+</ol>
+<p>sets.txt通过<code>utils/prepare_lang.sh</code>生成，其中每一行为相同base的音素，sets.int 和sets.txt实例：</p>
+<pre><code>sil									1
+spn									2
+AA0 AA1 AA2		 					        3 4 5
+AE0 AE1 AE2					  		        6 7 8
+...									...
+</code></pre><h2 id="automaticallyobtainquestions">AutomaticallyObtainQuestions</h2>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="kt">void</span> <span class="n">AutomaticallyObtainQuestions</span><span class="p">(</span><span class="n">BuildTreeStatsType</span> <span class="o">&amp;</span><span class="n">stats</span><span class="p">,</span>
+                         		  <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">phone_sets_in</span><span class="p">,</span>
+                         		  <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">all_hmm_positions_in</span><span class="p">,</span>
+                         		  <span class="n">int32</span> <span class="n">P</span><span class="p">,</span>
+                         		  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="o">&gt;</span> <span class="o">*</span><span class="n">questions_out</span>
+                                 <span class="p">)</span>
+</code></pre></div><p>通过对音素自动进行聚类，从而获取问题集；它把音素聚类成一棵树，并且对树中的每一个结点，把从该结点可以到达的所有叶子结点合在一起构成一个问题（该树的一个叶子结点保存着一些音素，一个问题就是一个音素的集合）。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="o">&gt;</span> <span class="n">phone_sets</span><span class="p">(</span><span class="n">phone_sets_in</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="n">phones</span><span class="p">;</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">phone_sets</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="p">;</span><span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+   <span class="n">std</span><span class="o">::</span><span class="n">sort</span><span class="p">(</span><span class="n">phone_sets</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">begin</span><span class="p">(),</span> <span class="n">phone_sets</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">end</span><span class="p">());</span>
+   <span class="k">for</span> <span class="p">(</span><span class="n">size_t</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">phone_sets</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">size</span><span class="p">();</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span>
+      <span class="n">phones</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">phone_sets</span><span class="p">[</span><span class="n">i</span><span class="p">][</span><span class="n">j</span><span class="p">]);</span>
+<span class="p">}</span>
+<span class="n">std</span><span class="o">::</span><span class="n">sort</span><span class="p">(</span><span class="n">phones</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">phones</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="n">all_hmm_positions_in</span><span class="p">(</span><span class="n">all_hmm_positions_in</span><span class="p">);</span>
+<span class="n">SortAndUniq</span><span class="p">(</span><span class="o">&amp;</span><span class="n">all_hmm_positions_in</span><span class="p">);</span>
+</code></pre></div><p>读取sets.int中的音素到<code>phone_sets</code>，并将<code>phone_sets</code>中所有音素排序后保存在<code>phones</code>中；读取hmm-position-list参数保存到<code>all_hmm_positions_in</code>中，该参数指定了聚类时所考虑的HMM状态，默认为1，也就是只考虑三状态HMM的中间状态。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">BuildTreeStatsType</span> <span class="n">retained_stats</span><span class="p">;</span>
+<span class="n">FilterStatsByKey</span><span class="p">(</span><span class="n">stats</span><span class="p">,</span> <span class="n">kPdfClass</span><span class="p">,</span> <span class="n">all_hmm_positions_in</span><span class="p">,</span>
+                 <span class="nb">true</span><span class="p">,</span>  <span class="c1">// retain only the listed positions
+</span><span class="c1"></span>                 <span class="o">&amp;</span><span class="n">retained_stats</span><span class="p">);</span>
+</code></pre></div><p><code>FilterStatsByKey</code>挑选出三音素第二个HMM状态对应的<code>stats</code>保存到<code>retained_stats</code>中，即包含&lt;-1，1&gt;的<code>stats</code>。通过累积统计量部分我们知道，三音素的三个HMM状态都有对应的统计量，但是这里只把与第二个HMM状态相关的统计量留下进行聚类，其他的都暂时扔掉不用。若有100个phone，则有$100^3$个triphone，$3\times100^3$个HMM state，由于我们只保留中间的HMM state，因此<code>retained_stats</code>中只保存了$100^3$个HMM状态及其统计量。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">BuildTreeStatsType</span><span class="o">&gt;</span> <span class="n">split_stats</span><span class="p">;</span>  <span class="c1">// split by phone.
+</span><span class="c1"></span><span class="n">SplitStatsByKey</span><span class="p">(</span><span class="n">retained_stats</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">split_stats</span><span class="p">);</span>
+</code></pre></div><p><code>SplitStatsByKey</code>根据三音素的中间音素对<code>retained_stats</code>进行划分，中间音素相同的分到一起，保存到<code>split_stats</code>向量中。由参数P指定根据三音素的第几个音素进行划分，因为此处P是1，所以是三音素的中间音素。<code>retained_stats</code>中$100^3$个统计量按照中间音素划分为100部分保存到<code>split_stats</code>中，每一个部分保存着$100^2$个状态及其统计量。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Clusterable</span><span class="o">*&gt;</span> <span class="n">summed_stats</span><span class="p">;</span>  <span class="c1">// summed up by phone.
+</span><span class="c1"></span><span class="n">SumStatsVec</span><span class="p">(</span><span class="n">split_stats</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">summed_stats</span><span class="p">);</span>
+</code></pre></div><p><code>SumStatsVec</code>把<code>split_stats</code>每个元素中的所有统计量加起来，也就是把中间音素相同的统计量全部相加到一起，得到<code>summed_stats</code>。若有100个phone，那么<code>summed_stats</code>向量就只有100个元素，每个元素保存着x音素作为中间音素的第二个HMM状态的所有统计量的累积。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Clusterable</span><span class="o">*&gt;</span> <span class="n">summed_stats_per_set</span><span class="p">(</span><span class="n">phone_sets</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span> <span class="nb">NULL</span><span class="p">);</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">phone_sets</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">this_set</span> <span class="o">=</span> <span class="n">phone_sets</span><span class="p">[</span><span class="n">i</span><span class="p">];</span>
+    <span class="n">summed_stats_per_set</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">summed_stats</span><span class="p">[</span><span class="n">this_set</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">-&gt;</span><span class="n">Copy</span><span class="p">();</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">size_t</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">this_set</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span>
+      <span class="n">summed_stats_per_set</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">summed_stats</span><span class="p">[</span><span class="n">this_set</span><span class="p">[</span><span class="n">j</span><span class="p">]]));</span>
+<span class="p">}</span>
+</code></pre></div><p>根据sets.int指定的集合，累加同一个集合中音素的统计量保存到<code>summed_stats_per_set</code>中。从上面sets.int文件的图片可以看出，该文件的一行就是一个音素的集合，这块代码的作用就是把属于sets.int文件同一行的音素的统计量累加在一起，所以最后<code>summed_stats</code>的维数就是sets.int的行数，一行对应一个统计量。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">TreeClusterOptions</span> <span class="n">topts</span><span class="p">;</span>
+<span class="n">topts</span><span class="p">.</span><span class="n">kmeans_cfg</span><span class="p">.</span><span class="n">num_tries</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>  <span class="c1">// This is a slow-but-accurate setting,
+</span><span class="c1"></span>  <span class="c1">// we do it this way since there are typically few phones.
+</span><span class="c1"></span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="n">assignments</span><span class="p">;</span> <span class="c1">//assignment of phones to clusters. dim == summed_stats.size().
+</span><span class="c1"></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="n">clust_assignments</span><span class="p">;</span>  <span class="c1">// Parent of each cluster.  Dim == #clusters.
+</span><span class="c1"></span><span class="n">int32</span> <span class="n">num_leaves</span><span class="p">;</span>  <span class="c1">// number of leaf-level clusters.
+</span><span class="c1"></span><span class="n">TreeCluster</span><span class="p">(</span><span class="n">summed_stats_per_set</span><span class="p">,</span>
+            <span class="n">summed_stats_per_set</span><span class="p">.</span><span class="n">size</span><span class="p">(),</span>  <span class="c1">// max-#clust is all of the points.
+</span><span class="c1"></span>            <span class="nb">NULL</span><span class="p">,</span>  <span class="c1">// don&#39;t need the clusters out.
+</span><span class="c1"></span>            <span class="o">&amp;</span><span class="n">assignments</span><span class="p">,</span>
+            <span class="o">&amp;</span><span class="n">clust_assignments</span><span class="p">,</span>
+            <span class="o">&amp;</span><span class="n">num_leaves</span><span class="p">,</span>
+            <span class="n">topts</span><span class="p">);</span>
+</code></pre></div><p>调用<code>TreeCluster</code>，对<code>summed_stats_per_set</code>进行聚类，生成相关信息。<code>TreeCluster</code>是<code>AutomaticallyObtainQuestions</code>最核心的部分。</p>
+<h2 id="treecluster">TreeCluster</h2>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">BaseFloat</span> <span class="nf">TreeCluster</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Clusterable</span><span class="o">*&gt;</span> <span class="o">&amp;</span><span class="n">points</span><span class="p">,</span>
+                      <span class="n">int32</span> <span class="n">max_clust</span><span class="p">,</span>  <span class="c1">// this is a max only.
+</span><span class="c1"></span>                      <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Clusterable</span><span class="o">*&gt;</span> <span class="o">*</span><span class="n">clusters_out</span><span class="p">,</span>
+                      <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">assignments_out</span><span class="p">,</span>
+                      <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">clust_assignments_out</span><span class="p">,</span>
+                      <span class="n">int32</span> <span class="o">*</span><span class="n">num_leaves_out</span><span class="p">,</span>
+                      <span class="n">TreeClusterOptions</span> <span class="n">cfg</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">TreeClusterer</span> <span class="n">tc</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">max_clust</span><span class="p">,</span> <span class="n">cfg</span><span class="p">);</span>
+  <span class="n">BaseFloat</span> <span class="n">ans</span> <span class="o">=</span> <span class="n">tc</span><span class="p">.</span><span class="n">Cluster</span><span class="p">(</span><span class="n">clusters_out</span><span class="p">,</span> <span class="n">assignments_out</span><span class="p">,</span> <span class="n">clust_assignments_out</span><span class="p">,</span> <span class="n">num_leaves_out</span><span class="p">);</span>                    
+<span class="p">}</span>
+</code></pre></div><p>该函数首先初始化一个<code>TreeClusterer</code>对象，把统计量<code>points</code>传给该对象；然后调用该对象的<code>Cluster</code>方法获取关于聚类结果的相关信息。<code>ObtainSetsOfPhones</code>根据这些信息就可以生成问题集。</p>
+<h4 id="treeclusterer对象和node数据结构">TreeClusterer对象和Node数据结构</h4>
+<p><code>TreeClusterer</code>是自顶向下的树进行聚类的一个对象，<code>TreeClusterer</code>类中定义了树的结点<code>Node</code>结构体。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="k">struct</span> <span class="nc">Node</span> <span class="p">{</span>
+    <span class="kt">bool</span> <span class="n">is_leaf</span><span class="p">;</span>
+    <span class="n">int32</span> <span class="n">index</span><span class="p">;</span>  <span class="c1">// index into leaf_nodes or nonleaf_nodes as applicable.
+</span><span class="c1"></span>    <span class="n">Node</span> <span class="o">*</span><span class="n">parent</span><span class="p">;</span>
+    <span class="n">Clusterable</span> <span class="o">*</span><span class="n">node_total</span><span class="p">;</span>  <span class="c1">// sum of all data with this node.
+</span><span class="c1"></span>    <span class="k">struct</span> <span class="p">{</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Clusterable</span><span class="o">*&gt;</span> <span class="n">points</span><span class="p">;</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="n">point_indices</span><span class="p">;</span>
+      <span class="n">BaseFloat</span> <span class="n">best_split</span><span class="p">;</span>
+      <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Clusterable</span><span class="o">*&gt;</span> <span class="n">clusters</span><span class="p">;</span>  <span class="c1">// [branch_factor]... if we do split.
+</span><span class="c1"></span>      <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="n">assignments</span><span class="p">;</span>  <span class="c1">// assignments of points to clusters.
+</span><span class="c1"></span>    <span class="p">}</span> <span class="n">leaf</span><span class="p">;</span>
+    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">*&gt;</span> <span class="n">children</span><span class="p">;</span>  <span class="c1">// vector of size branch_factor.   if non-leaf.
+</span><span class="c1"></span>    <span class="c1">// pointers not owned here but in vectors leaf_nodes_, nonleaf_nodes_.
+</span><span class="c1"></span><span class="p">};</span> 
+</code></pre></div><ul>
+<li><code>Node</code>保存着指向其父亲结点<code>parent</code>和孩子结点<code>children</code>的指针，其中<code>children</code>是一个<code>Node</code>指针类型的vector，vector的大小由<code>TreeClusterOptions</code>中的<code>branch_factor</code>参数指定，这个值默认为2，所以我们这里使用的树是二叉树，每个结点最多只有两个孩子结点。</li>
+<li><code>Node</code>保存着属于该结点的所有统计量之和<code>node_total</code>。统计量就是该结点中的音素对应的所有特征向量的出现次数<code>count_</code>、特征向量之和以及特征向量的平方和，统计量用来计算该结点的似然L(s)。</li>
+<li><code>Node</code>还保存着该结点是否是叶子结点<code>is_leaf</code>，以及是叶子结点时在leaf_nodes中的索引和不是叶子结点时在nonleaf_nodes中的索引<code>index</code>。</li>
+<li>如果是叶子结点，保存着<code>leaf</code>对象，<code>leaf</code>成员变量包含：属于该叶子的那些点的统计量<code>points</code>，以及该叶子上拥有的那些点在所有点组成的vector中的索引<code>point_indices</code>（也就是在TreeClusterer对象points成员中的索引）。用<code>best_split</code>保存着对该叶子结点进行最优划分时，获得的最大的似然提升。对该叶子结点划分意味着生成两个新的簇（或者说两个新的孩子结点），<code>assignments</code>中就保存着对该叶子结点进行最优划分后，该叶子结点中的点分别被划分到哪个簇（或者说分别被划分到哪个孩子结点）。</li>
+</ul>
+<p>下面看一下TreeClusterer的成员变量</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">*&gt;</span> <span class="n">leaf_nodes_</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Node</span><span class="o">*&gt;</span> <span class="n">nonleaf_nodes_</span><span class="p">;</span>
+<span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Clusterable</span><span class="o">*&gt;</span> <span class="o">&amp;</span><span class="n">points_</span><span class="p">;</span>
+<span class="n">int32</span> <span class="n">max_clust_</span><span class="p">;</span>
+<span class="n">BaseFloat</span> <span class="n">ans_</span><span class="p">;</span>  <span class="c1">// objf improvement.
+</span><span class="c1"></span><span class="n">std</span><span class="o">::</span><span class="n">priority_queue</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">BaseFloat</span><span class="p">,</span> <span class="n">Node</span><span class="o">*&gt;</span> <span class="o">&gt;</span> <span class="n">queue_</span><span class="p">;</span>  <span class="c1">// contains leaves.
+</span><span class="c1"></span><span class="n">TreeClusterOptions</span> <span class="n">cfg_</span><span class="p">;</span>
+</code></pre></div><ul>
+<li><code>TreeClusterer</code>中构造的树的结点分为两类：叶子结点和非叶子结点。叶子结点放在<code>leaf_nodes_</code>中，非叶子结点放在<code>nonleaf_nodes_</code>中，每个结点<code>Node</code>的数据结构中保存着该<code>Node</code>是否为叶子结点以及在这两个向量中的索引。</li>
+<li><code>points</code>中保存着初始化<code>TreeClusterer</code>对象时传递进来的<code>summed_stats_per_set</code>统计量，该对象的聚类过程，就是为了把这些统计量分成一簇簇(cluster)。</li>
+<li><code>queue_</code>是一个优先队列，队列中的每个元素是一个对，这个对的第二个数据保存着结点信息，这个对的第一个数据是对该结点进行划分时所获得的似然的最大提升。使用优先队列则说明，对似然提升最大的结点优先进行划分</li>
+</ul>
+<h4 id="treeclusterer对象初始化">TreeClusterer对象初始化</h4>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">TreeClusterer</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Clusterable</span><span class="o">*&gt;</span> <span class="o">&amp;</span><span class="n">points</span><span class="p">,</span>
+              <span class="n">int32</span> <span class="n">max_clust</span><span class="p">,</span>
+              <span class="n">TreeClusterOptions</span> <span class="n">cfg</span><span class="p">)</span><span class="o">:</span>
+      <span class="n">points_</span><span class="p">(</span><span class="n">points</span><span class="p">),</span> <span class="n">max_clust_</span><span class="p">(</span><span class="n">max_clust</span><span class="p">),</span> <span class="n">ans_</span><span class="p">(</span><span class="mf">0.0</span><span class="p">),</span> <span class="n">cfg_</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span>
+ <span class="p">{</span>
+    <span class="n">KALDI_ASSERT</span><span class="p">(</span><span class="n">cfg_</span><span class="p">.</span><span class="n">branch_factor</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">);</span>
+    <span class="n">Init</span><span class="p">();</span>
+ <span class="p">}</span>
+</code></pre></div><p>首先初始化<code>TreeClusterer</code>对象的一些数据成员，然后调用<code>Init()</code>完成剩余的初始化工作。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="kt">void</span> <span class="nf">Init</span><span class="p">()</span> <span class="p">{</span>  <span class="c1">// Initializes top node
+</span><span class="c1"></span>  <span class="n">Node</span> <span class="o">*</span><span class="n">top_node</span> <span class="o">=</span> <span class="k">new</span> <span class="n">Node</span><span class="p">;</span>
+  <span class="n">top_node</span><span class="o">-&gt;</span><span class="n">index</span> <span class="o">=</span> <span class="n">leaf_nodes_</span><span class="p">.</span><span class="n">size</span><span class="p">();</span> <span class="c1">// ==0 currently
+</span><span class="c1"></span>  <span class="n">top_node</span><span class="o">-&gt;</span><span class="n">parent</span> <span class="o">=</span> <span class="nb">NULL</span><span class="p">;</span>  <span class="c1">// no parent since root of tree
+</span><span class="c1"></span>  <span class="n">top_node</span><span class="o">-&gt;</span><span class="n">is_leaf</span> <span class="o">=</span> <span class="nb">true</span><span class="p">;</span>
+  <span class="n">leaf_nodes_</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">top_node</span><span class="p">);</span>
+  <span class="n">top_node</span><span class="o">-&gt;</span><span class="n">leaf</span><span class="p">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">points_</span><span class="p">;</span>
+  <span class="n">top_node</span><span class="o">-&gt;</span><span class="n">node_total</span> <span class="o">=</span> <span class="n">SumClusterable</span><span class="p">(</span><span class="n">points_</span><span class="p">);</span>
+  <span class="n">top_node</span><span class="o">-&gt;</span><span class="n">leaf</span><span class="p">.</span><span class="n">point_indices</span><span class="p">.</span><span class="n">resize</span><span class="p">(</span><span class="n">points_</span><span class="p">.</span><span class="n">size</span><span class="p">());</span>
+  <span class="k">for</span> <span class="p">(</span><span class="n">size_t</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span><span class="n">i</span><span class="o">&lt;</span><span class="n">points_</span><span class="p">.</span><span class="n">size</span><span class="p">();</span><span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="n">top_node</span><span class="o">-&gt;</span><span class="n">leaf</span><span class="p">.</span><span class="n">point_indices</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">i</span><span class="p">;</span>
+  <span class="n">FindBestSplit</span><span class="p">(</span><span class="n">top_node</span><span class="p">);</span>  <span class="c1">// this should always be called when new node is created.
+</span><span class="c1"></span> <span class="p">}</span>
+</code></pre></div><p><code>Init()</code>生成树的根结点<code>top_node</code>，根结点包含传递给该对象的所有点<code>points_</code>，初始化根结点<code>top_node</code>的信息，包括is_leaf=true、index=0、parent=NULL、node_total和leaf中的成员，并把该根结点<code>top_node</code>放进<code>leaf_nodes_</code>中。
+每当创建新结点node的时候（一般为叶子结点），应该总是调用<code>FindBestSplit(node)</code>函数。该函数的作用是找到对新结点node的最优划分，即采取该划分时，获得的似然提升最大；并把最优划分时获得的似然提升记录在该node的<code>leaf.best_split</code>中。若该<code>best_split</code>超过cfg指定的似然阈值thresh，则把(best_split, node)对放进优先队列<code>queue</code>中。该函数调用<code>ClusterKMeans</code>找到对属于该node的点的最优的划分和对应的似然提升，<code>ClusterKMeans</code>的细节我们在后面再提及，这里可以先略过。 
+因为<code>top_node</code>是新建的且唯一的叶子结点，所以在<code>Init()</code>的末尾，调用<code>FindBestSplit(top_node)</code>，找到对<code>top_node</code>的最优划分，将属于top_node的点划分成两簇，每一簇对应一个孩子结点，同时将该划分的最大似然提升记录在<code>top_node-&gt;leaf.best_split</code>中，并把对<code>pair&lt;leaf.best_split, top_node&gt;</code>放进优先队列<code>queue_</code>中。</p>
+<h4 id="treeclustererclusterkmeans">TreeClusterer.ClusterKMeans</h4>
+<p><code>ClusterKMeans</code>是类似K-Means的聚类算法，作用为将当前结点聚类为<code>branch_factor</code>个簇，使得聚类后的簇的似然提升最大。由于K-Means聚类依赖初始值的设定，因此重复调用<code>cfg.num_tries</code>次聚类<code>ClusterKMeansOnce</code>，取<code>ClusterKMeansOnce</code>返回值即似然提升最大的那次。</p>
+<p><code>ClusterKMeansOnce</code>即为单次聚类算法。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"> <span class="k">for</span> <span class="p">(</span><span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">count</span> <span class="o">!=</span> <span class="n">num_points</span><span class="p">;</span><span class="n">i</span> <span class="o">=</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="n">skip</span><span class="p">)</span><span class="o">%</span><span class="n">num_points</span><span class="p">,</span> <span class="n">j</span> <span class="o">=</span> <span class="p">(</span><span class="n">j</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span><span class="o">%</span><span class="n">num_clust</span><span class="p">,</span> <span class="n">count</span><span class="o">++</span><span class="p">){</span>
+     <span class="k">if</span> <span class="p">((</span><span class="o">*</span><span class="n">clusters_out</span><span class="p">)[</span><span class="n">j</span><span class="p">]</span> <span class="o">==</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">(</span><span class="o">*</span><span class="n">clusters_out</span><span class="p">)[</span><span class="n">j</span><span class="p">]</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">Copy</span><span class="p">();</span>
+     <span class="k">else</span> <span class="p">(</span><span class="o">*</span><span class="n">clusters_out</span><span class="p">)[</span><span class="n">j</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="p">]));</span>
+     <span class="p">(</span><span class="o">*</span><span class="n">assignments_out</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">j</span><span class="p">;</span>
+ <span class="p">}</span>
+</code></pre></div><p>首先将所有点随机分到<code>num_clust</code>个簇中，<code>num_clust</code>即为接收的<code>branch_factor</code>参数，默认为2。<code>skip</code>是在1~<code>num_points</code>之间且与<code>num_points</code>互质的数，</p>
+<p>每个点的聚类结果保存到<code>assignments_out</code>中，即0或者1分别表示分到左结点或者右结点。每个簇的统计量的累加结果保存到<code>clusters_out</code>中。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="k">for</span> <span class="p">(</span><span class="n">int32</span> <span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span><span class="n">iter</span> <span class="o">&lt;</span> <span class="n">cfg</span><span class="p">.</span><span class="n">num_iters</span><span class="p">;</span><span class="n">iter</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Keep refining clusters by reassigning points.
+</span><span class="c1"></span>    <span class="n">BaseFloat</span> <span class="n">objf_before</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">cfg</span><span class="p">.</span><span class="n">verbose</span><span class="p">)</span> <span class="n">objf_before</span> <span class="o">=</span> <span class="n">SumClusterableObjf</span><span class="p">(</span><span class="o">*</span><span class="n">clusters_out</span><span class="p">);</span>
+    <span class="n">BaseFloat</span> <span class="n">impr</span> <span class="o">=</span> <span class="n">RefineClusterers</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">clusters_out</span><span class="p">,</span> <span class="n">assignments_out</span><span class="p">,</span> <span class="n">cfg</span><span class="p">.</span><span class="n">refine_cfg</span><span class="p">);</span>
+    <span class="n">BaseFloat</span> <span class="n">objf_after</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">cfg</span><span class="p">.</span><span class="n">verbose</span><span class="p">)</span> <span class="n">objf_after</span> <span class="o">=</span> <span class="n">SumClusterableObjf</span><span class="p">(</span><span class="o">*</span><span class="n">clusters_out</span><span class="p">);</span>
+    <span class="n">ans</span> <span class="o">+=</span> <span class="n">impr</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">impr</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">break</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div><p>再对每个点随机分配到簇中后，循环调用<code>cfg.num_iters</code>次优化聚类函数<code>RefineClusterers</code>，直至优化后的似然不再增加，返回最终的似然值。</p>
+<p><code>RefineClusterers</code>通过定义了<code>RefineClusterer</code>对象来调整每个点所属的簇，其过程和K-Means类似，具体原理如下。</p>
+<h4 id="refineclusterer对象">RefineClusterer对象</h4>
+<p><code>RefineClusterer</code>的成员变量</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="k">typedef</span> <span class="k">struct</span> <span class="p">{</span>
+    <span class="n">LocalInt</span> <span class="n">clust</span><span class="p">;</span>
+    <span class="n">LocalInt</span> <span class="n">time</span><span class="p">;</span>
+    <span class="n">BaseFloat</span> <span class="n">objf</span><span class="p">;</span>  <span class="c1">// Objf of this cluster plus this point (or minus, if own cluster).
+</span><span class="c1"></span>    <span class="p">}</span> <span class="n">point_info</span><span class="p">;</span>
+<span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Clusterable</span><span class="o">*&gt;</span> <span class="n">points_</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Clusterable</span><span class="o">*&gt;</span> <span class="o">*</span><span class="n">clusters_</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">assignments_</span><span class="p">;</span>
+
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">point_info</span><span class="o">&gt;</span> <span class="n">info_</span><span class="p">;</span> <span class="c1">// size is [num_points_ * cfg_.top_n]
+</span><span class="c1"></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">ClustIndexInt</span><span class="o">&gt;</span> <span class="n">my_clust_index_</span><span class="p">;</span> <span class="c1">// says for each point, which index 0...cfg_.top_n-1 current 
+</span><span class="c1"></span>							<span class="c1">// corresponds to its own cluster
+</span><span class="c1"></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">LocalInt</span><span class="o">&gt;</span> <span class="n">clust_time_</span><span class="p">;</span>			<span class="c1">// Modification time of cluster
+</span><span class="c1"></span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">BaseFloat</span><span class="o">&gt;</span> <span class="n">clust_objf_</span><span class="p">;</span>			<span class="c1">// [clust], objf for cluster
+</span><span class="c1"></span>
+<span class="n">BaseFloat</span> <span class="n">ans_</span><span class="p">;</span>  <span class="c1">// objf improvment
+</span><span class="c1"></span>
+<span class="n">int32</span> <span class="n">num_clust_</span><span class="p">;</span>
+<span class="n">int32</span> <span class="n">num_points_</span><span class="p">;</span>
+<span class="n">int32</span> <span class="n">t_</span><span class="p">;</span>
+<span class="n">RefineClustersOptions</span> <span class="n">cfg_</span><span class="p">;</span> 
+</code></pre></div><p><code>point_info</code>结构体表示一个&lt;点——簇&gt;的对应信息，包括点对应的簇索引<code>clust</code>、修改次数<code>time</code>和修改引起的似然变化<code>objf</code>。对于每个点，<code>info_</code>保存了<code>top_n-1</code>个似然提升最大的&lt;点——簇&gt;信息，以及当前所属簇的&lt;点——簇&gt;信息，因此<code>point_info</code>的总大小为<code>num_points_</code> * <code>top_n</code>。</p>
+<p>举例来说，若有100个点，top_n为3，则point_info大小为300。前两列为将该点划分到其它簇，其它簇似然提升最大的2(<code>top_n-1</code>)个簇的相关信息，最后一列为该点当前所属簇的相关信息。如下表所示，point0目前在簇0中，将point0分到簇2和簇1中似然提升最大，分别为0.26和0.22，则info中存储信息为第一行所示。</p>
+<p>注意，前两列是按照似然的提升值$\Delta objf$从大到小排序，并不是按照提升后的似然绝对值从大到小排序，表中存储的值是提升后(最后一列为下降后)的似然值。</p>
+<table>
+<thead>
+<tr>
+<th>point_info</th>
+<th>index0</th>
+<th>index1</th>
+<th>index2</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>point 0</strong></td>
+<td>2，0，0.22</td>
+<td>1，0，0.28</td>
+<td>0，0，0.36</td>
+</tr>
+<tr>
+<td>&hellip;</td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><strong>point 99</strong></td>
+<td>0，0，0.46</td>
+<td>1，0，0.32</td>
+<td>2，0，0.25</td>
+</tr>
+</tbody>
+</table>
+<h4 id="refineclusterer对象初始化">RefineClusterer对象初始化</h4>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">RefineClusterer</span><span class="p">(</span><span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Clusterable</span><span class="o">*&gt;</span> <span class="o">&amp;</span><span class="n">points</span><span class="p">,</span>
+                <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Clusterable</span><span class="o">*&gt;</span> <span class="o">*</span><span class="n">clusters</span><span class="p">,</span>
+                <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">assignments</span><span class="p">,</span>
+                <span class="n">RefineClustersOptions</span> <span class="n">cfg</span><span class="p">)</span>
+    <span class="o">:</span> <span class="n">points_</span><span class="p">(</span><span class="n">points</span><span class="p">),</span> <span class="n">clusters_</span><span class="p">(</span><span class="n">clusters</span><span class="p">),</span> <span class="n">assignments_</span><span class="p">(</span><span class="n">assignments</span><span class="p">),</span> <span class="n">cfg_</span><span class="p">(</span><span class="n">cfg</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">cfg_</span><span class="p">.</span><span class="n">top_n</span> <span class="o">&gt;</span> <span class="p">(</span><span class="n">int32</span><span class="p">)</span> <span class="n">num_clust_</span><span class="p">)</span> <span class="n">cfg_</span><span class="p">.</span><span class="n">top_n</span> <span class="o">=</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="p">(</span><span class="n">num_clust_</span><span class="p">);</span>
+    <span class="n">t_</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">my_clust_index_</span><span class="p">.</span><span class="n">resize</span><span class="p">(</span><span class="n">num_points_</span><span class="p">);</span>
+    <span class="n">clust_time_</span><span class="p">.</span><span class="n">resize</span><span class="p">(</span><span class="n">num_clust_</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span>
+    <span class="n">clust_objf_</span><span class="p">.</span><span class="n">resize</span><span class="p">(</span><span class="n">num_clust_</span><span class="p">);</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">int32</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">num_clust_</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+        <span class="n">clust_objf_</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">clusters_</span><span class="p">)[</span><span class="n">i</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">Objf</span><span class="p">();</span>
+    <span class="n">info_</span><span class="p">.</span><span class="n">resize</span><span class="p">(</span><span class="n">num_points_</span> <span class="o">*</span> <span class="n">cfg_</span><span class="p">.</span><span class="n">top_n</span><span class="p">);</span>
+    <span class="n">ans_</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">InitPoints</span><span class="p">();</span>
+<span class="p">}</span>
+</code></pre></div><p>首先通过传递的参数初始化<code>RefineClusterer</code>对象的数据成员<code>points_</code>、<code>clusters_</code>和<code>assignments_</code>，分别表示每个点的统计量，每个簇的统计量和每个点对应簇的索引。<code>clust_objf_</code>保存每个簇的似然值，最后<code>InitPoints()</code>为对每个点调用<code>InitPoint()</code>。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="kt">void</span> <span class="nf">InitPoint</span><span class="p">(</span><span class="n">int32</span> <span class="n">point</span><span class="p">)</span> <span class="p">{</span>
+	<span class="c1">// Find closest clusters to this point.
+</span><span class="c1"></span>    <span class="c1">// distances are really negated objf changes, ignoring terms that don&#39;t vary with the &#34;other&#34; cluster.
+</span><span class="c1"></span>    <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">BaseFloat</span><span class="p">,</span> <span class="n">LocalInt</span><span class="o">&gt;</span> <span class="o">&gt;</span> <span class="n">distances</span><span class="p">;</span>
+    <span class="n">distances</span><span class="p">.</span><span class="n">reserve</span><span class="p">(</span><span class="n">num_clust_</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+    <span class="n">int32</span> <span class="n">my_clust</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">assignments_</span><span class="p">)[</span><span class="n">point</span><span class="p">];</span>
+    <span class="n">Clusterable</span> <span class="o">*</span><span class="n">point_cl</span> <span class="o">=</span> <span class="n">points_</span><span class="p">[</span><span class="n">point</span><span class="p">];</span>
+
+	<span class="k">for</span> <span class="p">(</span><span class="n">int32</span> <span class="n">clust</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span><span class="n">clust</span> <span class="o">&lt;</span> <span class="n">num_clust_</span><span class="p">;</span><span class="n">clust</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">clust</span> <span class="o">!=</span> <span class="n">my_clust</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">Clusterable</span> <span class="o">*</span><span class="n">tmp</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">clusters_</span><span class="p">)[</span><span class="n">clust</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">Copy</span><span class="p">();</span>
+            <span class="n">tmp</span><span class="o">-&gt;</span><span class="n">Add</span><span class="p">(</span><span class="o">*</span><span class="n">point_cl</span><span class="p">);</span>
+            <span class="n">BaseFloat</span> <span class="n">other_clust_objf</span> <span class="o">=</span> <span class="n">clust_objf_</span><span class="p">[</span><span class="n">clust</span><span class="p">];</span>
+            <span class="n">BaseFloat</span> <span class="n">other_clust_plus_me_objf</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">clusters_</span><span class="p">)[</span><span class="n">clust</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">ObjfPlus</span><span class="p">(</span><span class="o">*</span> <span class="p">(</span><span class="n">points_</span><span class="p">[</span><span class="n">point</span><span class="p">]));</span>
+            <span class="n">BaseFloat</span> <span class="n">distance</span> <span class="o">=</span> <span class="n">other_clust_objf</span> <span class="o">-</span> <span class="n">other_clust_plus_me_objf</span><span class="p">;</span>
+            <span class="n">distances</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="p">(</span><span class="n">distance</span><span class="p">,</span> <span class="p">(</span><span class="n">LocalInt</span><span class="p">)</span><span class="n">clust</span><span class="p">));</span>
+            <span class="k">delete</span> <span class="n">tmp</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="p">((</span><span class="n">cfg_</span><span class="p">.</span><span class="n">top_n</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">nth_element</span><span class="p">(</span><span class="n">distances</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">distances</span><span class="p">.</span><span class="n">begin</span><span class="p">()</span> <span class="o">+</span> <span class="p">(</span><span class="n">cfg_</span><span class="p">.</span><span class="n">top_n</span><span class="o">-</span><span class="mi">1</span><span class="o">-</span><span class="mi">1</span><span class="p">),</span> <span class="n">distances</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
+    <span class="p">}</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">int32</span> <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span><span class="n">index</span> <span class="o">&lt;</span> <span class="n">cfg_</span><span class="p">.</span><span class="n">top_n</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span><span class="n">index</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">point_info</span> <span class="o">&amp;</span><span class="n">info</span> <span class="o">=</span> <span class="n">GetInfo</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">index</span><span class="p">);</span>
+        <span class="n">int32</span> <span class="n">clust</span> <span class="o">=</span> <span class="n">distances</span><span class="p">[</span><span class="n">index</span><span class="p">].</span><span class="n">second</span><span class="p">;</span>
+        <span class="n">info</span><span class="p">.</span><span class="n">clust</span> <span class="o">=</span> <span class="n">clust</span><span class="p">;</span>
+        <span class="n">BaseFloat</span> <span class="n">distance</span> <span class="o">=</span> <span class="n">distances</span><span class="p">[</span><span class="n">index</span><span class="p">].</span><span class="n">first</span><span class="p">;</span>
+        <span class="n">BaseFloat</span> <span class="n">other_clust_objf</span> <span class="o">=</span> <span class="n">clust_objf_</span><span class="p">[</span><span class="n">clust</span><span class="p">];</span>
+        <span class="n">BaseFloat</span> <span class="n">other_clust_plus_me_objf</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="n">distance</span> <span class="o">-</span> <span class="n">other_clust_objf</span><span class="p">);</span>
+        <span class="n">info</span><span class="p">.</span><span class="n">objf</span> <span class="o">=</span> <span class="n">other_clust_plus_me_objf</span><span class="p">;</span>
+        <span class="n">info</span><span class="p">.</span><span class="n">time</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="c1">// now put the last element in, which is my current cluster.
+</span><span class="c1"></span>    <span class="n">point_info</span> <span class="o">&amp;</span><span class="n">info</span> <span class="o">=</span> <span class="n">GetInfo</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">cfg_</span><span class="p">.</span><span class="n">top_n</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+    <span class="n">info</span><span class="p">.</span><span class="n">clust</span> <span class="o">=</span> <span class="n">my_clust</span><span class="p">;</span>
+    <span class="n">info</span><span class="p">.</span><span class="n">time</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+    <span class="n">info</span><span class="p">.</span><span class="n">objf</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">clusters_</span><span class="p">)[</span><span class="n">my_clust</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">ObjfMinus</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">points_</span><span class="p">[</span><span class="n">point</span><span class="p">]));</span>
+    <span class="n">my_clust_index_</span><span class="p">[</span><span class="n">point</span><span class="p">]</span> <span class="o">=</span> <span class="n">cfg_</span><span class="p">.</span><span class="n">top_n</span><span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div><p><code>InitPoint</code>目的是计算和当前点距离最小的<code>top_n-1</code>个簇。这里的距离指的是别的簇的似然<code>other_clust_objf</code>减去将当前点归类到别的簇的后的似然<code>other_clust_plus_me_objf</code>，那么距离最小簇的即为似然变化最大的簇。首先将当前点和其他所有簇的&lt;距离，索引&gt;以pair的形式保存到<code>distances</code>中。然后通过<code>std::nth_element</code>使得<code>distances</code>中前面<code>top_n-1</code>个值即为我们想要的距离最小的值。</p>
+<p>对每一个点，将距离最近的<code>top_n-1</code>个簇以及目前所属的簇的信息保存到<code>point_info</code>中。每个点的info的索引为0~top_n-1，top_n-1为目前所属簇的info索引。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="kt">void</span> <span class="nf">Iterate</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">iter</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span><span class="n">iter</span> <span class="o">&lt;</span> <span class="n">num_iters</span><span class="p">;</span><span class="n">iter</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">int32</span> <span class="n">cur_t</span> <span class="o">=</span> <span class="n">t_</span><span class="p">;</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">int32</span> <span class="n">point</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span><span class="n">point</span> <span class="o">&lt;</span> <span class="n">num_points_</span><span class="p">;</span><span class="n">point</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+            <span class="p">...</span>
+            <span class="n">ProcessPoint</span><span class="p">(</span><span class="n">point</span><span class="p">);</span>
+        <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div><p><code>Init()</code>后，调用<code>Iterate()</code>函数，迭代<code>num_iters</code>次。迭代通过调用<code>ProcessPoint</code>函数，依次处理每一个点。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">int32</span> <span class="n">self_index</span> <span class="o">=</span> <span class="n">my_clust_index_</span><span class="p">[</span><span class="n">point</span><span class="p">];</span>
+<span class="n">point_info</span> <span class="o">&amp;</span><span class="n">self_info</span> <span class="o">=</span> <span class="n">GetInfo</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">self_index</span><span class="p">);</span>
+<span class="n">int32</span> <span class="n">self_clust</span> <span class="o">=</span> <span class="n">self_info</span><span class="p">.</span><span class="n">clust</span><span class="p">;</span>
+
+<span class="kt">float</span> <span class="n">own_clust_objf</span> <span class="o">=</span> <span class="n">clust_objf_</span><span class="p">[</span><span class="n">self_clust</span><span class="p">];</span>
+<span class="kt">float</span> <span class="n">own_clust_minus_me_objf</span> <span class="o">=</span> <span class="n">self_info</span><span class="p">.</span><span class="n">objf</span><span class="p">;</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">int32</span> <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span><span class="n">index</span> <span class="o">&lt;</span> <span class="n">cfg_</span><span class="p">.</span><span class="n">top_n</span><span class="p">;</span><span class="n">index</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">index</span> <span class="o">!=</span> <span class="n">self_index</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">UpdateInfo</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">index</span><span class="p">);</span>
+        <span class="n">point_info</span> <span class="o">&amp;</span><span class="n">other_info</span> <span class="o">=</span> <span class="n">GetInfo</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">index</span><span class="p">);</span>
+        <span class="n">BaseFloat</span> <span class="n">other_clust_objf</span> <span class="o">=</span> <span class="n">clust_objf_</span><span class="p">[</span><span class="n">other_info</span><span class="p">.</span><span class="n">clust</span><span class="p">];</span>
+        <span class="n">BaseFloat</span> <span class="n">other_clust_plus_me_objf</span> <span class="o">=</span> <span class="n">other_info</span><span class="p">.</span><span class="n">objf</span><span class="p">;</span>
+        <span class="n">BaseFloat</span> <span class="n">impr</span> <span class="o">=</span> <span class="n">other_clust_plus_me_objf</span> <span class="o">+</span> <span class="n">own_clust_minus_me_objf</span> <span class="o">-</span> <span class="n">other_clust_objf</span> <span class="o">-</span> <span class="n">own_clust_objf</span><span class="p">;</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">impr</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>  <span class="c1">// better to switch
+</span><span class="c1"></span>            <span class="n">ans_</span> <span class="o">+=</span> <span class="n">impr</span><span class="p">;</span>
+            <span class="n">MovePoint</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">index</span><span class="p">);</span>
+            <span class="k">return</span><span class="p">;</span>  
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div><p>注意<code>self_index</code>和<code>self_clust</code>的区别，前者是info索引，后者则是目前所属的clust索引。遍历该点对应的<code>point_info</code>，若将当前点划分到别的簇似然有提升，即<code>impr</code>为正，则调用<code>MovePoint</code>将该点移动到别的簇中。每次遍历前，调用<code>UpdateInfo</code>，根据修改次数<code>clust_time_</code>决定是否要更新<code>point_info</code>。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="kt">void</span> <span class="nf">MovePoint</span><span class="p">(</span><span class="n">int32</span> <span class="n">point</span><span class="p">,</span> <span class="n">int32</span> <span class="n">new_index</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">t_</span><span class="o">++</span><span class="p">;</span>
+    <span class="n">int32</span> <span class="n">old_index</span> <span class="o">=</span> <span class="n">my_clust_index_</span><span class="p">[</span><span class="n">point</span><span class="p">];</span>
+    <span class="n">point_info</span> <span class="o">&amp;</span><span class="n">old_info</span> <span class="o">=</span> <span class="n">GetInfo</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">old_index</span><span class="p">),</span>
+    	<span class="o">&amp;</span><span class="n">new_info</span> <span class="o">=</span> <span class="n">GetInfo</span><span class="p">(</span><span class="n">point</span><span class="p">,</span> <span class="n">new_index</span><span class="p">);</span>
+    <span class="n">my_clust_index_</span><span class="p">[</span><span class="n">point</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_index</span><span class="p">;</span>
+    
+    <span class="n">int32</span> <span class="n">old_clust</span> <span class="o">=</span> <span class="n">old_info</span><span class="p">.</span><span class="n">clust</span><span class="p">,</span> <span class="n">new_clust</span> <span class="o">=</span> <span class="n">new_info</span><span class="p">.</span><span class="n">clust</span><span class="p">;</span>
+    <span class="p">(</span><span class="o">*</span><span class="n">assignments_</span><span class="p">)[</span><span class="n">point</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_clust</span><span class="p">;</span>
+    <span class="p">(</span><span class="o">*</span><span class="n">clusters_</span><span class="p">)[</span><span class="n">old_clust</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">Sub</span><span class="p">(</span> <span class="o">*</span><span class="p">(</span><span class="n">points_</span><span class="p">[</span><span class="n">point</span><span class="p">])</span> <span class="p">);</span>
+    <span class="p">(</span><span class="o">*</span><span class="n">clusters_</span><span class="p">)[</span><span class="n">new_clust</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">Add</span><span class="p">(</span> <span class="o">*</span><span class="p">(</span><span class="n">points_</span><span class="p">[</span><span class="n">point</span><span class="p">])</span> <span class="p">);</span>
+    <span class="n">UpdateClust</span><span class="p">(</span><span class="n">old_clust</span><span class="p">);</span>
+    <span class="n">UpdateClust</span><span class="p">(</span><span class="n">new_clust</span><span class="p">);</span>
+<span class="p">}</span>
+<span class="kt">void</span> <span class="nf">UpdateClust</span><span class="p">(</span><span class="n">int32</span> <span class="n">clust</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">clust_objf_</span><span class="p">[</span><span class="n">clust</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="o">*</span><span class="n">cluster_</span><span class="p">)[</span><span class="n">clust</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">Objf</span><span class="p">();</span>
+    <span class="n">clust_time_</span><span class="p">[</span><span class="n">clust</span><span class="p">]</span> <span class="o">=</span> <span class="n">t_</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div><p><code>MovePoint</code>更新<code>my_clust_index_</code>为新的index，更新<code>assignments_</code>为新的clust，新旧簇的统计量分别增加和减去该点的统计量，最后更新新旧簇的似然和修改次数。</p>
+<h2 id="treeclusterer">TreeClusterer</h2>
+<p>至此，<code>TreeClusterer</code>的<code>Init()</code>结束，初始根节点<code>top_node</code>和根节点的似然最大提升保存到优先队列<code>queue_</code>中。接下来调用<code>TreeClusterer</code>的<code>Cluster</code>函数。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">BaseFloat</span> <span class="nf">Cluster</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">Clusterable</span><span class="o">*&gt;</span> <span class="o">*</span><span class="n">clusters_out</span><span class="p">,</span>
+                  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">assignments_out</span><span class="p">,</span>
+                  <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="o">*</span><span class="n">clust_assignments_out</span><span class="p">,</span>
+                  <span class="n">int32</span> <span class="o">*</span><span class="n">num_leaves_out</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">while</span> <span class="p">(</span><span class="k">static_cast</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span><span class="p">(</span><span class="n">leaf_nodes_</span><span class="p">.</span><span class="n">size</span><span class="p">())</span> <span class="o">&lt;</span> <span class="n">max_clust_</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="n">queue_</span><span class="p">.</span><span class="n">empty</span><span class="p">())</span> <span class="p">{</span>
+        <span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">BaseFloat</span><span class="p">,</span> <span class="n">Node</span><span class="o">*&gt;</span> <span class="n">pr</span> <span class="o">=</span> <span class="n">queue_</span><span class="p">.</span><span class="n">top</span><span class="p">();</span>
+        <span class="n">queue_</span><span class="p">.</span><span class="n">pop</span><span class="p">();</span>
+        <span class="n">ans_</span> <span class="o">+=</span> <span class="n">pr</span><span class="p">.</span><span class="n">first</span><span class="p">;</span>
+        <span class="n">DoSplit</span><span class="p">(</span><span class="n">pr</span><span class="p">.</span><span class="n">second</span><span class="p">);</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div><p>依次取出优先队列中元素，调用<code>DoSplit</code>进行分裂。<code>DoSplit</code>函数的作用为生成节点的子节点，然后对每个子节点分别调用<code>FindBestSplit</code>进行分裂，分裂结果如果大于阈值，继续保存到优先队列中。</p>
+<p>至此<code>TreeCluster</code>函数结束，<code>assignments</code>中保存<code>summed_stats_per_set</code>每个元素的叶子结点索引，<code>clust_assignments</code>保存树中每个结点的父结点索引，<code>num_leaves_out</code>保存叶子结点的数目。</p>
+<h2 id="obtainsetsofphones">ObtainSetsOfPhones</h2>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="c1">// process the information obtained by TreeCluster into the
+</span><span class="c1">// form we want at output.
+</span><span class="c1"></span><span class="n">ObtainSetsOfPhones</span><span class="p">(</span><span class="n">phone_sets</span><span class="p">,</span>
+                   <span class="n">assignments</span><span class="p">,</span>
+                   <span class="n">clust_assignments</span><span class="p">,</span>
+                   <span class="n">num_leaves</span><span class="p">,</span>
+                   <span class="n">questions_out</span><span class="p">);</span>
+</code></pre></div><p><code>ObtainSetsOfPhones</code>，由<code>TreeCluster</code>得到的信息，生成问题集。先解释下该函数的几个参数：</p>
+<ul>
+<li>
+<p><code>phone_sets</code>：由sets.int生成，每个元素代表sets.int中一行上的音素集</p>
+</li>
+<li>
+<p><code>assignments</code>：phone_sets中每个元素所属的cluster(叶子结点)</p>
+</li>
+<li>
+<p><code>clust_assignments</code>：<code>TreeCluster</code>生成的树的每个结点的父结点</p>
+</li>
+<li>
+<p><code>num_leaves</code>：<code>TreeCluster</code>生成的树的叶子个数</p>
+</li>
+<li>
+<p><code>question_out</code>：生成的问题集</p>
+</li>
+</ul>
+<p>函数内容： 
+a) 得到每个cluster（叶子结点）中的音素集； 
+b) 将子结点的音素集加入到其父结点的音素集中（实现了“把从该结点可以到达的所有叶子结点合在一起构成一个问题”）； 
+c) 把原始的phone_set插入到问题集； 
+d) 过滤问题集的重复项、空项，生成最终的问题集。</p>
+<p>在获得问题集questions.txt后，通过<code>compile-questions</code>设置问题，生成questions.fst。</p>
+<h2 id="questionsforkey">QuestionsForKey</h2>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="k">struct</span> <span class="nc">QuestionsForKey</span> <span class="p">{</span>
+	<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">EventValueType</span><span class="o">&gt;</span> <span class="o">&gt;</span> <span class="n">initial_questions</span><span class="p">;</span>
+	<span class="n">RefineClustersOptions</span> <span class="n">refine_opts</span><span class="p">;</span>
+    <span class="p">...</span>
+<span class="p">}</span>
+</code></pre></div><p><code>QuestionsForKey</code>结构体中定义了key（即phone或state）对应的问题集<code>initial_questions</code>，以及优化问题集时的参数<code>refine_opts</code>。</p>
+<h2 id="questions">Questions</h2>
+<h4 id="成员变量">成员变量</h4>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">QuestionsForKey</span><span class="o">*&gt;</span> <span class="n">key_options_</span><span class="p">;</span>
+<span class="n">std</span><span class="o">::</span><span class="n">map</span><span class="o">&lt;</span><span class="n">EventKeyType</span><span class="p">,</span> <span class="n">size_t</span><span class="o">&gt;</span> <span class="n">key_idx_</span><span class="p">;</span>
+</code></pre></div><p><code>key_options_</code>保存某个key的问题集和参数，<code>key_idx_</code>则以&lt;key，index&gt;的形式保存了key以及其在<code>key_options_</code>中的索引。</p>
+<h4 id="setquestionsof">SetQuestionsOf</h4>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="kt">void</span> <span class="nf">SetQuestionsOf</span><span class="p">(</span><span class="n">EventKeyType</span> <span class="n">key</span><span class="p">,</span> <span class="k">const</span> <span class="n">QuestionsForKey</span> <span class="o">&amp;</span><span class="n">options_of_key</span><span class="p">){</span>
+    <span class="n">options_of_key</span><span class="p">.</span><span class="n">Check</span><span class="p">();</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">key_idx_</span><span class="p">.</span><span class="n">count</span><span class="p">(</span><span class="n">key</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">key_idx_</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">key_options_</span><span class="p">.</span><span class="n">size</span><span class="p">();</span>
+        <span class="n">key_options_</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="k">new</span> <span class="n">QuestionsForKey</span><span class="p">());</span>
+        <span class="o">*</span><span class="p">(</span><span class="n">key_options_</span><span class="p">.</span><span class="n">back</span><span class="p">())</span> <span class="o">=</span> <span class="n">options_of_key</span><span class="p">;</span>
+    <span class="p">}</span><span class="k">else</span><span class="p">{</span>
+        <span class="n">size_t</span> <span class="n">idx</span> <span class="o">=</span> <span class="n">key_idx_</span><span class="p">[</span><span class="n">key</span><span class="p">];</span>
+        <span class="n">assert</span><span class="p">(</span><span class="n">idx</span> <span class="o">&lt;</span> <span class="n">key_options_</span><span class="p">.</span><span class="n">size</span><span class="p">());</span>
+        <span class="o">*</span><span class="p">(</span><span class="n">key_options_</span><span class="p">[</span><span class="n">idx</span><span class="p">])</span> <span class="o">=</span> <span class="n">options_of_key</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span> 
+</code></pre></div><p><code>SetQuestionsOf</code>设置给定key的问题集，若给定的key不在<code>key_idx_</code>中，则插入问题集；否则修改key对应的问题集。</p>
+<h2 id="compile-questions">compile-questions</h2>
+<p><code>compile-questions</code>读取上一步生成的questions.txt作为问题集，同时读取topo文件获得每个音素的状态数，生成qustions.fst。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">int32</span> <span class="n">max_num_pdfclasses</span> <span class="o">=</span> <span class="n">ProcessTopo</span><span class="p">(</span><span class="n">topo</span><span class="p">,</span> <span class="n">questions</span><span class="p">);</span>
+</code></pre></div><p>读取qusetions.txt保存到<code>questions</code>，topo保存到<code>topo</code>，检查topo中的每个音素至少出现在一个问题中，返回<code>ProcessTopo</code>获得topo中音素的最大的pdf class数<code>max_num_pdfclasses</code>。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">QuestionsForKey</span> <span class="nf">phone_opts</span><span class="p">(</span><span class="n">num_iters_refine</span><span class="p">);</span>
+<span class="n">phone_opts</span><span class="p">.</span><span class="n">initial_questions</span> <span class="o">=</span> <span class="n">questions</span><span class="p">;</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">int32</span> <span class="n">n</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">n</span> <span class="o">&lt;</span> <span class="n">N</span><span class="p">;</span> <span class="n">n</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">qo</span><span class="p">.</span><span class="n">SetQuestionsOf</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">phone_opts</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div><p>首先设定三音素中每个位置(0，1，2)的问题集，初始问题集均为questions.txt。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">QuestionsForKey</span> <span class="nf">pdfclass_opts</span><span class="p">(</span><span class="n">num_iters_refine</span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="o">&gt;</span> <span class="n">pdfclass_questions</span><span class="p">(</span><span class="n">max_num_pdfclasses</span><span class="o">-</span><span class="mi">1</span><span class="p">);</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">int32</span> <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">max_num_pdfclasses</span> <span class="o">-</span> <span class="mi">1</span><span class="p">;</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span>
+    <span class="k">for</span> <span class="p">(</span><span class="n">int32</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">i</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span>
+        <span class="n">pdfclass_questions</span><span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">push_back</span><span class="p">(</span><span class="n">j</span><span class="p">);</span>
+<span class="n">pdfclass_opts</span><span class="p">.</span><span class="n">initial_questions</span> <span class="o">=</span> <span class="n">pdfclass_questions</span><span class="p">;</span>
+<span class="n">qo</span><span class="p">.</span><span class="n">SetQuestionsOf</span><span class="p">(</span><span class="n">kPdfClass</span><span class="p">,</span> <span class="n">pdfclass_opts</span><span class="p">);</span>
+</code></pre></div><p>其次设定三音素的hmm状态的问题集，若<code>max_num_pdfclasses</code>为5，则初始问题集均为[[0]，[0，1]，[0，1，2]，[0，1，2，3]]。</p>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/kaldi/">kaldi</a>
+        
+            <a href="/tags/decison-tree/">decison tree</a>
+        
+    </section>
+
+
+    </footer>
+
+    
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css"
+    integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"
+    integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4"
+    crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"
+    integrity="sha384-mll67QQFJfxn0IYznZYonOWZ644AWYC+Pt2cHqMaRhXVrursRwvLnLaebdGIlYNa" crossorigin="anonymous"
+    onload="StackLaTeX()"></script>
+
+<script>
+    function StackLaTeX() {
+        renderMathInElement(document.querySelector(`.article-content`), {
+            delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true }
+            ]
+        });
+    }
+</script>
+    
+</article>
+
+    <aside class="related-contents--wrapper">
+    
+    
+</aside>
+
+
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2021 Cosmo
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="2.0.1">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css">
+            </main>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js"
+    integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin="anonymous"></script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

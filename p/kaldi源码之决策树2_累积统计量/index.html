@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='kaldi source code of decision tree_2'><title>Kaldi源码之决策树2_累积统计量</title>
+
+<link rel='canonical' href='https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%912_%E7%B4%AF%E7%A7%AF%E7%BB%9F%E8%AE%A1%E9%87%8F/'>
+
+<link rel="stylesheet" href="/scss/style.min.css"><meta property='og:title' content='Kaldi源码之决策树2_累积统计量'>
+<meta property='og:description' content='kaldi source code of decision tree_2'>
+<meta property='og:url' content='https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%912_%E7%B4%AF%E7%A7%AF%E7%BB%9F%E8%AE%A1%E9%87%8F/'>
+<meta property='og:site_name' content='Cosmo'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='kaldi' /><meta property='article:tag' content='decison tree' /><meta property='article:published_time' content='2019-07-08T00:00:00&#43;00:00'/><meta property='article:modified_time' content='2019-07-08T00:00:00&#43;00:00'/>
+<meta name="twitter:title" content="Kaldi源码之决策树2_累积统计量">
+<meta name="twitter:description" content="kaldi source code of decision tree_2">
+    </head>
+    <body class="">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.body.dataset.scheme = 'dark';
+        } else {
+            document.body.dataset.scheme = 'light';
+        }
+    })();
+</script><div class="container main-container flex on-phone--column extended article-page with-toolbar">
+            <aside class="sidebar left-sidebar sticky">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header class="site-info">
+        
+            <figure class="site-avatar">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu874715197ebd8e5cb58e412c943f3434_12926_300x0_resize_q75_box.jpg" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+
+                
+            </figure>
+        
+        <h1 class="site-name"><a href="https://cosmo1995.github.io/">Cosmo</a></h1>
+        <h2 class="site-description">Why not ask the Magic Conch</h2>
+    </header>
+
+    <ol class="menu" id="main-menu">
+        
+        
+        
+
+        <li >
+            <a href='/'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>Home</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/about'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>About</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/archives'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>Archives</span>
+            </a>
+        </li>
+        
+
+        
+            <li id="dark-mode-toggle">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <span>Dark Mode</span>
+            </li>
+        
+    </ol>
+</aside>
+
+            <main class="main full-width">
+    <div id="article-toolbar">
+        <a href="https://cosmo1995.github.io/" class="back-home">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="15 6 9 12 15 18" />
+</svg>
+
+
+
+            <span>Back</span>
+        </a>
+    </div>
+
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/kaldi/" style="background-color: #2a9d8f; color: #fff;">
+                kaldi
+            </a>
+        
+    </header>
+    
+
+    <h2 class="article-title">
+        <a href="/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%912_%E7%B4%AF%E7%A7%AF%E7%BB%9F%E8%AE%A1%E9%87%8F/">Kaldi源码之决策树2_累积统计量</a>
+    </h2>
+
+    
+    <h3 class="article-subtitle">
+        kaldi source code of decision tree_2
+    </h3>
+    <footer class="article-time">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+        <time class="article-time--published">Jul 08, 2019</time>
+    </footer></div>
+</header>
+
+    <section class="article-content">
+    <h2 id="build-tree-questions">Build-Tree-Questions</h2>
+<p>在构建决策树时，我们需要知道的所有信息就是从训练数据的对齐中得到的所有<code>EventType</code>（三音素+HMM状态id），和每个<code>EventType</code>对应的统计量即<code>Clusterable</code>对象。很自然的，我们可以把这两者的对应关系保存成一个对<code>pair&lt;EventType, Clusterable*&gt;</code>，然后把所有的这些对保存成一个向量<code>BuildTreeStatsType</code>。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="k">typedef</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">EventType</span><span class="p">,</span> <span class="n">Clusterable</span><span class="o">*&gt;</span> <span class="o">&gt;</span> <span class="n">BuildTreeStatsType</span><span class="p">;</span>
+</code></pre></div><h2 id="acc-tree-stats">acc-tree-stats</h2>
+<ul>
+<li>
+<p>作用：为决策树的构建累积相关的统计量</p>
+</li>
+<li>
+<p>输入：声学模型、特征、对齐</p>
+</li>
+<li>
+<p>输出：统计量tree.acc文件</p>
+</li>
+</ul>
+<div class="highlight"><pre class="chroma"><code class="language-shell" data-lang="shell">  acc-tree-stats <span class="nv">$context_opts</span> <span class="se">\
+</span><span class="se"></span>      --ci-phones<span class="o">=</span><span class="nv">$ciphonelist</span> <span class="nv">$alidir</span>/final.mdl <span class="s2">&#34;</span><span class="nv">$feats</span><span class="s2">&#34;</span> <span class="se">\
+</span><span class="se"></span>  <span class="s2">&#34;ark:gunzip -c </span><span class="nv">$alidir</span><span class="s2">/ali.JOB.gz|&#34;</span> <span class="nv">$dir</span>/JOB.treeacc
+</code></pre></div><p>输入的声学模型一般为单音素训练得到的GMM模型。<code>acc-tree-stats</code>的核心就是<code>AccumulateTreeStats</code>函数。</p>
+<h2 id="accumulatetreestats">AccumulateTreeStats</h2>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="kt">void</span> <span class="nf">AccumulateTreeStats</span><span class="p">(</span><span class="k">const</span> <span class="n">TransitionModel</span> <span class="o">&amp;</span><span class="n">trans_model</span><span class="p">,</span>
+                         <span class="n">BaseFloat</span> <span class="n">var_floor</span><span class="p">,</span>
+                         <span class="kt">int</span> <span class="n">N</span><span class="p">,</span>  <span class="c1">// context window size.
+</span><span class="c1"></span>                         <span class="kt">int</span> <span class="n">P</span><span class="p">,</span>  <span class="c1">// central position.
+</span><span class="c1"></span>                         <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">ci_phones</span><span class="p">,</span>
+                         <span class="c1">//const AccumulateTreeStatsInfo &amp;info,
+</span><span class="c1"></span>                         <span class="k">const</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">alignment</span><span class="p">,</span>
+                         <span class="k">const</span> <span class="n">Matrix</span><span class="o">&lt;</span><span class="n">BaseFloat</span><span class="o">&gt;</span> <span class="o">&amp;</span><span class="n">features</span><span class="p">,</span>
+                         <span class="n">std</span><span class="o">::</span><span class="n">map</span><span class="o">&lt;</span><span class="n">EventType</span><span class="p">,</span> <span class="n">GaussClusterable</span><span class="o">*&gt;</span> <span class="o">*</span><span class="n">stats</span><span class="p">){</span>
+    <span class="p">...</span>
+    <span class="kt">bool</span> <span class="n">ans</span> <span class="o">=</span> <span class="n">SplitToPhones</span><span class="p">(</span><span class="n">trans_model</span><span class="p">,</span> <span class="n">alignment</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">split_alignemnt</span><span class="p">);</span>
+    <span class="p">...</span>
+    <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="o">-</span><span class="n">N</span><span class="p">;</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">split_alignment</span><span class="p">.</span><span class="n">size</span><span class="p">());</span> <span class="n">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+        <span class="c1">// consider window starting at i
+</span><span class="c1"></span>        <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">P</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">i</span> <span class="o">+</span> <span class="n">P</span> <span class="o">&lt;</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">split_alignment</span><span class="p">.</span><span class="n">size</span><span class="p">()))</span> <span class="p">{</span>
+            <span class="n">int32</span> <span class="n">central_phone</span> <span class="o">=</span> <span class="n">trans_model</span><span class="p">.</span><span class="n">TransitionIdToPhone</span><span class="p">(</span><span class="n">split_alignment</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="n">P</span><span class="p">][</span><span class="mi">0</span><span class="p">]);</span>
+            <span class="kt">bool</span> <span class="n">is_ctx_dep</span> <span class="o">=</span> <span class="o">!</span> <span class="n">std</span><span class="o">::</span><span class="n">binary_search</span><span class="p">(</span><span class="n">ci_phones</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span><span class="n">ci_phones</span><span class="p">.</span><span class="n">end</span><span class="p">(),</span><span class="n">central_phone</span><span class="p">);</span>
+            <span class="n">EventType</span> <span class="n">evec</span><span class="p">;</span>
+            <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">N</span><span class="p">;</span> <span class="n">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                <span class="kt">int</span> <span class="n">phone</span><span class="p">;</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="o">&amp;&amp;</span> <span class="n">i</span> <span class="o">+</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">split_alignment</span><span class="p">.</span><span class="n">size</span><span class="p">()))</span>
+                    <span class="n">phone</span> <span class="o">=</span> <span class="n">trans_model</span><span class="p">.</span><span class="n">TransitionIdToPhone</span><span class="p">(</span><span class="n">split_alignment</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="n">j</span><span class="p">][</span><span class="mi">0</span><span class="p">]);</span>
+                <span class="k">else</span>
+                    <span class="n">phone</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+                <span class="k">if</span> <span class="p">(</span><span class="n">is_ctx_dep</span> <span class="o">||</span> <span class="n">j</span> <span class="o">==</span> <span class="n">P</span><span class="p">)</span>
+                    <span class="n">evec</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">std</span><span class="o">::</span><span class="n">make_pair</span><span class="o">&lt;</span><span class="n">EventKeyType</span><span class="p">,</span> <span class="n">EventValueType</span><span class="o">&gt;</span><span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">phone</span><span class="p">));</span>
+                <span class="c1">// now for each sub-hmm-position in the window...
+</span><span class="c1"></span>            <span class="p">}</span>
+            <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="k">static_cast</span><span class="o">&lt;</span><span class="kt">int</span><span class="o">&gt;</span><span class="p">(</span><span class="n">split_alignment</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="n">P</span><span class="p">].</span><span class="n">size</span><span class="p">());</span><span class="n">j</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+                <span class="c1">// for central phone of this window
+</span><span class="c1"></span>                <span class="n">EventType</span> <span class="n">evec_more</span><span class="p">(</span><span class="n">evec</span><span class="p">);</span>
+                <span class="n">int32</span> <span class="n">pdf_class</span> <span class="o">=</span> <span class="n">trans_model</span><span class="p">.</span><span class="n">TransitionIdToPdfClass</span><span class="p">(</span><span class="n">split_alignment</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="n">P</span><span class="p">][</span><span class="n">j</span><span class="p">]);</span>
+                <span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">EventKeyType</span><span class="p">,</span> <span class="n">EventValueType</span><span class="o">&gt;</span> <span class="n">pr</span><span class="p">(</span><span class="n">kPdfClass</span><span class="p">,</span> <span class="n">pdf_class</span><span class="p">);</span>
+                <span class="n">evec_more</span><span class="p">.</span><span class="n">push_back</span><span class="p">(</span><span class="n">pr</span><span class="p">);</span>
+                <span class="n">std</span><span class="o">::</span><span class="n">sort</span><span class="p">(</span><span class="n">evec_more</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">evec_more</span><span class="p">.</span><span class="n">end</span><span class="p">());</span> 
+                <span class="k">if</span> <span class="p">(</span><span class="n">stats</span><span class="o">-&gt;</span><span class="n">count</span><span class="p">(</span><span class="n">evec_more</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+                    <span class="n">GaussClusterable</span> <span class="o">*</span><span class="n">new_stats</span> <span class="o">=</span> <span class="k">new</span> <span class="n">GaussClusterable</span><span class="p">(</span><span class="n">dim</span><span class="p">,</span> <span class="n">var_floor</span><span class="p">);</span>
+                    <span class="p">(</span><span class="o">*</span><span class="n">stats</span><span class="p">)[</span><span class="n">evec_more</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_stats</span><span class="p">;</span>
+                <span class="p">}</span>
+                <span class="p">(</span><span class="o">*</span><span class="n">stats</span><span class="p">)[</span><span class="n">evec_more</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">AddStats</span><span class="p">(</span><span class="n">features</span><span class="p">.</span><span class="n">Row</span><span class="p">(</span><span class="n">cur_pos</span><span class="p">),</span> <span class="mf">1.0</span><span class="p">);</span>
+                <span class="n">cur_pos</span><span class="o">++</span><span class="p">;</span>
+            <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div><p><code>AccumulateTreeStats</code>函数的形参中，<code>ci_phones</code>指的是上下文无关的音素，一般为silence_phones。在新版本中，<code>var_floor</code>，<code>N</code>，<code>P</code>，<code>ci_phones</code>统一到<code>info</code>中。</p>
+<blockquote>
+<p>举例：alignment为[ 3 12 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 18 17 17 17 17 17 17 17 17 17 17 ]</p>
+<p>[ 1202 1201 1201 1204 1203 1203 1203 1206 1205 ]</p>
+<p>[ 806 805 805 805 805 805 805 808 807 810 ]</p>
+<p>[ 794 796 798 797 797 ]</p>
+<p>[ 590 589 589 589 589 589 589 589 589 589 589 589 589 589 589 589 589 589 589 592 594 593 593 593 593 593 593 593 593 593 593  ]</p>
+<p>[ 3 12 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10 10  10 10 10 10 10 10 10 10 18]</p>
+<p>对应的phone分别为[sil，n，i3，h， ao3，sil]，phone_id为[1，197，132，129，95，1]。</p>
+</blockquote>
+<p>11行首先调用<code>SplitToPhones</code>，将alignment中transition-id根据音素转换为<code>vector&lt;vector&lt;int&gt;&gt;</code>的形式保存到<code>split_alignemnt</code>中，每个元素中保存着隶属于同一个phone的transition-ids。</p>
+<p>13行通过滑动窗口的方式遍历<code>split_alignemnt</code>中每一个音素，每一个音素作为中间音素。滑动窗口的大小即为<code>N</code>，<code>i</code>为三音素窗口的第一个音素，<code>i+P</code>为三音素窗口的中间音素。16行根据transition-id获取对应的phone，17行判断该phone是否在<code>ci_phones</code>中，即是否是上下文无关的音素(一般silence phone为上下文无关的音素)。</p>
+<p>19行遍历该三音素窗口，20-24行获取三音素中每一个音素，将&lt;index，phone-id&gt;保存到<code>evec</code>中，其中index为当前音素在三音素中的索引0，1，2。</p>
+<blockquote>
+<p>对于上述例子，<code>evec</code>中保存了</p>
+<p>&laquo;1，1&raquo;，三音素为&lt;NULL，sil，n&gt;</p>
+<p>&laquo;0，1&gt;，&lt;1，197&gt;，&lt;2，132&raquo;，三音素为&lt;sil，n，i3&gt;</p>
+<p>&laquo;0，197&gt;，&lt;1，132&gt;，&lt;2，129&raquo;，三音素为&lt;n，i3，h&gt;</p>
+<p>&laquo;0，132&gt;，&lt;1，129&gt;，&lt;2，95&raquo;，三音素为&lt;i3，h，ao3&gt;</p>
+<p>&laquo;0，129&gt;，&lt;1，95&gt;，&lt;2，1&raquo;，三音素为&lt;h，ao3，sil&gt;</p>
+<p>&laquo;1，1&raquo;，三音素为&lt;ao3，sil，NULL&gt;</p>
+<p>即将<code>split_alignemnt</code>中每一个phone作为central phone。</p>
+</blockquote>
+<p>29行开始遍历<code>split_alignemnt</code>中音素的内部，32行根据transition-id获取对应的pdf_class，34行将&lt;kPdfClass, pdf_class&gt;保存到<code>evec_more</code>。因此，对于alignment中每一个transition-id，<code>evec_more</code>中保存了对应的<code>EventType</code>，即三音素和HMM state信息。</p>
+<blockquote>
+<p>对于上述例子中transition-id 3，evec_more中保存了 &laquo;-1，0&gt;，&lt;1，1&raquo;</p>
+<p>transition-id 1202，evec_more中保存了 &laquo;-1，0&gt;，&lt;0，197&gt;，&lt;1，132&gt;，&lt;2，129&raquo;</p>
+</blockquote>
+<p>36行往后保存<code>EventType</code>的统计量，相同<code>EventType</code>的统计量累加到一起。</p>
+<h2 id="treeacc文件">treeacc文件</h2>
+<p>kaldi中上述统计量保存在treeacc文件中，如下：</p>
+<pre><code>BTS 9347 EV 4 -1 0 0 0 1 127 2 113
+T GCL 3 0.01  [
+-1.023983 8.608648 38.34841 ...
+122.1417 705.353 642.767 ... ]
+EV 4 -1 0 0 0 1 287 2 252
+T GCL 1 0.01  [
+-20.32862 25.84675 37.57724 ...
+413.2527 668.0544 1412.049 ... ]
+</code></pre><p>第1行：BTS 9347表示不同的<code>EventType</code>个数，EV 4 -1 0 0 0 1 127 2代表一个~，4表示后面有4对<code>&lt;int,int&gt;</code>pair，-1 0 0 0 1 29 2 134表示当前<code>EventType</code>为triphone 0/127/113的第0个HMM state。
+第2行：GCL 3表示该<code>EventType</code>出现的次数为3(对应<code>count_</code>)； 0.01为<code>var_floor</code>，表示方差如果小于0.01，则等于0.01。
+第3行：表示当前<code>EventType</code>对应的特征向量之和
+第4行：表示当前<code>EventType</code>对应的特征向量平方之和</p>
+<h2 id="reference">Reference</h2>
+<ul>
+<li><a href="http://www.kaldi-asr.org/doc/clustering.html">http://www.kaldi-asr.org/doc/clustering.html</a></li>
+<li><a href="https://blog.csdn.net/u010731824/article/details/69668647">https://blog.csdn.net/u010731824/article/details/69668647</a></li>
+<li><a href="https://www.isip.piconepress.com/publications/reports/1999/isip/decoder_3/doc/report_061599.pdf">https://www.isip.piconepress.com/publications/reports/1999/isip/decoder_3/doc/report_061599.pdf</a></li>
+<li><a href="https://dl.acm.org/doi/pdf/10.3115/1075812.1075885">https://dl.acm.org/doi/pdf/10.3115/1075812.1075885</a></li>
+</ul>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/kaldi/">kaldi</a>
+        
+            <a href="/tags/decison-tree/">decison tree</a>
+        
+    </section>
+
+
+    </footer>
+
+    
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css"
+    integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"
+    integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4"
+    crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"
+    integrity="sha384-mll67QQFJfxn0IYznZYonOWZ644AWYC+Pt2cHqMaRhXVrursRwvLnLaebdGIlYNa" crossorigin="anonymous"
+    onload="StackLaTeX()"></script>
+
+<script>
+    function StackLaTeX() {
+        renderMathInElement(document.querySelector(`.article-content`), {
+            delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true }
+            ]
+        });
+    }
+</script>
+    
+</article>
+
+    <aside class="related-contents--wrapper">
+    
+    
+</aside>
+
+
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2021 Cosmo
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="2.0.1">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css">
+            </main>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js"
+    integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin="anonymous"></script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

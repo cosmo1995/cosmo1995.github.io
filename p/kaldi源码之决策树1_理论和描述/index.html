@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='kaldi source code of decision tree_1'><title>Kaldi源码之决策树1_理论和描述</title>
+
+<link rel='canonical' href='https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%911_%E7%90%86%E8%AE%BA%E5%92%8C%E6%8F%8F%E8%BF%B0/'>
+
+<link rel="stylesheet" href="/scss/style.min.css"><meta property='og:title' content='Kaldi源码之决策树1_理论和描述'>
+<meta property='og:description' content='kaldi source code of decision tree_1'>
+<meta property='og:url' content='https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%911_%E7%90%86%E8%AE%BA%E5%92%8C%E6%8F%8F%E8%BF%B0/'>
+<meta property='og:site_name' content='Cosmo'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='kaldi' /><meta property='article:tag' content='decison tree' /><meta property='article:published_time' content='2019-06-08T00:00:00&#43;00:00'/><meta property='article:modified_time' content='2019-06-08T00:00:00&#43;00:00'/>
+<meta name="twitter:title" content="Kaldi源码之决策树1_理论和描述">
+<meta name="twitter:description" content="kaldi source code of decision tree_1">
+    </head>
+    <body class="">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.body.dataset.scheme = 'dark';
+        } else {
+            document.body.dataset.scheme = 'light';
+        }
+    })();
+</script><div class="container main-container flex on-phone--column extended article-page with-toolbar">
+            <aside class="sidebar left-sidebar sticky">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header class="site-info">
+        
+            <figure class="site-avatar">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu874715197ebd8e5cb58e412c943f3434_12926_300x0_resize_q75_box.jpg" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+
+                
+            </figure>
+        
+        <h1 class="site-name"><a href="https://cosmo1995.github.io/">Cosmo</a></h1>
+        <h2 class="site-description">Why not ask the Magic Conch</h2>
+    </header>
+
+    <ol class="menu" id="main-menu">
+        
+        
+        
+
+        <li >
+            <a href='/'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>Home</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/about'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>About</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/archives'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>Archives</span>
+            </a>
+        </li>
+        
+
+        
+            <li id="dark-mode-toggle">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <span>Dark Mode</span>
+            </li>
+        
+    </ol>
+</aside>
+
+            <main class="main full-width">
+    <div id="article-toolbar">
+        <a href="https://cosmo1995.github.io/" class="back-home">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="15 6 9 12 15 18" />
+</svg>
+
+
+
+            <span>Back</span>
+        </a>
+    </div>
+
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/kaldi/" style="background-color: #2a9d8f; color: #fff;">
+                kaldi
+            </a>
+        
+    </header>
+    
+
+    <h2 class="article-title">
+        <a href="/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%911_%E7%90%86%E8%AE%BA%E5%92%8C%E6%8F%8F%E8%BF%B0/">Kaldi源码之决策树1_理论和描述</a>
+    </h2>
+
+    
+    <h3 class="article-subtitle">
+        kaldi source code of decision tree_1
+    </h3>
+    <footer class="article-time">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+        <time class="article-time--published">Jun 08, 2019</time>
+    </footer></div>
+</header>
+
+    <section class="article-content">
+    <p>triphone模型中，为了解决数据稀疏和参数量太大的问题，需要进行聚类和状态绑定。kaldi通过决策树进行状态绑定，即将相似的HMM状态聚类到同一个pdf，以减少总的pdf数。</p>
+<h2 id="决策树理论">决策树理论</h2>
+<p>决策树是一种自上而下的聚类方法。决策树包含叶子结点和非叶子结点，每一个叶子结点代表一类。</p>
+<p>决策树的每一个结点包含一些状态的集合，我们可以计算该状态集生成对应观测帧的似然。在triphone模型中，将一系列HMM states输入到决策树的根节点中，对这些状态进行提问，根据问题的答案分为左子结点或者右子结点。对于每一个子结点，可以计算该结点的新似然。决策树分类的根据就是使得分裂后的子节点似然之和相比分裂之前增量最大。同时我们通过设置某些阈值来控制决策树何时停止分裂，例如分裂前后似然的增量阈值，结点对应的state occupancy等。</p>
+<p>一般我们会将具有相同中间音素的triphone的同一个位置的所有状态构建一个决策树，如果有63个monophone，那么我们会构建189个决策树(kaldi中这189个决策树会放在一个大的决策树下)。下图为所有中间音素为&quot;zh&quot;的triphone第3个HMM state进行决策树聚类的例子。</p>
+<p><img src="https://s1.ax1x.com/2020/06/29/Nf5er6.png" alt="Nf5er6.png"  /></p>
+<p>决策树的似然等于每一个叶子结点的似然之和。若$L$为决策树某一个结点的似然，则有
+$$
+L=\sum_{t \in T}{\sum_{s \in S}\gamma_s(t) logP(x_t;\mu_S,\Sigma_S)}
+$$
+其中$S$为该结点对应的状态集，$T$为状态集$S$对应的所有帧，$\gamma_s(t)$为帧$x_t$由状态$s$生成的后验概率，$P$为概率分布。</p>
+<p>若$P$为高斯分布，则有
+$$
+\begin {aligned}
+log P (x_t;\mu_S,\Sigma_S) 
+&amp;= log \frac{1}{(2\pi)^{\frac{D}{2}}{\lvert{\Sigma_S}\rvert}^{\frac{1}{2}}}exp[-\frac{1}{2}(x_t-\mu_S)^T\Sigma_S^{-1}(x_t-\mu_S)] \cr
+&amp;= -\frac{1}{2}[Dlog2\pi + log\lvert{\Sigma_S}\rvert + (x_t-\mu_S)^T\Sigma_S^{-1}(x_t-\mu_S)]
+\end {aligned}
+$$
+那么有：
+$$
+\begin {aligned}
+L &amp;= -\frac{1}{2} (log[(2\pi)^D|\Sigma_S|] + D) \cdot \sum_{s \in S}\sum_{t \in T} \gamma_s(t) \cr
+&amp;= -\frac{1}{2}(Dlog(2\pi) + \sum_{i=1}^D{log\Sigma_{ii}} + D) \cdot \sum_{s \in S}\sum_{t \in T} \gamma_s(t)
+\end {aligned}
+$$</p>
+<p>triphone模型通过决策树分裂时，首先将具有相同中间音素的triphone的同一个位置的所有状态作为根节点，然后生成一系列可选问题集。对每一个叶子结点，选择使得分裂前后的似然增量最大的问题，即选择$\Delta L$最大的问题进行分裂。重复分裂步骤直到不满足设定的阈值。
+$$
+\Delta L = L(parent) - L(leftchild) - L(rightchild)
+$$</p>
+<p>根据$L$的计算公式，要想计算决策树某个结点的似然，我们只需要知道该结点对应状态集$S$的协方差$\Sigma_S$，以及状态集中所有状态的state occupancy之和$\sum_{s \in S}\sum_{t \in T} \gamma_s(t)$。</p>
+<p>对于协方差矩阵$\Sigma_S$，由于$\Sigma_S$为对角阵，对角即为特征每一维的方差$D$，根据$D=E(X^2)-E(X)^2$，我们只需要知道特征向量的和以及特征向量的平方和。</p>
+<p>对于state occupancy，由于我们已经进行了Viterbi强制对齐，即已知每一帧对应的transition-id。根据transition-id，可以得到每一帧对应的triphone和HMM state，即可以统计每一个状态的出现次数，用出现次数代替state occupancy。</p>
+<p>于是，我们就可以发现，与一个状态相关的统计量包括：<strong>该状态对应的特征向量的个数(帧数)、特征向量的和、特征向量的平方和</strong>。</p>
+<p>那么这些统计量以什么样的形式保存呢，又如何计算呢？</p>
+<h2 id="统计量的表示方法">统计量的表示方法</h2>
+<p>kaldi中，通过<code>Clusterable</code>对象来描述状态的统计量，主要作用是累加这些统计量和计算目标函数。<code>Clusterable</code>是一个纯虚类，作为kaldi聚类机制的统一接口。在三音素决策树状态绑定这一块，我们主要用到的是继承自该基类的<code>GuassClusterable</code>。</p>
+<h3 id="guassclusterable">GuassClusterable</h3>
+<p>GuassClusterable的成员变量为</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">BaseFloat</span> <span class="n">count_</span><span class="p">;</span>
+<span class="n">Matrix</span><span class="o">&lt;</span><span class="kt">double</span><span class="o">&gt;</span> <span class="n">stats_</span><span class="p">;</span>
+<span class="n">BaseFloat</span> <span class="n">var_floor</span><span class="p">;</span>
+</code></pre></div><p><code>count_</code>保存状态出现的次数，<code>stats_</code>矩阵的第一行保存着该状态应的特征向量的和，stats_矩阵的第二行保存着该状态对应的特征向量的平方和。</p>
+<p>统计量的累加实现函数为<code>GaussClusterable::AddStats</code></p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">count_</span> <span class="o">+=</span> <span class="n">weight</span><span class="p">;</span>
+<span class="n">stats_</span><span class="p">.</span><span class="n">Row</span><span class="p">(</span><span class="mi">0</span><span class="p">).</span><span class="n">AddVec</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="n">vec</span><span class="p">);</span>
+<span class="n">stats_</span><span class="p">.</span><span class="n">Row</span><span class="p">(</span><span class="mi">1</span><span class="p">).</span><span class="n">AddVec2</span><span class="p">(</span><span class="n">weight</span><span class="p">,</span> <span class="n">vec</span><span class="p">);</span>
+</code></pre></div><p>把多个状态的统计量累加在一起，就可以计算这些状态组成的状态集的似然。</p>
+<p>目标函数计算实现函数为<code>GaussClusterable::Objf()</code></p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">size_t</span> <span class="n">dim</span> <span class="o">=</span> <span class="n">stats_</span><span class="p">.</span><span class="n">NumCols</span><span class="p">();</span>
+<span class="n">Vector</span><span class="o">&lt;</span><span class="n">BaseFloat</span><span class="o">&gt;</span> <span class="n">vars</span><span class="p">(</span><span class="n">dim</span><span class="p">);</span>
+<span class="k">for</span> <span class="p">(</span><span class="n">size_t</span> <span class="n">d</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span> <span class="n">d</span> <span class="o">&lt;</span> <span class="n">dim</span><span class="p">;</span> <span class="n">d</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
+  <span class="n">BaseFloat</span> <span class="nf">mean</span><span class="p">(</span><span class="n">stats_</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="o">/</span> <span class="n">count_</span><span class="p">),</span> <span class="n">var</span> <span class="o">=</span> <span class="n">stats_</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span> <span class="o">/</span> <span class="n">count_</span> <span class="o">-</span> <span class="n">mean</span> <span class="o">*</span> <span class="n">mean</span> <span class="p">;</span>
+  <span class="n">var</span> <span class="o">=</span> <span class="n">std</span><span class="o">::</span><span class="n">max</span><span class="p">(</span><span class="n">var</span><span class="p">,</span> <span class="n">var_floor_</span><span class="p">);</span>
+  <span class="n">vars</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">=</span> <span class="n">var</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">BaseFloat</span> <span class="n">ans</span> <span class="o">=</span> <span class="o">-</span><span class="mf">0.5</span> <span class="o">*</span> <span class="p">(</span><span class="n">vars</span><span class="p">.</span><span class="n">SumLog</span><span class="p">()</span> <span class="o">+</span> <span class="n">M_LOG_2PI</span> <span class="o">*</span> <span class="n">dim</span><span class="p">);</span>
+<span class="p">...</span>
+<span class="k">return</span> <span class="n">ans</span> <span class="o">*</span> <span class="n">count_</span><span class="p">;</span>
+</code></pre></div><p>统计量描述后，目标函数也可以计算了。那么问题来了，我们又如何描述triphone对应的某个状态呢，显然需要描述triphone的每个phone以及该状态的HMM state位置。</p>
+<h2 id="状态的表示方法">状态的表示方法</h2>
+<h3 id="eventtype">EventType</h3>
+<p>首先描述状态对应的triphone，可以通过<code>pair&lt;int,int&gt;</code>来表示，其中第一个int值代表triphone的位置0，1，2；第二个int值为phone-id。</p>
+<p>有了triphone后，还需要确定该状态是triphone的第几个状态，即HMM state。同样可以通过<code>pair&lt;int,int&gt;</code>来表示，为了和音素区分，第一个值取-1表示描述的是状态信息，第二个值为状态编号(对于三状态HMM，取0，1，2)。通过这四对<code>pair&lt;int,int&gt;</code>即可描述triphone对应的某个状态。</p>
+<p>kaldi定义了<code>EventType</code>这一数据结构来描述状态：</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="k">typedef</span> <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">std</span><span class="o">::</span><span class="n">pair</span><span class="o">&lt;</span><span class="n">EventKeyType</span><span class="p">,</span><span class="n">EventValueType</span><span class="o">&gt;</span> <span class="o">&gt;</span> <span class="n">EventType</span><span class="p">;</span>
+</code></pre></div><p>这里的<code>EventKeyType</code>和<code>EventValueType</code>都是int32的别名。</p>
+<p>举个例子，假设我们当前的triphone为a-b+c，音素a,b,c的phone-id分别是10，11，12，假设使用标准的3状态HMM拓扑结构；那么该triphone的第二个HMM状态可表示为：</p>
+<pre><code>EventType e = { (-1, 1), (0, 10), (1, 11), (2,12) };
+</code></pre><p>在可以描述状态及其统计量后，就可以通过决策树进行聚类了。那么问题又来了，如何表示决策树呢?</p>
+<h2 id="决策树的表示方法">决策树的表示方法</h2>
+<h3 id="eventmap">EventMap</h3>
+<p><code>EventMap</code>是保存决策树的一种方法，它是一个多态纯虚类，不能够被实例化。</p>
+<p><code>EventMap</code>有三个子类<code>ConstantEventMap</code>、<code>SplitEventMap</code>、<code>TableEventMap</code>，实现了<code>EventMap</code>接口，每种子类都有不同的功能，下面具体介绍这三个子类。</p>
+<h4 id="constanteventmap">ConstantEventMap</h4>
+<p><code>ConstantEventMap</code>表示决策树的叶子结点。</p>
+<p>假设我们已经构建好了一个决策树，对某一个<code>EventType</code>，我们从决策树的树根开始问问题，比如左边的音素属于问题集1吗（每个问题集都是一些音素的集合）？右边的音素属于问题集20吗？根据对问题的回答我们就会进入决策树的不同分支，直到到达这个决策树的某一叶子结点，若该叶子结点保存着pdf-id，那么我们就得到了<code>EventType</code>对应的pdf-id。 
+前面我们讲到，可以用<code>EventAnwserType</code>表示pdf-id，那么叶子结点就只需要保存一个<code>EventAnwserType</code>类型的变量answer_，用来保存该叶子结点对应的pdf-id即可。</p>
+<h4 id="spliteventmap">SplitEventMap</h4>
+<p><code>SplitEventMap</code>表示决策树的非叶子结点。</p>
+<p>给定一个<code>EventType</code>，在决策树的每一个非叶子结点，我们都会对其进行提问以决定进入该结点的哪个分支，比如“左边的音素属于问题集1吗？”、“右边的音素属于问题集20吗？”。那么我们该怎么表示“左边”、“右边”呢？我们可以用<code>EventKeyType</code>类型的变量来表示这个位置信息，我们将其命名为<code>key_</code>——当其取值为0时，表示对左边的音素提问；其取值1时，表示对中间的音素提问；其取值2时，表示对右边的音素提问；取值为-1时，表示对HMM state提问。 
+在论文中遇见的手工制作的问题类似这样：“左边的音素是鼻音吗？”、“右边的音素是元音吗？”。那么如何表示问题“鼻音”、“元音”这些概念呢？其实鼻音就是一些音素的集合，元音也是一些音素的集合。其实问题的本质其实就是一些音素的集合(或者状态的集合)。我们可以用<code>EventValueType</code>类型的变量表示一个音素，用vector类型的变量表示音素集，我们把这个变量命名为<code>yes_set_</code>。</p>
+<p>此时，我们在每个非叶子结点所问的问题变成“第<code>key_</code>个位置的音素属于音素集合<code>yes_set_</code>吗？” 。当第<code>key_</code>个位置的音素属于<code>yes_set_</code>时，我们进入命名为yes的孩子结点；否则进入命名为no的孩子结点。因为孩子结点可以是叶子结点也可以是非叶子结点，所以用<code>EventMap</code> 来表示指向两个孩子结点的指针。
+综上所述，表示决策树非叶子结点的<code>SplitEventMap</code>所需的数据成员包括：提问的位置<code>key_</code>，问题<code>yes_set_</code>以及两个孩子指针<code>*yes_</code>和<code>*no_</code>。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">EventKeyType</span> <span class="n">key_</span><span class="p">;</span>
+<span class="n">ConstIntegerSet</span><span class="o">&lt;</span><span class="n">EventValueType</span><span class="o">&gt;</span> <span class="n">yes_set_</span><span class="p">;</span>  <span class="c1">// more efficient Map function.
+</span><span class="c1"></span><span class="n">EventMap</span> <span class="o">*</span><span class="n">yes_</span><span class="p">;</span>
+<span class="n">EventMap</span> <span class="o">*</span><span class="n">no_</span><span class="p">;</span>
+</code></pre></div><h4 id="tableeventmap">TableEventMap</h4>
+<p>一般来说，对每个中间音素的每个状态都要建立一棵决策树进行状态绑定，比如说有63个不同音素，每个音素3个HMM状态，则需要建立63x3=189个决策树。但是Kaldi中想把这189个决策树放进一棵大树里面，这棵大树的189个叶子结点分别是189个决策树的起点；我们随后对这189个叶子结点的每一个进行扩展，每个叶子结点都扩展成一棵决策树，整个完整的大决策树就生成了。当然，这棵大树也用<code>EventMap</code>表示。注意在<code>SplitEventMap</code>上进行一次划分最多生成两个叶子结点，<code>TableEventMap</code>则可以直接生成多个叶子结点。 
+<code>TableEventMap</code>的数据成员包括进行划分的位置<code>key_</code>，以及指向对其划分后的所有子结点的指针向量<code>std::vector&lt;EventMap&gt; table_</code>。</p>
+<p>决策树现在也可以表示了，那么如何进行聚类呢。</p>
+<h2 id="聚类">聚类</h2>
+<h3 id="map">Map</h3>
+<p>在给定<code>EventType</code>后，我们希望通过决策树得到这个<code>EventType</code>对应的pdf-id。<code>EventMap</code>中定义了<code>EventAnswerType</code>表示pdf-id， <code>EventAnswerType</code>也是int32的别名。因此，决策树聚类可以表示为<code>EventType</code>到<code>EventAnwserType</code>的映射。</p>
+<p><code>EventMap</code>中<code>Map</code>接口来完成这种映射：</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="k">virtual</span> <span class="kt">bool</span> <span class="nf">Map</span><span class="p">(</span><span class="k">const</span> <span class="n">EventType</span> <span class="o">&amp;</span><span class="n">event</span><span class="p">,</span> <span class="n">EventAnswerType</span> <span class="o">*</span><span class="n">ans</span><span class="p">)</span> <span class="k">const</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+</code></pre></div><p>三种<code>EventMap</code>具有相同的成员函数接口，但是其具体实现不太一样，具体实现和不同<code>EventMap</code>的功能有关。</p>
+<h4 id="spliteventmapmap">SplitEventMap::Map()</h4>
+<p>首先调用<code>LookUp</code>查找<code>EventType</code>第<code>key</code>个位置的值value，若该value在<code>yes_set_</code>中，则递归调用<code>yes_</code>孩子的Map()；若该value不在<code>yes_set_</code>中，则递归调用<code>no_</code>孩子的Map()。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"> <span class="k">virtual</span> <span class="kt">bool</span> <span class="nf">Map</span><span class="p">(</span><span class="k">const</span> <span class="n">EventType</span> <span class="o">&amp;</span><span class="n">event</span><span class="p">,</span> <span class="n">EventAnswerType</span> <span class="o">*</span><span class="n">ans</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+    <span class="n">EventValueType</span> <span class="n">value</span><span class="p">;</span>
+    <span class="k">if</span> <span class="p">(</span><span class="n">Lookup</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">key_</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">value</span><span class="p">))</span> <span class="p">{</span>
+      <span class="c1">// if (std::binary_search(yes_set_.begin(), yes_set_.end(), value)) {
+</span><span class="c1"></span>      <span class="k">if</span> <span class="p">(</span><span class="n">yes_set_</span><span class="p">.</span><span class="n">count</span><span class="p">(</span><span class="n">value</span><span class="p">))</span> <span class="p">{</span>
+        <span class="k">return</span> <span class="n">yes_</span><span class="o">-&gt;</span><span class="n">Map</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">ans</span><span class="p">);</span>
+      <span class="p">}</span>
+      <span class="k">return</span> <span class="n">no_</span><span class="o">-&gt;</span><span class="n">Map</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">ans</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div><h4 id="constanteventmapmap">ConstantEventMap::Map()</h4>
+<p>直接将<code>ans_</code>置为<code>answer_</code></p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="k">virtual</span> <span class="kt">bool</span> <span class="nf">Map</span><span class="p">(</span><span class="k">const</span> <span class="n">EventType</span> <span class="o">&amp;</span><span class="n">event</span><span class="p">,</span> <span class="n">EventAnswerType</span> <span class="o">*</span><span class="n">ans</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+    <span class="o">*</span><span class="n">ans</span> <span class="o">=</span> <span class="n">answer_</span><span class="p">;</span>
+    <span class="k">return</span> <span class="nb">true</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div><h4 id="tableeventmapmap">TableEventMap::Map()</h4>
+<p>若<code>EventType</code>第key个位置的值tmp在table的范围内，当table的第tmp个元素存在且不为空时，对TE的第tmp个孩子结点，也就是table的第tmp个元素递归调用Map()函数，直到到达叶子结点CE，返回该CE的pdf-id。</p>
+<div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="k">virtual</span> <span class="kt">bool</span> <span class="nf">Map</span><span class="p">(</span><span class="k">const</span> <span class="n">EventType</span> <span class="o">&amp;</span><span class="n">event</span><span class="p">,</span> <span class="n">EventAnswerType</span> <span class="o">*</span><span class="n">ans</span><span class="p">)</span> <span class="k">const</span> <span class="p">{</span>
+    <span class="n">EventValueType</span> <span class="n">tmp</span><span class="p">;</span>   <span class="o">*</span><span class="n">ans</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>  <span class="c1">// means no answer
+</span><span class="c1"></span>    <span class="k">if</span> <span class="p">(</span><span class="n">Lookup</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">key_</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">tmp</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="n">tmp</span> <span class="o">&gt;=</span> <span class="mi">0</span>
+       <span class="o">&amp;&amp;</span> <span class="n">tmp</span> <span class="o">&lt;</span> <span class="p">(</span><span class="n">EventValueType</span><span class="p">)</span><span class="n">table_</span><span class="p">.</span><span class="n">size</span><span class="p">()</span> <span class="o">&amp;&amp;</span> <span class="n">table_</span><span class="p">[</span><span class="n">tmp</span><span class="p">]</span> <span class="o">!=</span> <span class="nb">NULL</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="n">table_</span><span class="p">[</span><span class="n">tmp</span><span class="p">]</span><span class="o">-&gt;</span><span class="n">Map</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">ans</span><span class="p">);</span>
+    <span class="p">}</span>
+    <span class="k">return</span> <span class="nb">false</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div><p>至此，状态、统计量、决策树都可以描述了，下面可以开始进行统计量的累积。</p>
+<h2 id="reference">Reference</h2>
+<ul>
+<li><a href="https://blog.csdn.net/u010731824/article/details/69668647">https://blog.csdn.net/u010731824/article/details/69668647</a></li>
+</ul>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/kaldi/">kaldi</a>
+        
+            <a href="/tags/decison-tree/">decison tree</a>
+        
+    </section>
+
+
+    </footer>
+
+    
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css"
+    integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"
+    integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4"
+    crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"
+    integrity="sha384-mll67QQFJfxn0IYznZYonOWZ644AWYC+Pt2cHqMaRhXVrursRwvLnLaebdGIlYNa" crossorigin="anonymous"
+    onload="StackLaTeX()"></script>
+
+<script>
+    function StackLaTeX() {
+        renderMathInElement(document.querySelector(`.article-content`), {
+            delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true }
+            ]
+        });
+    }
+</script>
+    
+</article>
+
+    <aside class="related-contents--wrapper">
+    
+    
+</aside>
+
+
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2021 Cosmo
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="2.0.1">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css">
+            </main>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js"
+    integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin="anonymous"></script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

@@ -6,7 +6,86 @@
     <description>Recent content in kaldi on Cosmo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sat, 06 Apr 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/categories/kaldi/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 08 Sep 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/categories/kaldi/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Kaldi源码之决策树4_构建决策树</title>
+      <link>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%914_%E6%9E%84%E5%BB%BA%E5%86%B3%E7%AD%96%E6%A0%91/</link>
+      <pubDate>Sun, 08 Sep 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%914_%E6%9E%84%E5%BB%BA%E5%86%B3%E7%AD%96%E6%A0%91/</guid>
+      <description>到现在为止，程序acc-tree-stats累积好了构建决策树所需的统计量，程序cluster-phones和compile-questions自动生成好了构建决策树所需的问题集。我们根据sets.int生成好了roots.int文件，那么我们就可以开始构建决策树，对三音素GMM的状态进行绑定。这次笔记的主要内容是讲解Kaldi如何构建决策树，实现对三音素GMM状态的绑定。 在这个笔记中，首先我会介绍构建决策树的主程序build-tree和主函数BuildTree，然后介绍主函数中用到的核心函数GetStubMap和SplitDecisionTree。
+build-tree  作用：构建决策树 输入：累积的统计量treeacc、问题集questions.qst、roots.int、topo 输出：决策树tree  build-tree $context_opts --verbose=1 --max-leaves=$numleaves \  --cluster-thresh=$cluster_thresh $dir/treeacc $lang/phones/roots.int \  $dir/questions.qst $lang/topo $dir/tree   读取roots.int，得到
+1)vector&amp;lt;vector&amp;lt;int&amp;gt;&amp;gt; phone_sets，其一个元素包含roots.int的一行上的所有音素
+2)vector&amp;lt;bool&amp;gt; is_shared_root，其一个元素指明该行的音素是否共享三个HMM状态的决策树树根
+3)vector&amp;lt;bool&amp;gt; is_split_root，其一个元素指明是否对该行音素对应的决策树树根进行划分
+  读取topo文件，得到保存HMM拓扑结构的对象HmmTopology topo
+  读取treeacc，得到累积的统计量BuildTreeStatsType stats
+  读取questions.qst，得到Questions qo
+  std::vector&amp;lt;int32&amp;gt; phone2num_pdf_classes; topo.GetPhoneToNumPdfClasses(&amp;amp;phone2num_pdf_classes); 调用topo.GetPhoneToNumPdfClasses得到phone2num_pdf_classes，其元素保存每个音素对应的HMM状态数。
+to_pdf = BuildTree(qo, phone_sets, phone2num_pdf_classes, is_shared_root, is_split_root, stats, thresh, max_leaves, cluster_thresh, P) 调用BuildTree，返回保存整个大决策树的 to_pdf
+BuildTree EventMap *tree_stub = GetStubMap(P phone_sets phone2num_pdf_classes share_roots &amp;amp;num_leaves); .</description>
+    </item>
+    
+    <item>
+      <title>Kaldi源码之决策树3_构建问题集</title>
+      <link>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%913_%E6%9E%84%E5%BB%BA%E9%97%AE%E9%A2%98%E9%9B%86/</link>
+      <pubDate>Thu, 08 Aug 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%913_%E6%9E%84%E5%BB%BA%E9%97%AE%E9%A2%98%E9%9B%86/</guid>
+      <description>前面我们已经通过acc-tree-stats累积好了构建决策树所需的统计量，要建立一颗决策树，我们还需要构建问题集。在HTK中，问题集是人工定义的；而在kaldi中，问题集是通过训练数据自动生成的。kaldi中，通过cluster-phones生成问题集。
+cluster-phones  作用：多个音素或多个音素集进行聚类。 输入：决策树相关统计量treeacc，多个音素集sets.int 输出：自动生成的问题集（每个问题由多个音素组成） 示例：  cluster-phones $context_opts $dir/treeacc $lang/phones/sets.int \  $dir/questions.int  过程：   context_opts指定context-width和central-position，默认的三音素参数N=3，P=1；从treeacc中读取统计量到BuildTreeStatsType stats；从sets.int读取phone set 保存到phone_sets；读取pdf_class_list，该变量指定构建问题集所考虑的HMM状态，默认为1，也就是只考虑三状态HMM的中间状态。 若指定的mode为questions，调用AutomaticallyObtainQuestions()自动生成问题集保存到phone_sets_out；若指定的model为k-means，调用KMeansClusterPhones()。 将上述函数自动生成的phone_sets_out写到questions.int。  sets.txt通过utils/prepare_lang.sh生成，其中每一行为相同base的音素，sets.int 和sets.txt实例：
+sil	1spn	2AA0 AA1 AA2	3 4 5AE0 AE1 AE2	6 7 8...	...AutomaticallyObtainQuestions void AutomaticallyObtainQuestions(BuildTreeStatsType &amp;amp;stats, const std::vector&amp;lt;std::vector&amp;lt;int32&amp;gt; &amp;gt; &amp;amp;phone_sets_in, const std::vector&amp;lt;int32&amp;gt; &amp;amp;all_hmm_positions_in, int32 P, std::vector&amp;lt;std::vector&amp;lt;int32&amp;gt; &amp;gt; *questions_out ) 通过对音素自动进行聚类，从而获取问题集；它把音素聚类成一棵树，并且对树中的每一个结点，把从该结点可以到达的所有叶子结点合在一起构成一个问题（该树的一个叶子结点保存着一些音素，一个问题就是一个音素的集合）。
+std::vector&amp;lt;std::vector&amp;lt;int32&amp;gt; &amp;gt; phone_sets(phone_sets_in); std::vector&amp;lt;int32&amp;gt; phones; for (size_t i = 0; i &amp;lt; phone_sets.</description>
+    </item>
+    
+    <item>
+      <title>Kaldi源码之决策树2_累积统计量</title>
+      <link>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%912_%E7%B4%AF%E7%A7%AF%E7%BB%9F%E8%AE%A1%E9%87%8F/</link>
+      <pubDate>Mon, 08 Jul 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%912_%E7%B4%AF%E7%A7%AF%E7%BB%9F%E8%AE%A1%E9%87%8F/</guid>
+      <description>Build-Tree-Questions 在构建决策树时，我们需要知道的所有信息就是从训练数据的对齐中得到的所有EventType（三音素+HMM状态id），和每个EventType对应的统计量即Clusterable对象。很自然的，我们可以把这两者的对应关系保存成一个对pair&amp;lt;EventType, Clusterable*&amp;gt;，然后把所有的这些对保存成一个向量BuildTreeStatsType。
+typedef std::vector&amp;lt;std::pair&amp;lt;EventType, Clusterable*&amp;gt; &amp;gt; BuildTreeStatsType; acc-tree-stats   作用：为决策树的构建累积相关的统计量
+  输入：声学模型、特征、对齐
+  输出：统计量tree.acc文件
+  acc-tree-stats $context_opts \  --ci-phones=$ciphonelist $alidir/final.mdl &amp;#34;$feats&amp;#34; \  &amp;#34;ark:gunzip -c $alidir/ali.JOB.gz|&amp;#34; $dir/JOB.treeacc 输入的声学模型一般为单音素训练得到的GMM模型。acc-tree-stats的核心就是AccumulateTreeStats函数。
+AccumulateTreeStats void AccumulateTreeStats(const TransitionModel &amp;amp;trans_model, BaseFloat var_floor, int N, // context window size.  int P, // central position.  const std::vector&amp;lt;int32&amp;gt; &amp;amp;ci_phones, //const AccumulateTreeStatsInfo &amp;amp;info,  const std::vector&amp;lt;int32&amp;gt; &amp;amp;alignment, const Matrix&amp;lt;BaseFloat&amp;gt; &amp;amp;features, std::map&amp;lt;EventType, GaussClusterable*&amp;gt; *stats){ .</description>
+    </item>
+    
+    <item>
+      <title>Kaldi源码之决策树1_理论和描述</title>
+      <link>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%911_%E7%90%86%E8%AE%BA%E5%92%8C%E6%8F%8F%E8%BF%B0/</link>
+      <pubDate>Sat, 08 Jun 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%911_%E7%90%86%E8%AE%BA%E5%92%8C%E6%8F%8F%E8%BF%B0/</guid>
+      <description>triphone模型中，为了解决数据稀疏和参数量太大的问题，需要进行聚类和状态绑定。kaldi通过决策树进行状态绑定，即将相似的HMM状态聚类到同一个pdf，以减少总的pdf数。
+决策树理论 决策树是一种自上而下的聚类方法。决策树包含叶子结点和非叶子结点，每一个叶子结点代表一类。
+决策树的每一个结点包含一些状态的集合，我们可以计算该状态集生成对应观测帧的似然。在triphone模型中，将一系列HMM states输入到决策树的根节点中，对这些状态进行提问，根据问题的答案分为左子结点或者右子结点。对于每一个子结点，可以计算该结点的新似然。决策树分类的根据就是使得分裂后的子节点似然之和相比分裂之前增量最大。同时我们通过设置某些阈值来控制决策树何时停止分裂，例如分裂前后似然的增量阈值，结点对应的state occupancy等。
+一般我们会将具有相同中间音素的triphone的同一个位置的所有状态构建一个决策树，如果有63个monophone，那么我们会构建189个决策树(kaldi中这189个决策树会放在一个大的决策树下)。下图为所有中间音素为&amp;quot;zh&amp;quot;的triphone第3个HMM state进行决策树聚类的例子。
+决策树的似然等于每一个叶子结点的似然之和。若$L$为决策树某一个结点的似然，则有 $$ L=\sum_{t \in T}{\sum_{s \in S}\gamma_s(t) logP(x_t;\mu_S,\Sigma_S)} $$ 其中$S$为该结点对应的状态集，$T$为状态集$S$对应的所有帧，$\gamma_s(t)$为帧$x_t$由状态$s$生成的后验概率，$P$为概率分布。
+若$P$为高斯分布，则有 $$ \begin {aligned} log P (x_t;\mu_S,\Sigma_S) &amp;amp;= log \frac{1}{(2\pi)^{\frac{D}{2}}{\lvert{\Sigma_S}\rvert}^{\frac{1}{2}}}exp[-\frac{1}{2}(x_t-\mu_S)^T\Sigma_S^{-1}(x_t-\mu_S)] \cr &amp;amp;= -\frac{1}{2}[Dlog2\pi + log\lvert{\Sigma_S}\rvert + (x_t-\mu_S)^T\Sigma_S^{-1}(x_t-\mu_S)] \end {aligned} $$ 那么有： $$ \begin {aligned} L &amp;amp;= -\frac{1}{2} (log[(2\pi)^D|\Sigma_S|] + D) \cdot \sum_{s \in S}\sum_{t \in T} \gamma_s(t) \cr &amp;amp;= -\frac{1}{2}(Dlog(2\pi) + \sum_{i=1}^D{log\Sigma_{ii}} + D) \cdot \sum_{s \in S}\sum_{t \in T} \gamma_s(t) \end {aligned} $$</description>
+    </item>
+    
+    <item>
+      <title>Kaldi源码之hmm</title>
+      <link>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bhmm/</link>
+      <pubDate>Wed, 08 May 2019 00:00:00 +0000</pubDate>
+      
+      <guid>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bhmm/</guid>
+      <description>kaldi中TransitionModel用来更新HMM的转移概率，通过hmm-topology描述每个phone的拓扑结构，包括phone对应的state和以及state之间的初始转移概率。通过transition-model定义了transition的基本单元transition-state和转移路径transition-id。
+hmm-topology 以yesno的topo为例，yesno中有三个音素：SIL、Y、N ，phone id 分别为1、2、3。其中SIL有0~4共5个状态，5为non-emitting。yes/no均含有0~2共3个状态，3为non-emitting。topo中还定义了每个phone对应的状态之间的初始转移概率。
+Kaldi通过HmmTopology类表示topo结构，在HmmTopology中定义了HmmState结构体来描述HMM-state，包含HMM-state对应的pdf-class和转移的目标状态、初始转移概率。
+struct HmmState { int32 pdf_class; std::vector&amp;lt;std::pair&amp;lt;int32, BaseFloat&amp;gt; &amp;gt; transitions; ... } typedef std::vector&amp;lt;HmmState&amp;gt; TopologyEntry; TopologyEntry中包含一个phone对应的所有HMM-state以及这些HMM-state之间的转移路径和转移概率，即一个phone的完整topo结构。
+hmm-topology的成员变量为：
+std::vector&amp;lt;int32&amp;gt; phones_; std::vector&amp;lt;int32&amp;gt; phone2idx_; std::vector&amp;lt;TopologyEntry&amp;gt; entries_; hmm-topology类包含了上图中完整的topo信息，包括所有音素、每个音素对应的HMM-state和HMM-state间的转移路径和转移概率。
+transition-model transition中相关的概念：
+ phone：音素，id是从1开始的整数。 HMM-state：每个音素的state的id，从0开始的整数。 pdf-id：每个state相对应的GMM概率密度函数id，这个值是全局唯一从0开始的整数。在triphone中，pdf-id会替换为决策树聚类后的实际pdf-id。pdf-id又可以分为forward-pdf-id和self-loop-pdf-id，默认pdf-id=forward-pdf-id=self-loop-pdf-id。 transition-state：抽象出来的转移状态，对于monophone，和HMM-state一一对应；对于triphone，对应于上下文音素绑定的状态。用(phone,HMM-state,pdf-id)表示，从1开始。 transition-index：表示一个transition-state的转移路径的index，在每个状态内从0开始的整数。 transition-id：所有transition-state的转移路径的id，全局唯一从1开始的整数，跟(transition-state,transition-index)一一对应。  通过show-transitions可以查看这些变量的具体值，如下表。
+transition-model中定义了triples,state2id_和id2state，分别表示transition-state对应的triples，每个transition-state对应的的第一个transition-id，每个transition-id对应的transition-state。
+std::vector&amp;lt;Triple&amp;gt; triples_; // indexed by transition-state - 1 std::vector&amp;lt;int32&amp;gt; state2id_; // indexed by transition-state std::vector&amp;lt;int32&amp;gt; id2state_; // indexed by transition-id ... 通过这三个变量，transition-model中实现了一系列transition概念的转换，包括：
+(phone, HMM-state, pdf-id) &amp;lt;&amp;mdash;&amp;gt; transition-state
+(transition-state, transition-index) &amp;lt;&amp;mdash;&amp;gt; transition-id</description>
+    </item>
+    
     <item>
       <title>Kaldi源码之gmm_2</title>
       <link>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/</link>
