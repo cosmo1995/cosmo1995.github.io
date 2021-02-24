@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='Mel Frequency Cepstral Coefficents and Filter Banks'><title>MFCC和FBank特征</title>
+
+<link rel='canonical' href='https://cosmo1995.github.io/p/mfcc%E5%92%8Cfbank%E7%89%B9%E5%BE%81/'>
+
+<link rel="stylesheet" href="/scss/style.min.css"><meta property='og:title' content='MFCC和FBank特征'>
+<meta property='og:description' content='Mel Frequency Cepstral Coefficents and Filter Banks'>
+<meta property='og:url' content='https://cosmo1995.github.io/p/mfcc%E5%92%8Cfbank%E7%89%B9%E5%BE%81/'>
+<meta property='og:site_name' content='Cosmo'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='frontend' /><meta property='article:published_time' content='2019-05-08T00:00:00&#43;00:00'/><meta property='article:modified_time' content='2019-05-08T00:00:00&#43;00:00'/>
+<meta name="twitter:title" content="MFCC和FBank特征">
+<meta name="twitter:description" content="Mel Frequency Cepstral Coefficents and Filter Banks">
+    </head>
+    <body class="">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.body.dataset.scheme = 'dark';
+        } else {
+            document.body.dataset.scheme = 'light';
+        }
+    })();
+</script><div class="container main-container flex on-phone--column extended article-page with-toolbar">
+            <aside class="sidebar left-sidebar sticky">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header class="site-info">
+        
+            <figure class="site-avatar">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu874715197ebd8e5cb58e412c943f3434_12926_300x0_resize_q75_box.jpg" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+
+                
+            </figure>
+        
+        <h1 class="site-name"><a href="https://cosmo1995.github.io/">Cosmo</a></h1>
+        <h2 class="site-description">Why not ask the Magic Conch</h2>
+    </header>
+
+    <ol class="menu" id="main-menu">
+        
+        
+        
+
+        <li >
+            <a href='/'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>Home</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/about'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>About</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/archives'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>Archives</span>
+            </a>
+        </li>
+        
+
+        
+            <li id="dark-mode-toggle">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <span>Dark Mode</span>
+            </li>
+        
+    </ol>
+</aside>
+
+            <main class="main full-width">
+    <div id="article-toolbar">
+        <a href="https://cosmo1995.github.io/" class="back-home">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="15 6 9 12 15 18" />
+</svg>
+
+
+
+            <span>Back</span>
+        </a>
+    </div>
+
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/kaldi/" style="background-color: #2a9d8f; color: #fff;">
+                kaldi
+            </a>
+        
+    </header>
+    
+
+    <h2 class="article-title">
+        <a href="/p/mfcc%E5%92%8Cfbank%E7%89%B9%E5%BE%81/">MFCC和FBank特征</a>
+    </h2>
+
+    
+    <h3 class="article-subtitle">
+        Mel Frequency Cepstral Coefficents and Filter Banks
+    </h3>
+    <footer class="article-time">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+        <time class="article-time--published">May 08, 2019</time>
+    </footer></div>
+</header>
+
+    <section class="article-content">
+    <p>MFCC（Mel Frequency Cepstral Coefficent）和Fbank特征在语音和说话人识别中被广泛使用。</p>
+<p>Fbank和MFCC计算的主要过程一致，MFCC是在Fbank的基础上做DCT变换，去除特征维度之间的相关性。</p>
+<p><img src="https://s3.ax1x.com/2021/02/24/yXVHnU.png" alt="fbank"  /></p>
+<!-- raw HTML omitted -->
+<h3 id="预加重">预加重</h3>
+<p>第一步是对语音信号应用预加重，以放大高频部分。将语音信号通过一个高通滤波器：</p>
+<p>$$
+y(t) = x(t) - \alpha x(t-1)
+$$
+其中滤波系数$\alpha$一般取0.95或0.97。</p>
+<p>预加重滤波器在几种方面有用：（1）平衡频谱，因为高频通常比低频具有较小的能量；（2）避免在傅立叶变换操作期间出现数值问题；（3）还可改善信噪比（SNR）。</p>
+<p><img src="https://s3.ax1x.com/2021/02/24/yXZY3q.jpg" alt="raw"  /></p>
+<!-- raw HTML omitted -->
+<h3 id="分帧">分帧</h3>
+<p>因为语音信号是快速变化的，而FFT适用于分析平稳的信号。为了简化起见，我们假设音频信号在短时间范围内变化不大（当我们说它不变时，我们指的是统计上的，即统计上是平稳的，显然样本在不断变化。即使是短时间尺度）。我们将语音分成20-40ms帧（一般取帧长为25ms），如果帧过短，将没有足够的样本来获得可靠的频谱估计；如果帧过长，则信号在整个帧中变化太大。 帧移一般为10ms，相邻两帧之间有15ms的重叠部分。</p>
+<h3 id="加窗">加窗</h3>
+<p>将语音信号分帧后，我们将每一帧代入窗函数，窗外的值设定为0，其目的是保持帧中第一个点和最后一个点的连续性。常用的窗函数有汉明窗和汉宁窗等，根据窗函数的频域特性，常采用汉明窗(hamming window)。
+$$
+w[n]=(1-\alpha)-\alpha cos(\frac{2\pi n}{N-1})
+$$
+实践中$\alpha$一般取0.46，其中$0\leq n \leq N-1$，$N$为窗的长度。</p>
+<p>通过应用汉明窗，可以降低傅立叶变换后旁瓣的强度(主瓣是变换为频谱之后振幅最大的那个波峰部分，而周围的小的波峰部分叫旁瓣)，取得更高质量的频谱。</p>
+<p><img src="https://s3.ax1x.com/2021/02/24/yXZ5UH.png" alt="yXZ5UH.png"  /></p>
+<p>这里也解释了为什么要帧移是10ms,  相邻帧之间有15ms的重叠, 由于帧与帧连接处的信号因为加窗而弱化。</p>
+<h3 id="傅里叶变换">傅里叶变换</h3>
+<p>对分帧加窗后的各帧信号进行傅里叶变换得到各帧的频谱，一般只保留幅度谱，丢弃相位谱。</p>
+<h3 id="mel滤波">Mel滤波</h3>
+<p>由于人耳对不同频率的敏感程度不同（人耳对低频声音的变化比高频的变化更敏感），且成非线性关系。因此我们</p>
+<p>将频谱按人耳敏感程度分为多个Mel滤波器组，在Mel刻度范围内，各个滤波器的中心频率是相等间隔的线性分布，但在频率范围不是相等间隔的。
+$$
+mel(f)=2595*log_{10}(1+f/700)
+$$
+<img src="https://s3.ax1x.com/2021/02/24/yXZxaQ.jpg" alt="yXZxaQ.jpg"  /></p>
+<p>将频谱通过一组Mel尺度的三角形滤波器组，一般用40个滤波器，每个滤波在中心频率的响应都是1，然后线性下降，一直到相邻三角滤波的中心频率处为0，如图所示：
+<img src="https://s3.ax1x.com/2021/02/24/yXZ78I.jpg" alt="yXZ78I.jpg"  /></p>
+<p>通过以上一系列的操作，即得到了FBank特征。</p>
+<h2 id="mfcc">MFCC</h2>
+<p>事实证明，在上一步中计算出的FBank特征的维度间是高度相关的（相邻滤波器间存在重叠），这在某些机器学习算法中可能会出现问题。因此，我们可以应用离散余弦变换（DCT）去相关，并进一步压缩了特征。</p>
+<h3 id="log">log</h3>
+<p>对FBank特征取log，可以放大低能量处的能量差异。</p>
+<h3 id="dct">DCT</h3>
+<p>计算MFCC时使用的离散余弦变换（discrete cosine transform，DCT）是傅里叶变换的一个变种，好处是结果是实数，没有虚部。DCT还有一个特点是，对于一般的语音信号，这一步的结果的前几个系数特别大，后面的系数比较小，可以忽略。上面说了一般取40个三角形，所以DCT的结果也是40个点；实际中，一般仅保留前12~20个，这就进一步压缩了数据。</p>
+<h2 id="fbank与mfcc">FBank与MFCC</h2>
+<p>到目前为止，已根据其动机和实现方式讨论了计算FBank和MFCC的步骤。有趣的是，计算FBank所需的所有步骤都是由语音信号的性质和人类对此类信号的感知所激发的。相反，某些机器学习算法的局限性促使了计算MFCC所需的额外步骤。需要离散余弦变换（DCT）来使FBank系数去相关，该过程也称为白化。特别是，当高斯混合模型-隐马尔可夫模型（GMM-HMM）非常流行并且MFCC和GMM-HMM共同发展成为自动语音识别（ASR）的标准方式时，MFCC变得非常流行。随着深度学习在语音系统中的出现，人们可能会质疑MFCC是否仍然是正确的选择，因为深度神经网络不太容易受到高度相关的输入的影响，因此离散余弦变换（DCT）不再是必要的步骤。</p>
+<h2 id="结论">结论</h2>
+<p>在本文中，我们探讨了计算FBank和MFCC的过程。讨论了该过程中每个步骤的动机和实现。我们还提出了与MFCC相比，FBank越来越受欢迎的原因。</p>
+<p>如果机器学习算法不易受到高度相关的输入的影响，推荐使用FBank。如果机器学习算法易受相关输入的影响，则使用MFCC更好。</p>
+<h2 id="reference">Reference</h2>
+<ul>
+<li><a href="https://haythamfayek.com/2016/04/21/speech-processing-for-machine-learning.html">https://haythamfayek.com/2016/04/21/speech-processing-for-machine-learning.html</a></li>
+<li><a href="https://blog.csdn.net/wbgxx333/article/details/10020449">https://blog.csdn.net/wbgxx333/article/details/10020449</a></li>
+<li><a href="http://www.speech.cs.cmu.edu/15-492/slides/03_mfcc.pdf">http://www.speech.cs.cmu.edu/15-492/slides/03_mfcc.pdf</a></li>
+</ul>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/frontend/">frontend</a>
+        
+    </section>
+
+
+    </footer>
+
+    
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css"
+    integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"
+    integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4"
+    crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"
+    integrity="sha384-mll67QQFJfxn0IYznZYonOWZ644AWYC+Pt2cHqMaRhXVrursRwvLnLaebdGIlYNa" crossorigin="anonymous"
+    onload="StackLaTeX()"></script>
+
+<script>
+    function StackLaTeX() {
+        renderMathInElement(document.querySelector(`.article-content`), {
+            delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true }
+            ]
+        });
+    }
+</script>
+    
+</article>
+
+    <aside class="related-contents--wrapper">
+    
+    
+</aside>
+
+
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2021 Cosmo
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="2.0.1">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css">
+            </main>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js"
+    integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin="anonymous"></script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>
