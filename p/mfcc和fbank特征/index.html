@@ -198,11 +198,11 @@
 
     <section class="article-content">
     <p>MFCC（Mel Frequency Cepstral Coefficent）和Fbank特征在语音和说话人识别中被广泛使用。</p>
-<p>Fbank和MFCC计算的主要过程一致，MFCC是在Fbank的基础上做DCT变换，去除特征维度之间的相关性。
-Fbank:
-<img src="https://s3.ax1x.com/2021/02/24/yXVHnU.png" alt="fbank"  />
-MFCC:
-<img src="https://s3.ax1x.com/2021/02/24/yXZANd.png" alt="mfcc"  /></p>
+<p>Fbank和MFCC计算的主要过程一致，MFCC是在Fbank的基础上做DCT变换，去除特征维度之间的相关性。</p>
+<p>Fbank:</p>
+<p><img src="https://s3.ax1x.com/2021/02/24/yXVHnU.png" alt="fbank"  /></p>
+<p>MFCC:</p>
+<p><img src="https://s3.ax1x.com/2021/02/24/yXZANd.png" alt="mfcc"  /></p>
 <h2 id="fbank">FBank</h2>
 <h3 id="预加重">预加重</h3>
 <p>第一步是对语音信号应用预加重，以放大高频部分。将语音信号通过一个高通滤波器：</p>
@@ -222,7 +222,7 @@ w[n]=(1-\alpha)-\alpha cos(\frac{2\pi n}{N-1})
 $$
 实践中$\alpha$一般取0.46，其中$0\leq n \leq N-1$，$N$为窗的长度。</p>
 <p>通过应用汉明窗，可以降低傅立叶变换后旁瓣的强度(主瓣是变换为频谱之后振幅最大的那个波峰部分，而周围的小的波峰部分叫旁瓣)，取得更高质量的频谱。</p>
-<p><img src="https://s3.ax1x.com/2021/02/24/yXZ5UH.png" alt="yXZ5UH.png"  /></p>
+<p><img src="https://s3.ax1x.com/2021/02/24/yXQByn.png" alt="yXQByn.png"  /></p>
 <p>这里也解释了为什么要帧移是10ms,  相邻帧之间有15ms的重叠, 由于帧与帧连接处的信号因为加窗而弱化。</p>
 <h3 id="傅里叶变换">傅里叶变换</h3>
 <p>对分帧加窗后的各帧信号进行傅里叶变换得到各帧的频谱，一般只保留幅度谱，丢弃相位谱。</p>
