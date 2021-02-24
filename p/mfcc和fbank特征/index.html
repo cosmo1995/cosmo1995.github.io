@@ -198,9 +198,12 @@
 
     <section class="article-content">
     <p>MFCC（Mel Frequency Cepstral Coefficent）和Fbank特征在语音和说话人识别中被广泛使用。</p>
-<p>Fbank和MFCC计算的主要过程一致，MFCC是在Fbank的基础上做DCT变换，去除特征维度之间的相关性。</p>
-<p><img src="https://s3.ax1x.com/2021/02/24/yXVHnU.png" alt="fbank"  /></p>
-<!-- raw HTML omitted -->
+<p>Fbank和MFCC计算的主要过程一致，MFCC是在Fbank的基础上做DCT变换，去除特征维度之间的相关性。
+Fbank:
+<img src="https://s3.ax1x.com/2021/02/24/yXVHnU.png" alt="fbank"  />
+MFCC:
+<img src="https://s3.ax1x.com/2021/02/24/yXZANd.png" alt="mfcc"  /></p>
+<h2 id="fbank">FBank</h2>
 <h3 id="预加重">预加重</h3>
 <p>第一步是对语音信号应用预加重，以放大高频部分。将语音信号通过一个高通滤波器：</p>
 <p>$$
