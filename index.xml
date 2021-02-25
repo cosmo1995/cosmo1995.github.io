@@ -7,18 +7,17 @@
         <generator>Hugo -- gohugo.io</generator>
         <language>en-us</language>
         <lastBuildDate>Wed, 24 Feb 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/index.xml" rel="self" type="application/rss+xml" /><item>
-        <title>MFCC和FBank特征</title>
+        <title>MFCC和FBANK特征</title>
         <link>https://cosmo1995.github.io/p/mfcc%E5%92%8Cfbank%E7%89%B9%E5%BE%81/</link>
         <pubDate>Wed, 24 Feb 2021 00:00:00 +0000</pubDate>
         
         <guid>https://cosmo1995.github.io/p/mfcc%E5%92%8Cfbank%E7%89%B9%E5%BE%81/</guid>
-        <description>&lt;p&gt;MFCC（Mel Frequency Cepstral Coefficent）和Fbank特征在语音和说话人识别中被广泛使用。&lt;/p&gt;
-&lt;p&gt;Fbank和MFCC计算的主要过程一致，MFCC是在Fbank的基础上做DCT变换，去除特征维度之间的相关性。&lt;/p&gt;
-&lt;p&gt;Fbank:&lt;/p&gt;
-&lt;p&gt;&lt;img src=&#34;https://s3.ax1x.com/2021/02/24/yXVHnU.png&#34; alt=&#34;fbank&#34;  /&gt;&lt;/p&gt;
+        <description>&lt;p&gt;MFCC（Mel Frequency Cepstral Coefficent）和FBANK特征在语音和说话人识别中被广泛使用。FBANK和MFCC计算的主要过程一致，MFCC是在FBANK的基础上做DCT变换。&lt;/p&gt;
+&lt;p&gt;FBANK:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://s3.ax1x.com/2021/02/24/yXVHnU.png&#34; alt=&#34;FBANK&#34;  /&gt;&lt;/p&gt;
 &lt;p&gt;MFCC:&lt;/p&gt;
 &lt;p&gt;&lt;img src=&#34;https://s3.ax1x.com/2021/02/24/yXZANd.png&#34; alt=&#34;mfcc&#34;  /&gt;&lt;/p&gt;
-&lt;h2 id=&#34;fbank&#34;&gt;FBank&lt;/h2&gt;
+&lt;h2 id=&#34;fbank&#34;&gt;FBANK&lt;/h2&gt;
 &lt;h3 id=&#34;预加重&#34;&gt;预加重&lt;/h3&gt;
 &lt;p&gt;第一步是对语音信号应用预加重，以放大高频部分。将语音信号通过一个高通滤波器：&lt;/p&gt;
 &lt;p&gt;$$
@@ -29,9 +28,10 @@ $$
 &lt;p&gt;&lt;img src=&#34;https://s3.ax1x.com/2021/02/24/yXZY3q.jpg&#34; alt=&#34;raw&#34;  /&gt;&lt;/p&gt;
 &lt;!-- raw HTML omitted --&gt;
 &lt;h3 id=&#34;分帧&#34;&gt;分帧&lt;/h3&gt;
-&lt;p&gt;因为语音信号是快速变化的，而FFT适用于分析平稳的信号。为了简化起见，我们假设音频信号在短时间范围内变化不大（当我们说它不变时，我们指的是统计上的，即统计上是平稳的，显然样本在不断变化。即使是短时间尺度）。我们将语音分成20-40ms帧（一般取帧长为25ms），如果帧过短，将没有足够的样本来获得可靠的频谱估计；如果帧过长，则信号在整个帧中变化太大。 帧移一般为10ms，相邻两帧之间有15ms的重叠部分。&lt;/p&gt;
+&lt;p&gt;因为语音信号是快速变化的，而FFT适用于分析平稳的信号。为了简化起见，我们假设音频信号在短时间范围内变化不大（当我们说它不变时，我们指的是统计上的，即统计上是平稳的，显然样本在不断变化。即使是短时间尺度）。我们将语音分成20-40ms帧（一般取帧长为25ms），如果帧过短，将没有足够的样本来获得可靠的频谱估计；如果帧过长，则信号在整个帧中变化太大。 为确保声学特征参数的平滑性，帧移一般为10ms，即相邻两帧之间有15ms的重叠。&lt;/p&gt;
 &lt;h3 id=&#34;加窗&#34;&gt;加窗&lt;/h3&gt;
-&lt;p&gt;将语音信号分帧后，我们将每一帧代入窗函数，窗外的值设定为0，其目的是保持帧中第一个点和最后一个点的连续性。常用的窗函数有汉明窗和汉宁窗等，根据窗函数的频域特性，常采用汉明窗(hamming window)。
+&lt;p&gt;特征提取时，每次取长为25ms的语音，进行离散傅立叶变换计算出一帧，接着步移10ms继续计算下一帧，相当于加了矩形窗。而棱角分明的矩形窗容易造成频谱泄露，可以选择使用汉明窗（Hamming Window）、汉宁窗(Hanning Window)等。&lt;/p&gt;
+&lt;p&gt;汉明窗：
 $$
 w[n]=(1-\alpha)-\alpha cos(\frac{2\pi n}{N-1})
 $$
@@ -41,6 +41,8 @@ $$
 &lt;p&gt;这里也解释了为什么要帧移是10ms,  相邻帧之间有15ms的重叠, 由于帧与帧连接处的信号因为加窗而弱化。&lt;/p&gt;
 &lt;h3 id=&#34;傅里叶变换&#34;&gt;傅里叶变换&lt;/h3&gt;
 &lt;p&gt;对分帧加窗后的各帧信号进行傅里叶变换得到各帧的频谱，一般只保留幅度谱，丢弃相位谱。&lt;/p&gt;
+&lt;p&gt;语音信号经过短时傅立叶变换（STFT）后得到的频谱为对称谱，取正频率轴的频谱曲线，并且将每一帧的频谱值按时间顺序拼接起来即可得到语谱图（Spectrogram）。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://s3.ax1x.com/2021/02/25/yjrbgs.jpg&#34; alt=&#34;yjrbgs.jpg&#34;  /&gt;&lt;/p&gt;
 &lt;h3 id=&#34;mel滤波&#34;&gt;Mel滤波&lt;/h3&gt;
 &lt;p&gt;由于人耳对不同频率的敏感程度不同（人耳对低频声音的变化比高频的变化更敏感），且成非线性关系。因此我们&lt;/p&gt;
 &lt;p&gt;将频谱按人耳敏感程度分为多个Mel滤波器组，在Mel刻度范围内，各个滤波器的中心频率是相等间隔的线性分布，但在频率范围不是相等间隔的。
@@ -50,23 +52,23 @@ $$
 &lt;img src=&#34;https://s3.ax1x.com/2021/02/24/yXZxaQ.jpg&#34; alt=&#34;yXZxaQ.jpg&#34;  /&gt;&lt;/p&gt;
 &lt;p&gt;将频谱通过一组Mel尺度的三角形滤波器组，一般用40个滤波器，每个滤波在中心频率的响应都是1，然后线性下降，一直到相邻三角滤波的中心频率处为0，如图所示：
 &lt;img src=&#34;https://s3.ax1x.com/2021/02/24/yXZ78I.jpg&#34; alt=&#34;yXZ78I.jpg&#34;  /&gt;&lt;/p&gt;
-&lt;p&gt;通过以上一系列的操作，即得到了FBank特征。&lt;/p&gt;
+&lt;p&gt;Mel频谱的能量数值取对数得到FBANK特征，对数计算增强了特征的鲁棒性。用于DNN训练时，FBANK的维度就是Mel滤波器的个数。&lt;/p&gt;
 &lt;h2 id=&#34;mfcc&#34;&gt;MFCC&lt;/h2&gt;
-&lt;p&gt;事实证明，在上一步中计算出的FBank特征的维度间是高度相关的（相邻滤波器间存在重叠），这在某些机器学习算法中可能会出现问题。因此，我们可以应用离散余弦变换（DCT）去相关，并进一步压缩了特征。&lt;/p&gt;
-&lt;h3 id=&#34;log&#34;&gt;log&lt;/h3&gt;
-&lt;p&gt;对FBank特征取log，可以放大低能量处的能量差异。&lt;/p&gt;
+&lt;p&gt;FBANK特征中含有基频的谐波（相当于频谱中的毛刺），不利于整体轮廓（包络）的显现，并且各维度之间具有较高的相关性的（相邻滤波器间存在重叠），不适宜GMM学习。&lt;/p&gt;
+&lt;p&gt;MFCC的目的是消除与音素判别关系不大的谐波，保留包络信息。对FBANK特征每帧进行离散傅立叶变换（IDFT）可以将包络与谐波分开，等价于对每帧FBANK进行离散余弦变换（DCT），生成结果即为倒谱。&lt;/p&gt;
 &lt;h3 id=&#34;dct&#34;&gt;DCT&lt;/h3&gt;
 &lt;p&gt;计算MFCC时使用的离散余弦变换（discrete cosine transform，DCT）是傅里叶变换的一个变种，好处是结果是实数，没有虚部。DCT还有一个特点是，对于一般的语音信号，这一步的结果的前几个系数特别大，后面的系数比较小，可以忽略。上面说了一般取40个三角形，所以DCT的结果也是40个点；实际中，一般仅保留前12~20个，这就进一步压缩了数据。&lt;/p&gt;
-&lt;h2 id=&#34;fbank与mfcc&#34;&gt;FBank与MFCC&lt;/h2&gt;
-&lt;p&gt;到目前为止，已根据其动机和实现方式讨论了计算FBank和MFCC的步骤。有趣的是，计算FBank所需的所有步骤都是由语音信号的性质和人类对此类信号的感知所激发的。相反，某些机器学习算法的局限性促使了计算MFCC所需的额外步骤。需要离散余弦变换（DCT）来使FBank系数去相关，该过程也称为白化。特别是，当高斯混合模型-隐马尔可夫模型（GMM-HMM）非常流行并且MFCC和GMM-HMM共同发展成为自动语音识别（ASR）的标准方式时，MFCC变得非常流行。随着深度学习在语音系统中的出现，人们可能会质疑MFCC是否仍然是正确的选择，因为深度神经网络不太容易受到高度相关的输入的影响，因此离散余弦变换（DCT）不再是必要的步骤。&lt;/p&gt;
+&lt;h2 id=&#34;fbank与mfcc&#34;&gt;FBANK与MFCC&lt;/h2&gt;
+&lt;p&gt;到目前为止，已根据其动机和实现方式讨论了计算FBANK和MFCC的步骤。有趣的是，计算FBANK所需的所有步骤都是由语音信号的性质和人类对此类信号的感知所激发的。相反，某些机器学习算法的局限性促使了计算MFCC所需的额外步骤。需要离散余弦变换（DCT）来使FBANK系数去相关，该过程也称为白化。特别是，当高斯混合模型-隐马尔可夫模型（GMM-HMM）非常流行并且MFCC和GMM-HMM共同发展成为自动语音识别（ASR）的标准方式时，MFCC变得非常流行。随着深度学习在语音系统中的出现，人们可能会质疑MFCC是否仍然是正确的选择，因为深度神经网络不太容易受到高度相关的输入的影响，因此离散余弦变换（DCT）不再是必要的步骤。&lt;/p&gt;
 &lt;h2 id=&#34;结论&#34;&gt;结论&lt;/h2&gt;
-&lt;p&gt;在本文中，我们探讨了计算FBank和MFCC的过程。讨论了该过程中每个步骤的动机和实现。我们还提出了与MFCC相比，FBank越来越受欢迎的原因。&lt;/p&gt;
-&lt;p&gt;如果机器学习算法不易受到高度相关的输入的影响，推荐使用FBank。如果机器学习算法易受相关输入的影响，则使用MFCC更好。&lt;/p&gt;
+&lt;p&gt;在本文中，我们探讨了计算FBANK和MFCC的过程。讨论了该过程中每个步骤的动机和实现。我们还提出了与MFCC相比，FBANK越来越受欢迎的原因。&lt;/p&gt;
+&lt;p&gt;如果机器学习算法不易受到高度相关的输入的影响，推荐使用FBANK。如果机器学习算法易受相关输入的影响，则使用MFCC更好。&lt;/p&gt;
 &lt;h2 id=&#34;reference&#34;&gt;Reference&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&#34;https://haythamfayek.com/2016/04/21/speech-processing-for-machine-learning.html&#34;&gt;https://haythamfayek.com/2016/04/21/speech-processing-for-machine-learning.html&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;https://blog.csdn.net/wbgxx333/article/details/10020449&#34;&gt;https://blog.csdn.net/wbgxx333/article/details/10020449&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;http://www.speech.cs.cmu.edu/15-492/slides/03_mfcc.pdf&#34;&gt;http://www.speech.cs.cmu.edu/15-492/slides/03_mfcc.pdf&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.jianshu.com/p/8369b39f362f&#34;&gt;https://www.jianshu.com/p/8369b39f362f&lt;/a&gt;&lt;/li&gt;
 &lt;/ul&gt;
 </description>
         </item>
