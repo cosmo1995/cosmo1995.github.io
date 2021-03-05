@@ -8,15 +8,30 @@
     <language>en-us</language>
     <lastBuildDate>Wed, 24 Feb 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/post/index.xml" rel="self" type="application/rss+xml" />
     <item>
+      <title>Kaldi中的特征变换</title>
+      <link>https://cosmo1995.github.io/p/kaldi%E4%B8%AD%E7%9A%84%E7%89%B9%E5%BE%81%E5%8F%98%E6%8D%A2/</link>
+      <pubDate>Wed, 24 Feb 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://cosmo1995.github.io/p/kaldi%E4%B8%AD%E7%9A%84%E7%89%B9%E5%BE%81%E5%8F%98%E6%8D%A2/</guid>
+      <description>Kaldi中的特征空间变换 Kaldi中的特征空间变化的方法包含两类：
+Speaker Independent：
+ 线性判别分析LDA(Linear Discriminant Analysis) 拼帧Frame Splicing &amp;amp; 差分Delta 最大似然线性变换MLLT(Maximum Likelihood Linear Transform)/半绑定协方差STC(Semi-tied Covariance)  Speaker Adaptive：
+ 特征空间最大似然线性回归fMLLR(feature-space Maximum Likelihood Linear Regression) 线性声道长度归一化LVTLN(Linear Vocal Tract Length Normalization) 倒谱均值方差归一化CMVN(Cepstral Mean and Variance Normalization)  Speaker Independent： Delta 为了更好的识别语音，我们在静态MFCC特征的基础上附加一阶（delta）和二阶（delta-delta）差分，以补偿HMM的声学模型做出的条件独立性假设。
+LDA+MLLT 首先对原始的MFCC特征进行拼帧(Frame Splicing)，将相邻的N帧拼接起来，如下面的例子将7帧拼接到一起。
+steps/train_lda_mllt.sh --cmd &amp;#34;train.cmd&amp;#34; \  --splice-opts &amp;#34;--left-context=3 --right-context=3&amp;#34; \  2500 15000 $data $lang $tri1_ali $tri_2b 在HMM-GMM模型中，通过GMM对HMM的发射概率进行建模。为了减少GMM模型的参数量，我们通常使用对角协方差(diagonal covariance)矩阵，这就要特征的各个维度之间是独立的(independent)。MFCC特征即使通过DCT去相关后仍存在一定的相关性，而拼帧后的特征间的相关性更强了。
+因此将拼接后的帧通过LDA进行降维和去相关。LDA的核心思想为投影后类内方差最小，类间的方差最大，这里的类指的是声学模型的状态(如pdf-id)。
+LDA降维后的特征通过MLLT再次进行去相关，MLLT引入了一种新形式的协方差矩阵，这种方法的每个高斯分量有两个方差矩阵:
+ 对角协方差矩阵$\Sigma_{diag}^{(m)}$ 半绑定非对角矩阵$H$，可以在多个高斯分量之间共享  第m个高斯分量的协方差矩阵可以描述为： $$ \Sigma^{(m)}=H\Sigma^{(m)}{diag}H^{T} $$ 令$A=H^{-1}$，则有： $$ \Sigma^{(m)-1}=A^{T}\Sigma^{(m-1)}{diag}A $$ 训练过程为EM算法：</description>
+    </item>
+    
+    <item>
       <title>MFCC和FBANK特征</title>
       <link>https://cosmo1995.github.io/p/mfcc%E5%92%8Cfbank%E7%89%B9%E5%BE%81/</link>
       <pubDate>Wed, 24 Feb 2021 00:00:00 +0000</pubDate>
       
       <guid>https://cosmo1995.github.io/p/mfcc%E5%92%8Cfbank%E7%89%B9%E5%BE%81/</guid>
-      <description>MFCC（Mel Frequency Cepstral Coefficent）和FBANK特征在语音和说话人识别中被广泛使用。FBANK和MFCC计算的主要过程一致，MFCC是在FBANK的基础上做DCT变换。
-FBANK:
-MFCC:
-FBANK 预加重 第一步是对语音信号应用预加重，以放大高频部分。将语音信号通过一个高通滤波器：
+      <description>MFCC（Mel Frequency Cepstral Coefficent）和FBANK特征在语音和说话人识别中被广泛使用。FBANK和MFCC计算的主要过程一致，MFCC是在FBANK的基础上做DCT变换。MFCC特征提取的过程可以分为预处理和倒谱两部分。
+预处理 预加重 第一步是对语音信号应用预加重，以放大高频部分。将语音信号通过一个高通滤波器：
 $$ y(t) = x(t) - \alpha x(t-1) $$ 其中滤波系数$\alpha$一般取0.95或0.97。
 预加重滤波器在几种方面有用：（1）平衡频谱，因为高频通常比低频具有较小的能量；（2）避免在傅立叶变换操作期间出现数值问题；（3）还可改善信噪比（SNR）。
 分帧 因为语音信号是快速变化的，而FFT适用于分析平稳的信号。为了简化起见，我们假设音频信号在短时间范围内变化不大（当我们说它不变时，我们指的是统计上的，即统计上是平稳的，显然样本在不断变化。即使是短时间尺度）。我们将语音分成20-40ms帧（一般取帧长为25ms），如果帧过短，将没有足够的样本来获得可靠的频谱估计；如果帧过长，则信号在整个帧中变化太大。 为确保声学特征参数的平滑性，帧移一般为10ms，即相邻两帧之间有15ms的重叠。
@@ -24,17 +39,21 @@ $$ y(t) = x(t) - \alpha x(t-1) $$ 其中滤波系数$\alpha$一般取0.95或0.97
 汉明窗： $$ w[n]=(1-\alpha)-\alpha cos(\frac{2\pi n}{N-1}) $$ 实践中$\alpha$一般取0.46，其中$0\leq n \leq N-1$，$N$为窗的长度。
 通过应用汉明窗，可以降低傅立叶变换后旁瓣的强度(主瓣是变换为频谱之后振幅最大的那个波峰部分，而周围的小的波峰部分叫旁瓣)，取得更高质量的频谱。
 这里也解释了为什么要帧移是10ms, 相邻帧之间有15ms的重叠, 由于帧与帧连接处的信号因为加窗而弱化。
-傅里叶变换 对分帧加窗后的各帧信号进行傅里叶变换得到各帧的频谱，一般只保留幅度谱，丢弃相位谱。
-语音信号经过短时傅立叶变换（STFT）后得到的频谱为对称谱，取正频率轴的频谱曲线，并且将每一帧的频谱值按时间顺序拼接起来即可得到语谱图（Spectrogram）。
-Mel滤波 由于人耳对不同频率的敏感程度不同（人耳对低频声音的变化比高频的变化更敏感），且成非线性关系。因此我们
-将频谱按人耳敏感程度分为多个Mel滤波器组，在Mel刻度范围内，各个滤波器的中心频率是相等间隔的线性分布，但在频率范围不是相等间隔的。 $$ mel(f)=2595*log_{10}(1+f/700) $$ 将频谱通过一组Mel尺度的三角形滤波器组，一般用40个滤波器，每个滤波在中心频率的响应都是1，然后线性下降，一直到相邻三角滤波的中心频率处为0，如图所示： Mel频谱的能量数值取对数得到FBANK特征，对数计算增强了特征的鲁棒性。用于DNN训练时，FBANK的维度就是Mel滤波器的个数。
-MFCC FBANK特征中含有基频的谐波（相当于频谱中的毛刺），不利于整体轮廓（包络）的显现，并且各维度之间具有较高的相关性的（相邻滤波器间存在重叠），不适宜GMM学习。
-MFCC的目的是消除与音素判别关系不大的谐波，保留包络信息。对FBANK特征每帧进行离散傅立叶变换（IDFT）可以将包络与谐波分开，等价于对每帧FBANK进行离散余弦变换（DCT），生成结果即为倒谱。
-DCT 计算MFCC时使用的离散余弦变换（discrete cosine transform，DCT）是傅里叶变换的一个变种，好处是结果是实数，没有虚部。DCT还有一个特点是，对于一般的语音信号，这一步的结果的前几个系数特别大，后面的系数比较小，可以忽略。上面说了一般取40个三角形，所以DCT的结果也是40个点；实际中，一般仅保留前12~20个，这就进一步压缩了数据。
-FBANK与MFCC 到目前为止，已根据其动机和实现方式讨论了计算FBANK和MFCC的步骤。有趣的是，计算FBANK所需的所有步骤都是由语音信号的性质和人类对此类信号的感知所激发的。相反，某些机器学习算法的局限性促使了计算MFCC所需的额外步骤。需要离散余弦变换（DCT）来使FBANK系数去相关，该过程也称为白化。特别是，当高斯混合模型-隐马尔可夫模型（GMM-HMM）非常流行并且MFCC和GMM-HMM共同发展成为自动语音识别（ASR）的标准方式时，MFCC变得非常流行。随着深度学习在语音系统中的出现，人们可能会质疑MFCC是否仍然是正确的选择，因为深度神经网络不太容易受到高度相关的输入的影响，因此离散余弦变换（DCT）不再是必要的步骤。
-结论 在本文中，我们探讨了计算FBANK和MFCC的过程。讨论了该过程中每个步骤的动机和实现。我们还提出了与MFCC相比，FBANK越来越受欢迎的原因。
-如果机器学习算法不易受到高度相关的输入的影响，推荐使用FBANK。如果机器学习算法易受相关输入的影响，则使用MFCC更好。
-Reference  https://haythamfayek.com/2016/04/21/speech-processing-for-machine-learning.html https://blog.csdn.net/wbgxx333/article/details/10020449 http://www.speech.cs.cmu.edu/15-492/slides/03_mfcc.pdf https://www.jianshu.com/p/8369b39f362f  </description>
+倒谱 在对原始语音进行预加重、分帧、加窗等预处理后，就可以进行倒谱分析了。我们对每一帧语音进行FFT，得到每一帧语音的频谱图(spectrum)。
+
+频谱图中，峰值表示语音的主要频率成分，我们把这些峰值称为共振峰（formants），而共振峰包含了声音的辨识属性。共振峰点的通过一条平滑曲线连接起来，这条曲线叫做频谱的包络（Spectral Envelope）。
+
+我们可以这么理解，将原始的频谱由两部分组成：包络和细节。包络包含了语音的主要信息，因此我们的目的就是把包络部分提取出来，即分离频谱的包络和细节。
+频谱用$X[k]$表示，包络为$H[k]$，细节为$E[k]$，则有 $$ X[k]=H[k]*E[k] $$ 在两边取对数，将乘法转换为加法，便于分离，有： $$ logX[k]=logH[k] + logE[k] $$ 因此我们的目的是在给定$logX[k]$的基础上，求$logH[k]$和$logE[k]$，使得$logX[k]=logH[k] + logE[k]$。
+为了达到这一目的，我们在对数频谱上做FFT，频谱上做FFT相当于IFFT。在对数频谱上做IFFT就相当于在一个伪频率（pseudo-frequency）坐标轴上面描述信号。
+
+由上面这个图我们可以看到，包络是主要是低频成分，我们把它看成是一个每秒4个周期的正弦信号。这样我们在伪坐标轴上面的4Hz的地方给它一个峰值。而频谱的细节部分主要是高频。我们把它看成是一个每秒100个周期的正弦信号。这样我们在伪坐标轴上面的100Hz的地方给它一个峰值。把它俩叠加起来就是原来的频谱信号了。
+在实际中我们已经知道$logX[k]$，所以可以得到$x[k]$。而$h[k]$是$x[k]$的低频部分，那么我们将$x[k]$通过一个低通滤波器就可以得到$h[k]$了。
+$x[k]$实际上就是倒谱Cepstrum（这个是一个新造出来的词，把频谱的单词spectrum的前面四个字母顺序倒过来就是倒谱的单词了）。而我们所关心的$h[k]$就是倒谱的低频部分，它在语音识别中被广泛用于描述特征。
+那现在总结下倒谱分析，它实际上是这样一个过程：
+1）将原语音信号经过傅里叶变换得到频谱：$X[k]=H[k]E[k]$
+只考虑幅度就是：$||X[k] ||=||H[k]||\ ||E[k]||$
+2）我们在两边取对数：$log||X[k] ||= log ||H[k] ||+ log ||E[k] ||$</description>
     </item>
     
     <item>

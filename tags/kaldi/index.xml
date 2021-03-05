@@ -6,7 +6,24 @@
     <description>Recent content in kaldi on Cosmo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 08 Sep 2019 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/tags/kaldi/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Wed, 24 Feb 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/tags/kaldi/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Kaldi中的特征变换</title>
+      <link>https://cosmo1995.github.io/p/kaldi%E4%B8%AD%E7%9A%84%E7%89%B9%E5%BE%81%E5%8F%98%E6%8D%A2/</link>
+      <pubDate>Wed, 24 Feb 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://cosmo1995.github.io/p/kaldi%E4%B8%AD%E7%9A%84%E7%89%B9%E5%BE%81%E5%8F%98%E6%8D%A2/</guid>
+      <description>Kaldi中的特征空间变换 Kaldi中的特征空间变化的方法包含两类：
+Speaker Independent：
+ 线性判别分析LDA(Linear Discriminant Analysis) 拼帧Frame Splicing &amp;amp; 差分Delta 最大似然线性变换MLLT(Maximum Likelihood Linear Transform)/半绑定协方差STC(Semi-tied Covariance)  Speaker Adaptive：
+ 特征空间最大似然线性回归fMLLR(feature-space Maximum Likelihood Linear Regression) 线性声道长度归一化LVTLN(Linear Vocal Tract Length Normalization) 倒谱均值方差归一化CMVN(Cepstral Mean and Variance Normalization)  Speaker Independent： Delta 为了更好的识别语音，我们在静态MFCC特征的基础上附加一阶（delta）和二阶（delta-delta）差分，以补偿HMM的声学模型做出的条件独立性假设。
+LDA+MLLT 首先对原始的MFCC特征进行拼帧(Frame Splicing)，将相邻的N帧拼接起来，如下面的例子将7帧拼接到一起。
+steps/train_lda_mllt.sh --cmd &amp;#34;train.cmd&amp;#34; \  --splice-opts &amp;#34;--left-context=3 --right-context=3&amp;#34; \  2500 15000 $data $lang $tri1_ali $tri_2b 在HMM-GMM模型中，通过GMM对HMM的发射概率进行建模。为了减少GMM模型的参数量，我们通常使用对角协方差(diagonal covariance)矩阵，这就要特征的各个维度之间是独立的(independent)。MFCC特征即使通过DCT去相关后仍存在一定的相关性，而拼帧后的特征间的相关性更强了。
+因此将拼接后的帧通过LDA进行降维和去相关。LDA的核心思想为投影后类内方差最小，类间的方差最大，这里的类指的是声学模型的状态(如pdf-id)。
+LDA降维后的特征通过MLLT再次进行去相关，MLLT引入了一种新形式的协方差矩阵，这种方法的每个高斯分量有两个方差矩阵:
+ 对角协方差矩阵$\Sigma_{diag}^{(m)}$ 半绑定非对角矩阵$H$，可以在多个高斯分量之间共享  第m个高斯分量的协方差矩阵可以描述为： $$ \Sigma^{(m)}=H\Sigma^{(m)}{diag}H^{T} $$ 令$A=H^{-1}$，则有： $$ \Sigma^{(m)-1}=A^{T}\Sigma^{(m-1)}{diag}A $$ 训练过程为EM算法：</description>
+    </item>
+    
     <item>
       <title>Kaldi源码之决策树4_构建决策树</title>
       <link>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8B%E5%86%B3%E7%AD%96%E6%A0%914_%E6%9E%84%E5%BB%BA%E5%86%B3%E7%AD%96%E6%A0%91/</link>
