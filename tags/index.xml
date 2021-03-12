@@ -6,22 +6,22 @@
     <description>Recent content in Tags on Cosmo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Wed, 24 Feb 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Tue, 09 Mar 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>kaldi</title>
+      <link>https://cosmo1995.github.io/tags/kaldi/</link>
+      <pubDate>Tue, 09 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://cosmo1995.github.io/tags/kaldi/</guid>
+      <description></description>
+    </item>
+    
     <item>
       <title>frontend</title>
       <link>https://cosmo1995.github.io/tags/frontend/</link>
       <pubDate>Wed, 24 Feb 2021 00:00:00 +0000</pubDate>
       
       <guid>https://cosmo1995.github.io/tags/frontend/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>kaldi</title>
-      <link>https://cosmo1995.github.io/tags/kaldi/</link>
-      <pubDate>Wed, 24 Feb 2021 00:00:00 +0000</pubDate>
-      
-      <guid>https://cosmo1995.github.io/tags/kaldi/</guid>
       <description></description>
     </item>
     

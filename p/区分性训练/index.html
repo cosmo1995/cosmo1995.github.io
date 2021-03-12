@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='Discriminative Training'><title>区分性训练</title>
+
+<link rel='canonical' href='https://cosmo1995.github.io/p/%E5%8C%BA%E5%88%86%E6%80%A7%E8%AE%AD%E7%BB%83/'>
+
+<link rel="stylesheet" href="/scss/style.min.css"><meta property='og:title' content='区分性训练'>
+<meta property='og:description' content='Discriminative Training'>
+<meta property='og:url' content='https://cosmo1995.github.io/p/%E5%8C%BA%E5%88%86%E6%80%A7%E8%AE%AD%E7%BB%83/'>
+<meta property='og:site_name' content='Cosmo'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='kaldi' /><meta property='article:published_time' content='2021-03-09T00:00:00&#43;00:00'/><meta property='article:modified_time' content='2021-03-09T00:00:00&#43;00:00'/>
+<meta name="twitter:title" content="区分性训练">
+<meta name="twitter:description" content="Discriminative Training">
+    </head>
+    <body class="">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.body.dataset.scheme = 'dark';
+        } else {
+            document.body.dataset.scheme = 'light';
+        }
+    })();
+</script><div class="container main-container flex on-phone--column extended article-page with-toolbar">
+            <aside class="sidebar left-sidebar sticky">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header class="site-info">
+        
+            <figure class="site-avatar">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu874715197ebd8e5cb58e412c943f3434_12926_300x0_resize_q75_box.jpg" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+
+                
+            </figure>
+        
+        <h1 class="site-name"><a href="https://cosmo1995.github.io/">Cosmo</a></h1>
+        <h2 class="site-description">Why not ask the Magic Conch</h2>
+    </header>
+
+    <ol class="menu" id="main-menu">
+        
+        
+        
+
+        <li >
+            <a href='/'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>Home</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/about'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>About</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/archives'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>Archives</span>
+            </a>
+        </li>
+        
+
+        
+            <li id="dark-mode-toggle">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <span>Dark Mode</span>
+            </li>
+        
+    </ol>
+</aside>
+
+            <main class="main full-width">
+    <div id="article-toolbar">
+        <a href="https://cosmo1995.github.io/" class="back-home">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="15 6 9 12 15 18" />
+</svg>
+
+
+
+            <span>Back</span>
+        </a>
+    </div>
+
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/kaldi/" style="background-color: #2a9d8f; color: #fff;">
+                kaldi
+            </a>
+        
+    </header>
+    
+
+    <h2 class="article-title">
+        <a href="/p/%E5%8C%BA%E5%88%86%E6%80%A7%E8%AE%AD%E7%BB%83/">区分性训练</a>
+    </h2>
+
+    
+    <h3 class="article-subtitle">
+        Discriminative Training
+    </h3>
+    <footer class="article-time">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+        <time class="article-time--published">Mar 09, 2021</time>
+    </footer></div>
+</header>
+
+    <section class="article-content">
+    <h2 id="前言">前言</h2>
+<p>先回顾下语音识别的基本公式，我们要在给定语音观测序列$O$的情况下，求词序列$W$的概率$P(W|O)$，概率最大的词序列$W^{*}$即为最可能的识别结果。
+$$
+W^{*} = \arg\max_{W} P(W|O)
+$$
+根据贝叶斯公式，有：
+$$
+P(W|O)=\frac{P(O|W)P(W)}{P(O)}
+$$</p>
+<p>其中$P(O|W)$为声学模型，$P(W)$为语言模型，$P(O)$与识别结果无关可以忽略。故：
+$$
+W^{*} = \arg\max_{W} P(O|W)P(W)
+$$</p>
+<h2 id="最大似然估计">最大似然估计</h2>
+<p>基于最大似然的声学模型训练：</p>
+<p>$$
+\begin {aligned}
+\theta_{MLE} &amp;= \arg\max_{\theta}  P_\theta(O|W) \cr
+&amp;= \arg\max_{\theta}  \prod_u P_\theta(O_u|W_u) \cr
+&amp;= \arg\max_{\theta}  \sum_u \log P_\theta(O_u|W_u)
+\end {aligned}
+$$
+MLE的优点：</p>
+<ol>
+<li>MLE训练方法简单，一个较高精度的语音识别声学模型能迅速地训练得到</li>
+<li>MLE采用的EM等算法使得其不需要精细的参考文本音段时间标注，并在每一步迭代中确保对目标函数的优化</li>
+<li>MLE对训练资源的消耗较小</li>
+</ol>
+<p>MLE做出的假设：</p>
+<ol>
+<li>要求所学习模拟的分布是已知的，模型假设必须是正确的。就是说建模时指定的概率密度函数要能够代表实际语音的“真实”分布</li>
+<li>训练时数据应趋向于无穷多，可以经由无穷多的数据估计出模型的“真实”参数</li>
+<li>解码时需要的语言模型要事先已知，且参数要完全“真实”</li>
+</ol>
+<p>这三点实际上是不可能达到的，</p>
+<ol>
+<li>语音参数的“真实”分布是不可测的，更谈不上通常意义上的指数族函数(GMM)来充分模拟</li>
+<li>训练数据无穷多本就是天方夜谭</li>
+<li>解码中语言模型存在的问题与声学模型几乎完全一样，也达不到“真实”参数的要求</li>
+</ol>
+<p>结论：</p>
+<p>在现实条件下通过MLE训练得到最优分类器是不可能的，因此训练得到的ASR模型的识别率一般。</p>
+<h2 id="区分性训练">区分性训练</h2>
+<p>MLE由于上述问题的存在，识别效果不是很理想。为了在现实条件下能得到较优的分类器，区分性训练DT被提出。区分性训练的目标就是提高正确路径得分的同时降低其他路径得分，从而加大打分差异，就显得“区分开了”。MLE训练更重视调整模型参数以反映训练数据的概率分布，而区分性训练则更重视调整模型之间的分类面，以更好的根据设定的准则对训练数据进行分类。</p>
+<p>区分性训练的常用的准则为MMI最大互信息，并且和MLE不同的是，MMI直接最大化后验概率$P(W|O)$：</p>
+<p>$$
+\begin{aligned}
+\theta_{MMI} 
+&amp;= \arg\max_{\theta}  P_\theta(W|O) \cr
+&amp;= \arg\max_{\theta}  \prod_u P_\theta(W_u|O_u) \cr
+&amp;= \arg\max_{\theta} \sum_u \log P_\theta(W_u|O_u) \cr
+&amp;= \arg\max_{\theta} \sum_u \log \frac {P_\theta(O_u|W_u)P(W_u)}{P(O_u)}  \cr
+&amp;= \arg\max_{\theta} \sum_u \log \frac {P_\theta(O_u|W_u)P(W_u)}{\sum_W P_\theta(O_u|W)P(W)} 
+\end{aligned}
+$$</p>
+<p>和MLE的公式对比发现，MMI目标函数不仅与正确的标注（分子）有关系，还与其他的所有可能的$W$序列（分母）有关系。要最大化该式，要么使分子尽可能的大，要么使分母尽可能的小，要么同时去优化两者。</p>
+<p>上述公式在实际应用中有两个问题：</p>
+<ol>
+<li>MMI中的分母表示所有可能的词序列$W$，穷举出来计算量将十分巨大</li>
+<li>该式是否对声学模型（DNN）的参数可求导</li>
+</ol>
+<p>对于问题1，我们的思路是对$W$进行限制，让$W$是有穷的，可枚举的。有三条路可以走：</p>
+<ol>
+<li>N-best：用N-best代替所有路径，简单粗暴，很少有人这样走</li>
+<li>Lattice：为每个训练句子通过解码生成对应的lattice，来近似MMI分母部分，即Lattice-based MMI</li>
+<li>N-gram：用统计N-gram表示分母的所有可能路径</li>
+</ol>
+<p>对于问题2，答案是肯定的。(公式见&quot;Sequence-discriminative training of deep neural networks&quot;，详细推导可以参考http://placebokkk.github.io/asr/2019/12/24/asr-paper-se-mmi-note.html)。</p>
+<h2 id="lattice-based-mmi">Lattice-based MMI</h2>
+<p>上面说过，可以通过解码生成每个训练句子对应的lattice，来近似MMI分母部分。解码生成的lattice的示例如下图所示（图示为一个word级别的lattice），在解码过程中，除了保留最优路径之外，我们还将未被解码器剪枝的其他路径也保存下来，并且合并一些相同的前缀和后缀，表示为图的形式。由于lattice生成过程中系列剪枝处理后，其中包含的路径有限，相当于通过识别解码仅仅保留了概率大的词序列$W$，而将大部分小概率的词序列$W$忽略掉。</p>
+<p><a class="link" href="https://imgtu.com/i/6GwMTg"  target="_blank" rel="noopener"
+    ><img src="https://s3.ax1x.com/2021/03/10/6GwMTg.jpg" alt="6GwMTg.jpg"  /></a></p>
+<p>基于DNN-HMM的Lattice-based MMI训练流程：</p>
+<ol>
+<li>训练GMM-HMM，并基于CE(Cross Entropy)训练DNN</li>
+<li>DNN对每条训练句子状态级别的对齐，得到对应的Alignment，对应MMI分子部分</li>
+<li>基于WFST的HCLG对每条训练句子进行解码识别，得到对应的Lattice，对应MMI分母部分</li>
+<li>用基于CE的DNN参数初始化MMI模型，进行Lattice-based MMI训练</li>
+</ol>
+<p><a class="link" href="https://imgtu.com/i/6GMVtU"  target="_blank" rel="noopener"
+    ><img src="https://s3.ax1x.com/2021/03/10/6GMVtU.png" alt="6GMVtU.png"  /></a></p>
+<p>因为MMI的训练依赖Lattice，Lattice又依赖已经训练好的声学模型，所以在DNN的声学模型中，我们要先基于ML准则先训练好DNN模型，然后做MMI的训练。并且，<strong>Lattice是一个解码过程，其生成代价很高</strong>，并且只能在CPU上进行解码生成。一般我们只生成一次Lattice，区分性训练的过程中我们并不根据当前更新后的声学模型实时生成Lattice，也就是不使用实时的Lattice做MMI训练。所以在这种方式中，<strong>Lattice是滞后的，和当前的声学模型并不同步</strong>。</p>
+<p>区分性训练曾一度是语音识别的研究热点，除了MMI的准则之外，前人还提出过许多其他的区分性准则，如MCE、MPE、sMBR等等，其核心思想是一样的，形式上也大同小异，读者可以阅读文末的参考资料做进一步了解。目前，除了MMI之外，sMBR也比较常用。</p>
+<p>上述方法中，分母Lattice的生成需要对训练数据进行逐一解码，太麻烦了，有没有更简单的做法呢？</p>
+<h2 id="lattice-free-mmi">Lattice-free MMI</h2>
+<p>MMI中分母实际上是在考虑$W$的各种可能，即词序列的各种可能，在语言模型中我们通过统计n-gram的方式表示为概率模型，同样的，我们也可以通过概率统计模型n-gram去表示该分母。假设我们将$W$表示为一个和语音识别解码时类似的语言模型G，并为MMI分母构建一个类似HCLG的解码图，则该解码图中组合了MMI中的声学模型和语言模型的信息。对于任意特征观测$O$，我们将该HCLG当作一个巨大的HMM拓扑结构，在该拓扑结构上进行动态前向后向算法（和Lattice不同，Lattice在前向后向算法时，整个时间序列都已经展开，而这里需要根据观测$O$的长度动态展开成时间序列，和标准的HMM前向后向算法一样），最终可以得到上述所需的y_ut^DEN(s)。</p>
+<p>但是，我们提到$W$一定要是有限的，可枚举的，当MMI分母和语音识别解码图是一样时，即以词Word作为语言模型的单元，一般的语音识别系统词级别在数十万到百万之间，即使做个简单的bi-gram，其复杂度也非常非常高（HCLG的大小），训练代价非常高。</p>
+<p>为了降低复杂度，考虑以Phone作为语言模型单元。识别系统中Phone的一般在几十个到一百多个，考虑到数据稀疏性，即使做tri-gram或者4-gram复杂度也在合理区间内。以Phone作为建模单元时，MMI的分母图为HCP(没有词典L了)。</p>
+<p>其中，Phone的训练语料可以由语音识别的训练数据通过对齐生成。合理的控制Phone的MMI分母的大小，可以将其前向后向计算塞进GPU进行计算，也就是将MMI训练迁移到GPU，从而大大提高了MMI的训练速度。</p>
+<p>基于DNN-HMM的Lattice-free MMI训练流程：</p>
+<ol>
+<li>训练GMM-HMM，并基于CE(Cross Entropy)训练DNN</li>
+<li>MMI分母部分的FST前向后向计算直接用音素级别的FST图，并在每次训练后更新状态序列和统计量</li>
+<li>基于DNN-HMM得到句子的Lattice（FST形式）进行中MMI分子部分的前向后向计算</li>
+<li>进行Lattice-Free MMI训练</li>
+</ol>
+<p><a class="link" href="https://imgtu.com/i/6GK0FU"  target="_blank" rel="noopener"
+    ><img src="https://s3.ax1x.com/2021/03/10/6GK0FU.png" alt="6GK0FU.png"  /></a></p>
+<p>当使用语言模型的思想表示MMI的分母时，我们无需再对训练语料进行解码，无需生成Lattice，所以称之为Lattice Free MMI(LF-MMI)。对于所有训练语料来讲，MMI的分母图是一样的，并且因为我们限制了MMI分母图的空间，该前向后向算法是on-the-fly的，在训练过程中直接计算，其与声学模型是同步更新。</p>
+<p>对DNN训练也觉得是个累赘，能不能再简单一点呢？</p>
+<h2 id="chain-model">Chain-model</h2>
+<p>基于chain model的Lattice-free MMI训练流程：</p>
+<p><a class="link" href="https://imgtu.com/i/6GKFiD"  target="_blank" rel="noopener"
+    ><img src="https://s3.ax1x.com/2021/03/10/6GKFiD.png" alt="6GKFiD.png"  /></a></p>
+<p>Chain prepare包含：</p>
+<ul>
+<li>bi-phone Tree，决策树的重新生成</li>
+<li>Numerator FST，强制对齐得到分子FST</li>
+<li>Denominator FST，生成HCP得到分母FST</li>
+<li>Fixed chunk，整个音频分成块，加速训练和解码速度</li>
+<li>CE Regularization，使用CE作为第二个Task进行Multi-Task Learning</li>
+</ul>
+<p>chain model：</p>
+<ol>
+<li>HMM拓扑结构改变，从标准的三状态改为单状态的HMM</li>
+<li>训练速度更快，不需要预先训练DNN模型，同时省去了分母lattice的生成。</li>
+<li>解码速度更快，因为chain model采用拼帧降采样(每三帧取一帧)的方式，也就是说帧移变成了30ms，而不是10ms</li>
+</ol>
+<h2 id="总结">总结</h2>
+<p>本文先介绍了基于Lattice的区分性训练，再到LF-MMI，再到chain model，可以看到语音识别的流程在逐步简化。并且，我们在追求进一步的简化，目前看到的工作有：</p>
+<ol>
+<li>声学模型层面的简化：不依赖GMM-HMM系统，直接进行基于DNN的声学模型训练，如E2E-LF-MMI、CTC、CRF-CTC。</li>
+<li>整个语音识别简化，即当下研究热点End to End的语音识别系统，如CTC、LAS、RNN-T、Transformer。</li>
+</ol>
+<h2 id="reference">Reference</h2>
+<ol>
+<li><a href="http://www.inf.ed.ac.uk/teaching/courses/asr/2020-21/asr14-seq.pdf">http://www.inf.ed.ac.uk/teaching/courses/asr/2020-21/asr14-seq.pdf</a></li>
+<li><a href="https://www.inf.ed.ac.uk/teaching/courses/asr/2018-19/asr12-lfmmi.pdf">https://www.inf.ed.ac.uk/teaching/courses/asr/2018-19/asr12-lfmmi.pdf</a></li>
+<li><a href="https://zhuanlan.zhihu.com/p/210975288">https://zhuanlan.zhihu.com/p/210975288</a></li>
+</ol>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/kaldi/">kaldi</a>
+        
+    </section>
+
+
+    </footer>
+
+    
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css"
+    integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"
+    integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4"
+    crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"
+    integrity="sha384-mll67QQFJfxn0IYznZYonOWZ644AWYC+Pt2cHqMaRhXVrursRwvLnLaebdGIlYNa" crossorigin="anonymous"
+    onload="StackLaTeX()"></script>
+
+<script>
+    function StackLaTeX() {
+        renderMathInElement(document.querySelector(`.article-content`), {
+            delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true }
+            ]
+        });
+    }
+</script>
+    
+</article>
+
+    <aside class="related-contents--wrapper">
+    
+    
+</aside>
+
+
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2021 Cosmo
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="2.0.1">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css">
+            </main>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js"
+    integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin="anonymous"></script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

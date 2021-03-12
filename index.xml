@@ -6,7 +6,145 @@
         <description>Recent content on Cosmo</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>en-us</language>
-        <lastBuildDate>Wed, 24 Feb 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/index.xml" rel="self" type="application/rss+xml" /><item>
+        <lastBuildDate>Tue, 09 Mar 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>区分性训练</title>
+        <link>https://cosmo1995.github.io/p/%E5%8C%BA%E5%88%86%E6%80%A7%E8%AE%AD%E7%BB%83/</link>
+        <pubDate>Tue, 09 Mar 2021 00:00:00 +0000</pubDate>
+        
+        <guid>https://cosmo1995.github.io/p/%E5%8C%BA%E5%88%86%E6%80%A7%E8%AE%AD%E7%BB%83/</guid>
+        <description>&lt;h2 id=&#34;前言&#34;&gt;前言&lt;/h2&gt;
+&lt;p&gt;先回顾下语音识别的基本公式，我们要在给定语音观测序列$O$的情况下，求词序列$W$的概率$P(W|O)$，概率最大的词序列$W^{*}$即为最可能的识别结果。
+$$
+W^{*} = \arg\max_{W} P(W|O)
+$$
+根据贝叶斯公式，有：
+$$
+P(W|O)=\frac{P(O|W)P(W)}{P(O)}
+$$&lt;/p&gt;
+&lt;p&gt;其中$P(O|W)$为声学模型，$P(W)$为语言模型，$P(O)$与识别结果无关可以忽略。故：
+$$
+W^{*} = \arg\max_{W} P(O|W)P(W)
+$$&lt;/p&gt;
+&lt;h2 id=&#34;最大似然估计&#34;&gt;最大似然估计&lt;/h2&gt;
+&lt;p&gt;基于最大似然的声学模型训练：&lt;/p&gt;
+&lt;p&gt;$$
+\begin {aligned}
+\theta_{MLE} &amp;amp;= \arg\max_{\theta}  P_\theta(O|W) \cr
+&amp;amp;= \arg\max_{\theta}  \prod_u P_\theta(O_u|W_u) \cr
+&amp;amp;= \arg\max_{\theta}  \sum_u \log P_\theta(O_u|W_u)
+\end {aligned}
+$$
+MLE的优点：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;MLE训练方法简单，一个较高精度的语音识别声学模型能迅速地训练得到&lt;/li&gt;
+&lt;li&gt;MLE采用的EM等算法使得其不需要精细的参考文本音段时间标注，并在每一步迭代中确保对目标函数的优化&lt;/li&gt;
+&lt;li&gt;MLE对训练资源的消耗较小&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;MLE做出的假设：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;要求所学习模拟的分布是已知的，模型假设必须是正确的。就是说建模时指定的概率密度函数要能够代表实际语音的“真实”分布&lt;/li&gt;
+&lt;li&gt;训练时数据应趋向于无穷多，可以经由无穷多的数据估计出模型的“真实”参数&lt;/li&gt;
+&lt;li&gt;解码时需要的语言模型要事先已知，且参数要完全“真实”&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;这三点实际上是不可能达到的，&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;语音参数的“真实”分布是不可测的，更谈不上通常意义上的指数族函数(GMM)来充分模拟&lt;/li&gt;
+&lt;li&gt;训练数据无穷多本就是天方夜谭&lt;/li&gt;
+&lt;li&gt;解码中语言模型存在的问题与声学模型几乎完全一样，也达不到“真实”参数的要求&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;结论：&lt;/p&gt;
+&lt;p&gt;在现实条件下通过MLE训练得到最优分类器是不可能的，因此训练得到的ASR模型的识别率一般。&lt;/p&gt;
+&lt;h2 id=&#34;区分性训练&#34;&gt;区分性训练&lt;/h2&gt;
+&lt;p&gt;MLE由于上述问题的存在，识别效果不是很理想。为了在现实条件下能得到较优的分类器，区分性训练DT被提出。区分性训练的目标就是提高正确路径得分的同时降低其他路径得分，从而加大打分差异，就显得“区分开了”。MLE训练更重视调整模型参数以反映训练数据的概率分布，而区分性训练则更重视调整模型之间的分类面，以更好的根据设定的准则对训练数据进行分类。&lt;/p&gt;
+&lt;p&gt;区分性训练的常用的准则为MMI最大互信息，并且和MLE不同的是，MMI直接最大化后验概率$P(W|O)$：&lt;/p&gt;
+&lt;p&gt;$$
+\begin{aligned}
+\theta_{MMI} 
+&amp;amp;= \arg\max_{\theta}  P_\theta(W|O) \cr
+&amp;amp;= \arg\max_{\theta}  \prod_u P_\theta(W_u|O_u) \cr
+&amp;amp;= \arg\max_{\theta} \sum_u \log P_\theta(W_u|O_u) \cr
+&amp;amp;= \arg\max_{\theta} \sum_u \log \frac {P_\theta(O_u|W_u)P(W_u)}{P(O_u)}  \cr
+&amp;amp;= \arg\max_{\theta} \sum_u \log \frac {P_\theta(O_u|W_u)P(W_u)}{\sum_W P_\theta(O_u|W)P(W)} 
+\end{aligned}
+$$&lt;/p&gt;
+&lt;p&gt;和MLE的公式对比发现，MMI目标函数不仅与正确的标注（分子）有关系，还与其他的所有可能的$W$序列（分母）有关系。要最大化该式，要么使分子尽可能的大，要么使分母尽可能的小，要么同时去优化两者。&lt;/p&gt;
+&lt;p&gt;上述公式在实际应用中有两个问题：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;MMI中的分母表示所有可能的词序列$W$，穷举出来计算量将十分巨大&lt;/li&gt;
+&lt;li&gt;该式是否对声学模型（DNN）的参数可求导&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;对于问题1，我们的思路是对$W$进行限制，让$W$是有穷的，可枚举的。有三条路可以走：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;N-best：用N-best代替所有路径，简单粗暴，很少有人这样走&lt;/li&gt;
+&lt;li&gt;Lattice：为每个训练句子通过解码生成对应的lattice，来近似MMI分母部分，即Lattice-based MMI&lt;/li&gt;
+&lt;li&gt;N-gram：用统计N-gram表示分母的所有可能路径&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;对于问题2，答案是肯定的。(公式见&amp;quot;Sequence-discriminative training of deep neural networks&amp;quot;，详细推导可以参考http://placebokkk.github.io/asr/2019/12/24/asr-paper-se-mmi-note.html)。&lt;/p&gt;
+&lt;h2 id=&#34;lattice-based-mmi&#34;&gt;Lattice-based MMI&lt;/h2&gt;
+&lt;p&gt;上面说过，可以通过解码生成每个训练句子对应的lattice，来近似MMI分母部分。解码生成的lattice的示例如下图所示（图示为一个word级别的lattice），在解码过程中，除了保留最优路径之外，我们还将未被解码器剪枝的其他路径也保存下来，并且合并一些相同的前缀和后缀，表示为图的形式。由于lattice生成过程中系列剪枝处理后，其中包含的路径有限，相当于通过识别解码仅仅保留了概率大的词序列$W$，而将大部分小概率的词序列$W$忽略掉。&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6GwMTg&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;&lt;img src=&#34;https://s3.ax1x.com/2021/03/10/6GwMTg.jpg&#34; alt=&#34;6GwMTg.jpg&#34;  /&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;基于DNN-HMM的Lattice-based MMI训练流程：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;训练GMM-HMM，并基于CE(Cross Entropy)训练DNN&lt;/li&gt;
+&lt;li&gt;DNN对每条训练句子状态级别的对齐，得到对应的Alignment，对应MMI分子部分&lt;/li&gt;
+&lt;li&gt;基于WFST的HCLG对每条训练句子进行解码识别，得到对应的Lattice，对应MMI分母部分&lt;/li&gt;
+&lt;li&gt;用基于CE的DNN参数初始化MMI模型，进行Lattice-based MMI训练&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6GMVtU&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;&lt;img src=&#34;https://s3.ax1x.com/2021/03/10/6GMVtU.png&#34; alt=&#34;6GMVtU.png&#34;  /&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;因为MMI的训练依赖Lattice，Lattice又依赖已经训练好的声学模型，所以在DNN的声学模型中，我们要先基于ML准则先训练好DNN模型，然后做MMI的训练。并且，&lt;strong&gt;Lattice是一个解码过程，其生成代价很高&lt;/strong&gt;，并且只能在CPU上进行解码生成。一般我们只生成一次Lattice，区分性训练的过程中我们并不根据当前更新后的声学模型实时生成Lattice，也就是不使用实时的Lattice做MMI训练。所以在这种方式中，&lt;strong&gt;Lattice是滞后的，和当前的声学模型并不同步&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;区分性训练曾一度是语音识别的研究热点，除了MMI的准则之外，前人还提出过许多其他的区分性准则，如MCE、MPE、sMBR等等，其核心思想是一样的，形式上也大同小异，读者可以阅读文末的参考资料做进一步了解。目前，除了MMI之外，sMBR也比较常用。&lt;/p&gt;
+&lt;p&gt;上述方法中，分母Lattice的生成需要对训练数据进行逐一解码，太麻烦了，有没有更简单的做法呢？&lt;/p&gt;
+&lt;h2 id=&#34;lattice-free-mmi&#34;&gt;Lattice-free MMI&lt;/h2&gt;
+&lt;p&gt;MMI中分母实际上是在考虑$W$的各种可能，即词序列的各种可能，在语言模型中我们通过统计n-gram的方式表示为概率模型，同样的，我们也可以通过概率统计模型n-gram去表示该分母。假设我们将$W$表示为一个和语音识别解码时类似的语言模型G，并为MMI分母构建一个类似HCLG的解码图，则该解码图中组合了MMI中的声学模型和语言模型的信息。对于任意特征观测$O$，我们将该HCLG当作一个巨大的HMM拓扑结构，在该拓扑结构上进行动态前向后向算法（和Lattice不同，Lattice在前向后向算法时，整个时间序列都已经展开，而这里需要根据观测$O$的长度动态展开成时间序列，和标准的HMM前向后向算法一样），最终可以得到上述所需的y_ut^DEN(s)。&lt;/p&gt;
+&lt;p&gt;但是，我们提到$W$一定要是有限的，可枚举的，当MMI分母和语音识别解码图是一样时，即以词Word作为语言模型的单元，一般的语音识别系统词级别在数十万到百万之间，即使做个简单的bi-gram，其复杂度也非常非常高（HCLG的大小），训练代价非常高。&lt;/p&gt;
+&lt;p&gt;为了降低复杂度，考虑以Phone作为语言模型单元。识别系统中Phone的一般在几十个到一百多个，考虑到数据稀疏性，即使做tri-gram或者4-gram复杂度也在合理区间内。以Phone作为建模单元时，MMI的分母图为HCP(没有词典L了)。&lt;/p&gt;
+&lt;p&gt;其中，Phone的训练语料可以由语音识别的训练数据通过对齐生成。合理的控制Phone的MMI分母的大小，可以将其前向后向计算塞进GPU进行计算，也就是将MMI训练迁移到GPU，从而大大提高了MMI的训练速度。&lt;/p&gt;
+&lt;p&gt;基于DNN-HMM的Lattice-free MMI训练流程：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;训练GMM-HMM，并基于CE(Cross Entropy)训练DNN&lt;/li&gt;
+&lt;li&gt;MMI分母部分的FST前向后向计算直接用音素级别的FST图，并在每次训练后更新状态序列和统计量&lt;/li&gt;
+&lt;li&gt;基于DNN-HMM得到句子的Lattice（FST形式）进行中MMI分子部分的前向后向计算&lt;/li&gt;
+&lt;li&gt;进行Lattice-Free MMI训练&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6GK0FU&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;&lt;img src=&#34;https://s3.ax1x.com/2021/03/10/6GK0FU.png&#34; alt=&#34;6GK0FU.png&#34;  /&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;当使用语言模型的思想表示MMI的分母时，我们无需再对训练语料进行解码，无需生成Lattice，所以称之为Lattice Free MMI(LF-MMI)。对于所有训练语料来讲，MMI的分母图是一样的，并且因为我们限制了MMI分母图的空间，该前向后向算法是on-the-fly的，在训练过程中直接计算，其与声学模型是同步更新。&lt;/p&gt;
+&lt;p&gt;对DNN训练也觉得是个累赘，能不能再简单一点呢？&lt;/p&gt;
+&lt;h2 id=&#34;chain-model&#34;&gt;Chain-model&lt;/h2&gt;
+&lt;p&gt;基于chain model的Lattice-free MMI训练流程：&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6GKFiD&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;&lt;img src=&#34;https://s3.ax1x.com/2021/03/10/6GKFiD.png&#34; alt=&#34;6GKFiD.png&#34;  /&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Chain prepare包含：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;bi-phone Tree，决策树的重新生成&lt;/li&gt;
+&lt;li&gt;Numerator FST，强制对齐得到分子FST&lt;/li&gt;
+&lt;li&gt;Denominator FST，生成HCP得到分母FST&lt;/li&gt;
+&lt;li&gt;Fixed chunk，整个音频分成块，加速训练和解码速度&lt;/li&gt;
+&lt;li&gt;CE Regularization，使用CE作为第二个Task进行Multi-Task Learning&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;chain model：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;HMM拓扑结构改变，从标准的三状态改为单状态的HMM&lt;/li&gt;
+&lt;li&gt;训练速度更快，不需要预先训练DNN模型，同时省去了分母lattice的生成。&lt;/li&gt;
+&lt;li&gt;解码速度更快，因为chain model采用拼帧降采样(每三帧取一帧)的方式，也就是说帧移变成了30ms，而不是10ms&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;总结&#34;&gt;总结&lt;/h2&gt;
+&lt;p&gt;本文先介绍了基于Lattice的区分性训练，再到LF-MMI，再到chain model，可以看到语音识别的流程在逐步简化。并且，我们在追求进一步的简化，目前看到的工作有：&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;声学模型层面的简化：不依赖GMM-HMM系统，直接进行基于DNN的声学模型训练，如E2E-LF-MMI、CTC、CRF-CTC。&lt;/li&gt;
+&lt;li&gt;整个语音识别简化，即当下研究热点End to End的语音识别系统，如CTC、LAS、RNN-T、Transformer。&lt;/li&gt;
+&lt;/ol&gt;
+&lt;h2 id=&#34;reference&#34;&gt;Reference&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.inf.ed.ac.uk/teaching/courses/asr/2020-21/asr14-seq.pdf&#34;&gt;http://www.inf.ed.ac.uk/teaching/courses/asr/2020-21/asr14-seq.pdf&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://www.inf.ed.ac.uk/teaching/courses/asr/2018-19/asr12-lfmmi.pdf&#34;&gt;https://www.inf.ed.ac.uk/teaching/courses/asr/2018-19/asr12-lfmmi.pdf&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://zhuanlan.zhihu.com/p/210975288&#34;&gt;https://zhuanlan.zhihu.com/p/210975288&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+        </item>
+        <item>
         <title>Kaldi中的特征变换</title>
         <link>https://cosmo1995.github.io/p/kaldi%E4%B8%AD%E7%9A%84%E7%89%B9%E5%BE%81%E5%8F%98%E6%8D%A2/</link>
         <pubDate>Wed, 24 Feb 2021 00:00:00 +0000</pubDate>
