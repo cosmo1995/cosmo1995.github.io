@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='HMM-GMM and HMM-DNN Model'><title>HMM-GMM和HMM-DNN</title>
+
+<link rel='canonical' href='https://cosmo1995.github.io/p/hmm-gmm%E5%92%8Chmm-dnn/'>
+
+<link rel="stylesheet" href="/scss/style.min.css"><meta property='og:title' content='HMM-GMM和HMM-DNN'>
+<meta property='og:description' content='HMM-GMM and HMM-DNN Model'>
+<meta property='og:url' content='https://cosmo1995.github.io/p/hmm-gmm%E5%92%8Chmm-dnn/'>
+<meta property='og:site_name' content='Cosmo'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='kaldi' /><meta property='article:tag' content='hmm' /><meta property='article:tag' content='gmm' /><meta property='article:tag' content='dnn' /><meta property='article:published_time' content='2021-03-12T00:00:00&#43;00:00'/><meta property='article:modified_time' content='2021-03-12T00:00:00&#43;00:00'/>
+<meta name="twitter:title" content="HMM-GMM和HMM-DNN">
+<meta name="twitter:description" content="HMM-GMM and HMM-DNN Model">
+    </head>
+    <body class="">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.body.dataset.scheme = 'dark';
+        } else {
+            document.body.dataset.scheme = 'light';
+        }
+    })();
+</script><div class="container main-container flex on-phone--column extended article-page with-toolbar">
+            <aside class="sidebar left-sidebar sticky">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header class="site-info">
+        
+            <figure class="site-avatar">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu874715197ebd8e5cb58e412c943f3434_12926_300x0_resize_q75_box.jpg" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+
+                
+            </figure>
+        
+        <h1 class="site-name"><a href="https://cosmo1995.github.io/">Cosmo</a></h1>
+        <h2 class="site-description">Why not ask the Magic Conch</h2>
+    </header>
+
+    <ol class="menu" id="main-menu">
+        
+        
+        
+
+        <li >
+            <a href='/'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>Home</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/about'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>About</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/archives'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>Archives</span>
+            </a>
+        </li>
+        
+
+        
+            <li id="dark-mode-toggle">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <span>Dark Mode</span>
+            </li>
+        
+    </ol>
+</aside>
+
+            <main class="main full-width">
+    <div id="article-toolbar">
+        <a href="https://cosmo1995.github.io/" class="back-home">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="15 6 9 12 15 18" />
+</svg>
+
+
+
+            <span>Back</span>
+        </a>
+    </div>
+
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/kaldi/" style="background-color: #2a9d8f; color: #fff;">
+                kaldi
+            </a>
+        
+    </header>
+    
+
+    <h2 class="article-title">
+        <a href="/p/hmm-gmm%E5%92%8Chmm-dnn/">HMM-GMM和HMM-DNN</a>
+    </h2>
+
+    
+    <h3 class="article-subtitle">
+        HMM-GMM and HMM-DNN Model
+    </h3>
+    <footer class="article-time">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+        <time class="article-time--published">Mar 12, 2021</time>
+    </footer></div>
+</header>
+
+    <section class="article-content">
+    <h1 id="hmm-gmm模型">HMM-GMM模型</h1>
+<h2 id="模型分析">模型分析</h2>
+<p>原始音频信号，经过【预加重-分帧-加窗-fft-mel滤波器组-DCT】，得到MFCC特征作为输入信号。假设有一句80帧的原始语音，这80帧特征序列就是观察序列：</p>
+<p>$$
+O = [o_1,o_2,&hellip;,o_T],\ T=80
+$$
+给定观察序列$O$，估计HMM-GMM模型的参数，这就是HMM中的训练问题。</p>
+<ul>
+<li>输入：$O = [o_1,o_2,&hellip;,o_T]$，即80帧MFCC特征</li>
+<li>目标：估计HMM-GMM模型参数$\lambda=(A,B)$，使得$P(O|\lambda)$值最大</li>
+<li>输出：通过模型计算每一帧属于S IH K S这四个音素中某一个状态(3状态)的概率</li>
+</ul>
+<p>A是状态转移概率，B是观察概率，也就是发射概率。我们使用GMM模型对观察概率建模，所以HMM-GMM模型的参数：</p>
+<ul>
+<li>HMM参数：状态转移概率</li>
+<li>GMM参数：高斯分量系数、均值向量和协方差矩阵</li>
+</ul>
+<p>同时，需要额外说明的是：HMM-GMM模型的训练是无监督的。因为我们并不知道哪一帧输入特征对应哪个音素的哪一个状态。训练的目的就是找到帧对应状态的情况，并更新状态的gmm参数。把每一帧都归到某个状态上，本质上是进行聚类，是无监督训练。</p>
+<p>单音素GMM-HMM模型的训练通过Viterbi训练(嵌入式训练)，把“S IH K S”对应的GMM模型嵌入到整段音频中去训练。</p>
+<h2 id="模型训练">模型训练</h2>
+<p>对于HMM和GMM这种含有隐变量的模型，我们使用EM算法进行训练。训练的步骤如下图：</p>
+<p><a class="link" href="https://imgtu.com/i/6UTYcj"  target="_blank" rel="noopener"
+    ><img src="https://s3.ax1x.com/2021/03/12/6UTYcj.png" alt="6UTYcj.png"  /></a></p>
+<h4 id="初始化对齐">初始化对齐</h4>
+<p>初始化对齐的目的是为Viterbi对齐提供初始参数A、B。</p>
+<p>一开始不知道一段语音的哪些帧对应哪些状态，我们就进行平均分配。前面提到的“ six”语音一共80帧，包含四个音素“S IH K S”，每个音素分配到20帧，每个音素又有三个状态组成，每个状态分配6或者7帧。这样就初始化了每个状态对应的输入数据。</p>
+<p>就是假设前0-20帧数据都是“S”这个音素的发音，20-40帧数据都是“IH”这个音素的发音，40-60帧是“K”这个音素的发音，60-80是“S”这个音素的发音。但这只是一个假设，事实到底如此我们还不知道。我们可以在这个初始对齐下进一步优化。</p>
+<h4 id="初始化模型">初始化模型</h4>
+<p>HMM模型参数$λ=(A,B,\Pi)$。</p>
+<ul>
+<li>$A$：在初始化对齐后就可以统计出状态1-&gt;状态1的转移次数，状态1-&gt;状态2的转移次数，转移次数/总转移次数就是转移概率。</li>
+<li>$B$：初始化后，状态1对应前6帧数据，根据这6帧数据来计算状态1对应的GMM模型参数，得到初始均值向量和协方差矩阵 。K-Means来初始化GMM的高斯分量系数。</li>
+<li>$\Pi$：就是[1,0,0,0&hellip;]，一开始在状态1的概率是100%。在语音识别应用中由于HMM是从左到右的模型，第一个必然是状态1，即$P(q_0=1)=1$。所以没有$\Pi$这个参数了。</li>
+</ul>
+<h4 id="重新对齐">重新对齐</h4>
+<p>需要重新对齐，向真实情况逼近的重新对齐。viterbi算法根据初始化模型$λ=(A,B,Π)$来计算。它记录每个时刻的每个可能状态的之前最优路径概率，同时记录最优路径的前一个状态，不断向后迭代，找出最后一个时间点的最大概率值对应的状态，如何向前回溯，得到最优路径。得到最优路径就得到最优的状态转移情况，哪些帧对应哪些状态就变了。</p>
+<p>转移概率A就变了。哪些帧对应哪些状态变了导致状态对应的GMM参数自然就变了，也可以跟着更新均值 和方差，即发射概率B变了。</p>
+<h4 id="迭代">迭代</h4>
+<p>新的A和新的B又可以进行下一次的Viterbi算法，寻找新的最优路径，得到新的对齐，新的对齐继续改变着参数A、B。如此循环迭代直到收敛或者达到固定的轮数，则GMM-HMM模型训练完成。</p>
+<h1 id="hmm-dnn模型">HMM-DNN模型</h1>
+<p>HMM-GMM建模能力有限，无法准确的表征语音内部复杂的结构，所以识别率低。随着深度学习的崛起，研究人员将其逐步应用于语音识别中。最开始便是DNN代替了GMM来进行观察状态概率的输出，实现HMM-DNN声学模型框架，大大提高了识别率。</p>
+<h2 id="gmm与dnn对比">GMM与DNN对比</h2>
+<p>HMM-DNN用DNN替换了GMM来对输入语音信号的观察概率进行建模。</p>
+<ul>
+<li>
+<p>GMM为了减少参数量，一般使用对角协方差矩阵建模，要求特征维度间的独立性，因此GMM使用的特征是MFCC，这个特征已经做了去相关性处理；DNN使用的特征是FBank，这个特征保持着相关性。</p>
+</li>
+<li>
+<p>GMM是生成模型，采用无监督学习；DNN是判别模型，采用有监督学习。</p>
+</li>
+</ul>
+<p><a class="link" href="https://imgtu.com/i/6UqfQe"  target="_blank" rel="noopener"
+    ><img src="https://s3.ax1x.com/2021/03/12/6UqfQe.png" alt="6UqfQe.png"  /></a></p>
+<p>（DNN输入可采用连续的拼接帧）</p>
+<p><a class="link" href="https://imgtu.com/i/6ULmwR"  target="_blank" rel="noopener"
+    ><img src="https://s3.ax1x.com/2021/03/12/6ULmwR.png" alt="6ULmwR.png"  /></a></p>
+<h2 id="hmm-dnn训练步骤">HMM-DNN训练步骤</h2>
+<p>训练HMM-DNN之前，需要先得到每一帧语音的标签。标签可以通过HMM-GMM在训练语料上进行Viterbi强制对齐得到。利用标签和输入特征训练DNN模型，用DNN模型替换GMM进行观察概率的计算，保留转移概率和初始概率等其他部分。</p>
+<p><a class="link" href="https://imgtu.com/i/6ULNTI"  target="_blank" rel="noopener"
+    ><img src="https://s3.ax1x.com/2021/03/12/6ULNTI.png" alt="6ULNTI.png"  /></a></p>
+<p>（灵魂的拷问：一开始用MFCC特征进行训练、对齐，后来用FBank特征进行训练DNN，MFCC和Fbank特征维度明显不一样，这样对齐的标签和训练的标签一致吗？不会有问题吗？
+答：一帧的数据o1对齐到状态1，都是帧对应到状态，不管什么特征都代表这一帧的数据。）</p>
+<h4 id="步骤一基于gmm-hmm使用viterbi对齐得到标签">步骤一：基于GMM-HMM使用viterbi对齐得到标签</h4>
+<p>训练好GMM-HMM后使用Viterbi进行解码，获得最优路径的同时也自然得到了对齐，即哪一帧属于哪个状态。这样就把一段语音（宏观）和状态（微观）一一对应了。</p>
+<p><a class="link" href="https://imgtu.com/i/6UO340"  target="_blank" rel="noopener"
+    ><img src="https://s3.ax1x.com/2021/03/12/6UO340.png" alt="6UO340.png"  /></a></p>
+<h4 id="步骤二构建dnn-hmm">步骤二：构建DNN-HMM</h4>
+<p>所有音素的HMM只用一个DNN，DNN的输出节点数必须要和HMM的发射状态数一样。多少状态就是多少分类任务。</p>
+<p><a class="link" href="https://imgtu.com/i/6UO2Ke"  target="_blank" rel="noopener"
+    ><img src="https://s3.ax1x.com/2021/03/12/6UO2Ke.png" alt="6UO2Ke.png"  /></a></p>
+<h4 id="步骤三训练dnn-hmm">步骤三：训练DNN-HMM</h4>
+<p>当o1输入后，结果softmax把它分类到某一个状态中，就产生一个输出，与标签对比得到误差，进行反向传播训练权重参数W、b。</p>
+<h2 id="reference">Reference</h2>
+<ul>
+<li><a href="https://blog.csdn.net/qq_42734492/article/details/108773933?spm=1001.2014.3001.5501">https://blog.csdn.net/qq_42734492/article/details/108773933?spm=1001.2014.3001.5501</a></li>
+</ul>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/kaldi/">kaldi</a>
+        
+            <a href="/tags/hmm/">hmm</a>
+        
+            <a href="/tags/gmm/">gmm</a>
+        
+            <a href="/tags/dnn/">dnn</a>
+        
+    </section>
+
+
+    </footer>
+
+    
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css"
+    integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"
+    integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4"
+    crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"
+    integrity="sha384-mll67QQFJfxn0IYznZYonOWZ644AWYC+Pt2cHqMaRhXVrursRwvLnLaebdGIlYNa" crossorigin="anonymous"
+    onload="StackLaTeX()"></script>
+
+<script>
+    function StackLaTeX() {
+        renderMathInElement(document.querySelector(`.article-content`), {
+            delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true }
+            ]
+        });
+    }
+</script>
+    
+</article>
+
+    <aside class="related-contents--wrapper">
+    
+    
+</aside>
+
+
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2021 Cosmo
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="2.0.1">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css">
+            </main>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js"
+    integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin="anonymous"></script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

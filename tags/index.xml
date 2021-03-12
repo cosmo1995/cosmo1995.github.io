@@ -6,11 +6,38 @@
     <description>Recent content in Tags on Cosmo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Tue, 09 Mar 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 12 Mar 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>dnn</title>
+      <link>https://cosmo1995.github.io/tags/dnn/</link>
+      <pubDate>Fri, 12 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://cosmo1995.github.io/tags/dnn/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>gmm</title>
+      <link>https://cosmo1995.github.io/tags/gmm/</link>
+      <pubDate>Fri, 12 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://cosmo1995.github.io/tags/gmm/</guid>
+      <description></description>
+    </item>
+    
+    <item>
+      <title>hmm</title>
+      <link>https://cosmo1995.github.io/tags/hmm/</link>
+      <pubDate>Fri, 12 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://cosmo1995.github.io/tags/hmm/</guid>
+      <description></description>
+    </item>
+    
     <item>
       <title>kaldi</title>
       <link>https://cosmo1995.github.io/tags/kaldi/</link>
-      <pubDate>Tue, 09 Mar 2021 00:00:00 +0000</pubDate>
+      <pubDate>Fri, 12 Mar 2021 00:00:00 +0000</pubDate>
       
       <guid>https://cosmo1995.github.io/tags/kaldi/</guid>
       <description></description>
@@ -31,24 +58,6 @@
       <pubDate>Sun, 08 Sep 2019 00:00:00 +0000</pubDate>
       
       <guid>https://cosmo1995.github.io/tags/decison-tree/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>hmm</title>
-      <link>https://cosmo1995.github.io/tags/hmm/</link>
-      <pubDate>Wed, 08 May 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://cosmo1995.github.io/tags/hmm/</guid>
-      <description></description>
-    </item>
-    
-    <item>
-      <title>gmm</title>
-      <link>https://cosmo1995.github.io/tags/gmm/</link>
-      <pubDate>Sat, 06 Apr 2019 00:00:00 +0000</pubDate>
-      
-      <guid>https://cosmo1995.github.io/tags/gmm/</guid>
       <description></description>
     </item>
     

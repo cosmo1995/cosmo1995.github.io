@@ -4,32 +4,52 @@
   
   <url>
     <loc>https://cosmo1995.github.io/categories/</loc>
-    <lastmod>2021-03-09T00:00:00+00:00</lastmod>
+    <lastmod>2021-03-12T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>https://cosmo1995.github.io/</loc>
-    <lastmod>2021-03-09T00:00:00+00:00</lastmod>
+    <lastmod>2021-03-12T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://cosmo1995.github.io/tags/dnn/</loc>
+    <lastmod>2021-03-12T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://cosmo1995.github.io/tags/gmm/</loc>
+    <lastmod>2021-03-12T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://cosmo1995.github.io/tags/hmm/</loc>
+    <lastmod>2021-03-12T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://cosmo1995.github.io/p/hmm-gmm%E5%92%8Chmm-dnn/</loc>
+    <lastmod>2021-03-12T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>https://cosmo1995.github.io/tags/kaldi/</loc>
-    <lastmod>2021-03-09T00:00:00+00:00</lastmod>
+    <lastmod>2021-03-12T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>https://cosmo1995.github.io/categories/kaldi/</loc>
-    <lastmod>2021-03-09T00:00:00+00:00</lastmod>
+    <lastmod>2021-03-12T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>https://cosmo1995.github.io/post/</loc>
-    <lastmod>2021-03-09T00:00:00+00:00</lastmod>
+    <lastmod>2021-03-12T00:00:00+00:00</lastmod>
   </url>
   
   <url>
     <loc>https://cosmo1995.github.io/tags/</loc>
-    <lastmod>2021-03-09T00:00:00+00:00</lastmod>
+    <lastmod>2021-03-12T00:00:00+00:00</lastmod>
   </url>
   
   <url>
@@ -88,18 +108,8 @@
   </url>
   
   <url>
-    <loc>https://cosmo1995.github.io/tags/hmm/</loc>
-    <lastmod>2019-05-08T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
     <loc>https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bhmm/</loc>
     <lastmod>2019-05-08T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://cosmo1995.github.io/tags/gmm/</loc>
-    <lastmod>2019-04-06T00:00:00+00:00</lastmod>
   </url>
   
   <url>
