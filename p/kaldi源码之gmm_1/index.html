@@ -291,13 +291,13 @@ $$</p>
 <h4 id="split--merge">Split &amp;&amp; Merge</h4>
 <p><code>split</code>和<code>merge</code>分别用来分裂/合并GMM的分量以增加/减少分量数，最终达到目标分量数。</p>
 <p><code>split</code>函数通过遍历GMM的所有分量，每次对权重最大的分量进行分裂，权重均分为两份，然后对split后的GMM重新计算<code>gconsts_</code>。</p>
-<p>若分裂前分量的参数为$\lbrace c_1,\Sigma^{-1}_1,\mu_1^T\Sigma^{-1}_1 \rbrace$ ，分裂后分量的参数变为$$\lbrace c_1^{'},{\Sigma^{-1}_1}^{'},{\mu_1^T\Sigma^{-1}_1}^{'} \rbrace$$和$\lbrace c_2,\Sigma^{-1}_2,\mu_2^T\Sigma^{-1}_2 \rbrace$，则有:</p>
+<p>若分裂前分量的参数为$\lbrace c_1,\Sigma^{-1}_1,\mu_1^T\Sigma^{-1}_1 \rbrace$ ，分裂后分量的参数变为$\lbrace c_1^{'},{\Sigma^{-1}_1}^{'},{\mu_1^T\Sigma^{-1}_1}^{'} \rbrace$和$\lbrace c_2,\Sigma^{-1}_2,\mu_2^T\Sigma^{-1}_2 \rbrace$，则有:</p>
 <p>$$
 \begin {aligned}
 &amp;c^{'}_1=c_2=\frac{c_1}{2} \cr
 &amp;{\Sigma^{-1}_1}^{'}=\Sigma^{-1}_2=\Sigma^{-1}_1 \cr
-&amp;{\mu_1^T\Sigma^{-1}_1}^{'}={\mu_1^T\Sigma^{-1}_1} - perturb_factor \cdot rand_vector \cr
-&amp;{\mu_2^T\Sigma^{-1}_2}={\mu_1^T\Sigma^{-1}_1} + perturb_factor \cdot rand_vector
+&amp;{\mu_1^T\Sigma^{-1}_1}^{'}={\mu_1^T\Sigma^{-1}_1} - perturb\_factor \cdot rand\_vector \cr
+&amp;{\mu_2^T\Sigma^{-1}_2}={\mu_1^T\Sigma^{-1}_1} + perturb\_factor \cdot rand\_vector
 \end {aligned}
 $$</p>
 <p><code>merge</code>函数的原理是层次聚类，首先统计每一对分量合并前后$loglike$减小的值<code>delta_like</code>，然后依次选取<code>delta_like</code>最小的一对分量进行合并，合并后更新delta_like并重新计算GMM的<code>gconsts_</code>。</p>
@@ -320,7 +320,7 @@ $$</p>
  <span class="n">loglike</span> <span class="o">-=</span> <span class="mf">0.5</span> <span class="o">*</span> <span class="n">VecSpVec</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">inv_covars_</span><span class="p">[</span><span class="n">comp_id</span><span class="p">],</span> <span class="n">data</span><span class="p">)</span>
  <span class="k">return</span> <span class="n">loglike</span> <span class="o">+</span> <span class="n">gconsts_</span><span class="p">(</span><span class="n">comp_id</span><span class="p">)</span>
 </code></pre></div><h4 id="loglikelihoods">LogLikelihoods</h4>
-<p><code>LogLikelihoods</code>计算每一个分量的log-likelihood值，原理和<code>ComponentLogLikelihood</code>基本一致，不同的是在计算$x^T\Sigma_m^{-1}x$时，转为求两个对称矩阵相乘的迹，进而转为对两个对称矩阵做点乘运算，从而利用cblas优化运算。
+<p><code>LogLikelihoods</code>计算每一个分量的log-likelihood值，原理和<code>ComponentLogLikelihood</code>基本一致，不同的是在计算$x^T\Sigma_m^{-1}x$时，转为求两个对称矩阵相乘的迹，进而转为对两个对称矩阵做点乘运算，从而利用cblas加速运算。
 $$
 x^T\Sigma_m^{-1}x = tr(xx^T\Sigma_m^{-1}) = xx^T \cdot \Sigma_m^{-1}
 $$</p>
@@ -334,17 +334,17 @@ $$</p>
 <span class="p">}</span>
 </code></pre></div><p>data_sq即为$xx^T$，TraceSpSpLower求解两个对称矩阵乘积的迹。</p>
 <h4 id="loglikelihood">LogLikelihood</h4>
-<p><code>LogLikelihood</code>计算给定GMM的log-likelihood值，即对上面<code>LogLikelihoods</code>的计算结果进行$$log(sum(exp()))$$。</p>
+<p><code>LogLikelihood</code>计算给定GMM的log-likelihood值，即对上面<code>LogLikelihoods</code>的计算结果进行$log(sum(exp()))$。</p>
 <div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">LogLikelihoods</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">loglikes</span><span class="p">);</span>
 <span class="n">BaseFloat</span> <span class="n">log_sum</span> <span class="o">=</span> <span class="n">loglikes</span><span class="p">.</span><span class="n">LogSumExp</span><span class="p">();</span>
 <span class="p">...</span>
 <span class="k">return</span> <span class="n">log_sum</span><span class="p">;</span>
 </code></pre></div><h4 id="componentposteriors">ComponentPosteriors</h4>
 <p><code>ComponentPosteriors</code>输出component的后验概率，首先调用<code>LogLikelihoods</code>计算每一个分量的log-likelihood值，然后进行softmax归一化得到每一个分量的posterior。</p>
-<p>根据贝叶斯公式可以计算第$t$帧语音$x_t$是来自第$m$个分量的后验概率$\gamma_m(t)$：</p>
+<p>根据贝叶斯公式可以计算第$t$帧语音$x_t$是来自第$m$个分量的后验概率$P(m|x_t)$：</p>
 <p>$$
 \begin {aligned}
-\gamma_m(t) &amp;= p(z_t=m|x_t;c,\mu,\Sigma) \cr
+P(m|x_t) &amp;= p(z_t=m|x_t;c,\mu,\Sigma) \cr
 &amp;= \frac{p(x_t|z_t=m;\mu,\Sigma)p(z_t=m;c)}{\sum_{n=1}^M p(x_t|z_t=n;\mu,\Sigma)p(z_t=n;c) } \cr
 &amp;=\frac{c_m \mathcal{N}(x_t;\mu_m,\Sigma_m)}{\sum_{n=1}^M c_n \mathcal{N}(x_t;\mu_n,\Sigma_n)}
 \end {aligned}
@@ -354,7 +354,7 @@ $$</p>
 loglike(\mu_m,\Sigma_m ,c_m|x_t) = log c_m \mathcal{N}(x_t;\mu_m,\Sigma_m) 
 $$</p>
 <p>$$
-故：\gamma_m(t) = \frac{exp(loglike(\mu_m,\Sigma_m,c_m|x_t))} {\sum_{n=1}^M exp(loglike(\mu_n,\Sigma_n,c_n|x_t))}
+故：P(m|x_t) = \frac{exp(loglike(\mu_m,\Sigma_m,c_m|x_t))} {\sum_{n=1}^M exp(loglike(\mu_n,\Sigma_n,c_n|x_t))}
 $$</p>
 <p>因此，对每一个分量的loglike应用Softmax即可得到该分量的posterior。</p>
 <div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">LogLikelihoods</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">loglikes</span><span class="p">);</span>

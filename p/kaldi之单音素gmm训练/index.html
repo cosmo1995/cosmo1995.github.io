@@ -1,17 +1,17 @@
 <!DOCTYPE html>
 <html lang="en-us">
     <head><meta charset='utf-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='kaldi source code of gmm--2'><title>Kaldi源码之gmm_2</title>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='kaldi monophone GMM training'><title>Kaldi之单音素GMM训练</title>
 
-<link rel='canonical' href='https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/'>
+<link rel='canonical' href='https://cosmo1995.github.io/p/kaldi%E4%B9%8B%E5%8D%95%E9%9F%B3%E7%B4%A0gmm%E8%AE%AD%E7%BB%83/'>
 
-<link rel="stylesheet" href="/scss/style.min.css"><meta property='og:title' content='Kaldi源码之gmm_2'>
-<meta property='og:description' content='kaldi source code of gmm--2'>
-<meta property='og:url' content='https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/'>
+<link rel="stylesheet" href="/scss/style.min.css"><meta property='og:title' content='Kaldi之单音素GMM训练'>
+<meta property='og:description' content='kaldi monophone GMM training'>
+<meta property='og:url' content='https://cosmo1995.github.io/p/kaldi%E4%B9%8B%E5%8D%95%E9%9F%B3%E7%B4%A0gmm%E8%AE%AD%E7%BB%83/'>
 <meta property='og:site_name' content='Cosmo'>
-<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='kaldi' /><meta property='article:tag' content='gmm' /><meta property='article:published_time' content='2019-04-06T00:00:00&#43;00:00'/><meta property='article:modified_time' content='2019-04-06T00:00:00&#43;00:00'/>
-<meta name="twitter:title" content="Kaldi源码之gmm_2">
-<meta name="twitter:description" content="kaldi source code of gmm--2">
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='kaldi' /><meta property='article:tag' content='gmm' /><meta property='article:published_time' content='2019-05-18T00:00:00&#43;00:00'/><meta property='article:modified_time' content='2019-05-18T00:00:00&#43;00:00'/>
+<meta name="twitter:title" content="Kaldi之单音素GMM训练">
+<meta name="twitter:description" content="kaldi monophone GMM training">
     </head>
     <body class="">
     <script>
@@ -176,12 +176,12 @@
     
 
     <h2 class="article-title">
-        <a href="/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/">Kaldi源码之gmm_2</a>
+        <a href="/p/kaldi%E4%B9%8B%E5%8D%95%E9%9F%B3%E7%B4%A0gmm%E8%AE%AD%E7%BB%83/">Kaldi之单音素GMM训练</a>
     </h2>
 
     
     <h3 class="article-subtitle">
-        kaldi source code of gmm--2
+        kaldi monophone GMM training
     </h3>
     <footer class="article-time">
         <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -192,104 +192,15 @@
 
 
 
-        <time class="article-time--published">Apr 06, 2019</time>
+        <time class="article-time--published">May 18, 2019</time>
     </footer></div>
 </header>
 
     <section class="article-content">
-    <p>estimate-full-gmm和estimate-diag-gmm用来对GMM进行极大似然估计(MLE)，二者仅在协方差矩阵数据结构不同，下面均以estimate-full-gmm为例。</p>
-<!-- raw HTML omitted -->
-<h2 id="gmm">GMM</h2>
-<p>GMM的分布函数为</p>
-<p>$$
-p(x|\mu,\Sigma) = \sum_{m=1}^{M} c_m \mathcal{N} (x;\mu_m,\Sigma_m)
-$$</p>
-<p>其中$c_m$为第$m$个component的混合系数,$\sum_{m=1}^M c_m =1 $。</p>
-<p>定义指示函数$1_{[z_t=m]}$，如果$x_t$来自第m个component，则$1_{[z_t=m]} = 1$，否则$1_{[z_t=m]} = 0$。</p>
-<p>现在假设$1_{[z_t=m]}$已知，即$x_t$属于哪一个component是已知的话，我们就可以统计每一个component对应的帧数：</p>
-<p>$$
-N_m=\sum^N_{t=1} 1_{[z_t=m]}
-$$</p>
-<p>那么GMM参数可以估计为：</p>
-<p>$$
-\begin {aligned}
-&amp;c_m = \frac{\sum_{t=1}^N 1_{[z_t=m]}}{N} = \frac{N_m}{N} \cr
-&amp;\mu_m= \frac{\sum_{t=1}^N 1_{[z_t=m]} \mathbf{x_t}}{N_m} \cr
-&amp;\Sigma_m= \frac{\sum_{t=1}^N 1_{[z_t=m]}(\mathbf{x_t}-\mu_m)(\mathbf{x_t}-\mu_m)^T}{N_m}
-&amp;\end {aligned}
-$$</p>
-<p>然而$1_{[z_t=m]}$是未知的，我们并不知道每一帧$x_t$属于哪一个component。但是，我们可以计算后验概率$P(m|x_t)$，即第m个
-component生成$x_t$的概率。
-$$
-P(m|x_t) = \frac{P(x_t|m)P(m)} {P(x_t)} = \frac{P(x_t|m)P(m)} {\sum^M_{n=1}P(x_t|n)P(n)}
-$$</p>
-<p>其中后验概率$P(m|\mathbf{x_t})$也称为component occupation probability或者responsibility。</p>
-<p>此时，我们可以通过后验概率$P(m|x_t)$计算每一个component对应的&quot;soft counts&quot;: $N_m^*$</p>
-<p>$$
-N_m^* = \sum_{t=1}^N P(m|x_t)
-$$</p>
-<p>我们可以想象为对每一帧$x_t$，以$P(m|x_t)$的概率分配到第m个component上。这种分配是一种soft assignment，区别于k-means的hard assignment。</p>
-<p>在得到后验概率$P(m|x_t)$，参数可以估计为：</p>
-<p>$$
-\begin {aligned}
-&amp;c_m = \frac{\sum_{t=1}^N P(m|x_t)}{N} = \frac{N_m^*} {N} \cr
-&amp;\mu_m= \frac{\sum_{t=1}^N P(m|x_t) x_t}{\sum_{t=1}^N P(m|x_t)} = \frac {\sum_{t=1}^N P(m|x_t) x_t}{N_m^*} \cr
-&amp;\Sigma_m= \frac{\sum_{t=1}^N P(m|x_t)(x_t-\mu_m)(x_t-\mu_m)^T}{\sum_{t=1}^N P(m|x_t)} = \frac{\sum_{t=1}^N P(m|x_t)(x_t-\mu_m)(x_t-\mu_m)^T}{N_m^*}
-&amp;\end {aligned}
-$$</p>
-<p>由于：</p>
-<p>$$
-P(m|x_t) = \frac{P(x_t|m)P(m)} {P(x_t)} = \frac{P(x_t|m)P(m)} {\sum^M_{n=1}P(x_t|n)P(n)}
-$$</p>
-<p>因此，为了计算$P(m|x_t)$，必须知道$P(m)$和$P(x_t|m)$，其中$P(m)$为每一个component的先验概率，即为GMM参数中的$c_m$；$P(x_t|m)$为每一个component的分布函数，即为$\mathcal{N} (x;\mu_m,\Sigma_m)$，因此必须知道GMM的参数。反过来，GMM的参数又得在知道$P(m|x_t)$后通过极大似然来估计。问题此时陷入了一个死循环。</p>
-<p>此时可以通过EM算法来解决该问题，首先初始化GMM参数，在E步通过现有的参数计算$P(m|x_t)$，在M步通过计算的$P(m|x_t)$来更新GMM的参数，然后不断迭代直至收敛。</p>
-<h2 id="em算法">EM算法</h2>
-<p>EM算法是一种迭代算法，用于含有隐变量(Hidden variable)的概率模型参数的最大似然估计。</p>
-<ul>
-<li>先初始化参数</li>
-<li>E-step：依据当前参数，通过贝叶斯公式计算$x_t$的后验概率$P(m|x_t)$。</li>
-</ul>
-<p>$$
-\begin {aligned}
-P(m|x_t) &amp;= \frac{P(x_t|m)P(m)} {\sum^M_{n=1}P(x_t|n)P(n)} \cr
-&amp;=\frac{c_m \mathcal{N}(x_t;\mu_m,\Sigma_m)}{\sum_{n=1}^M c_n \mathcal{N}(x_t;\mu_n,\Sigma_n)}
-\end {aligned}
-$$</p>
-<p>通过<code>gmm.ComponentPosteriors</code>函数，首先计算第m个component的loglike,然后进行softmax归一化即得到posterior。</p>
-<!-- raw HTML omitted -->
-<ul>
-<li>M-step：计算新一轮迭代的模型参数</li>
-</ul>
-<p>$$
-\begin {aligned}
-c_m &amp;= \frac{\sum_{t=1}^N P(m|x_t)}{N} \cr
-\mu_m &amp;= \frac{\sum_{t=1}^N P(m|x_t) x_t}{\sum_{t=1}^N P(m|x_t)} \cr
-\Sigma_m &amp;= \frac{\sum_{t=1}^N P(m|x_t)(x_t-\mu_m)(x_t-\mu_m)^T}{\sum_{t=1}^N P(m|x_t)} \cr
-&amp;\end {aligned}
-$$</p>
-<ul>
-<li>重复计算 E-step 和 M-step 直至收敛</li>
-</ul>
-<h3 id="类mlestimatefullgmm-accumfullgmm">类MlEstimateFullGmm (AccumFullGmm)</h3>
-<pre><code>Vector&lt;double&gt; occupancy_;
-Matrix&lt;double&gt; mean_accumulator_;
-std::vector&lt;SpMatrix&lt;double&gt; &gt; covariance_accumulator_;
-</code></pre><p>类中定义了参数更新时所需的三个累积量，其中occupancy_可以视为GMM每个component对应的&quot;帧数&quot;。</p>
-<h3 id="accumulateforcomponent">AccumulateForComponent</h3>
-<p>对于单个component而言，上述三个累积量为：</p>
-<p>$$
-\begin {aligned}
-occupancy_m &amp;= \sum_{t=1}^N P(m|x_t) \cr
-mean\_accumulator_m &amp;= \sum_{t=1}^N P(m|x_t) x_t \cr
-covariance\_ accumulator_m &amp;= \sum_{t=1}^N P(m|x_t) x_t x_t^T
-\end {aligned}
-$$</p>
-<h3 id="accumulatefromposteriors">AccumulateFromPosteriors</h3>
-<p>计算GMM的累积量，原理和<code>AccumulateForComponent</code>一致，只是计算的对象变为了GMM的所有分量。</p>
-<h3 id="accumulatefromfull--accumulatefromdiag">AccumulateFromFull &amp; AccumulateFromDiag</h3>
-<p>首先通过<code>gmm.ComponentPosteriors</code>计算GMM每一个component的后验，然后调用<code>AccumulateFromPosteriors</code>计算GMM的累积量。</p>
-<h3 id="update">Update</h3>
-<p>根据上诉三个累积值更新GMM参数：</p>
+    <h2 id="前情回顾">前情回顾</h2>
+<p><a class="link" href="https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_1/"  target="_blank" rel="noopener"
+    >GMM1</a>和<a class="link" href="https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/"  target="_blank" rel="noopener"
+    >GMM2</a>可知，GMM模型的更新公式如下：</p>
 <p>$$
 \begin {aligned}
 &amp;c_m=\frac{occupancy_m}{N} \cr
@@ -297,39 +208,129 @@ $$</p>
 &amp;\Sigma_m=\frac{covariance\_accumulator_m} {occupancy_m} - \mu_m \mu_m^T
 &amp;\end {aligned}
 $$</p>
-<!-- raw HTML omitted -->
+<p>其中，</p>
 <p>$$
 \begin {aligned}
-注：
-\Sigma_m &amp;= \frac{\sum_{t=1}^N P(m|\mathbf{x_t})(\mathbf{x_t}-\mu_m)(\mathbf{x_t}-\mu_m)^T}{\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
-&amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) (\mathbf{x_t} \mathbf{x_t^T} - \mathbf{x_t} \mu_m^T -\mu_m\mathbf{x_t^T} + \mu_m \mu_m^T)} {\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
-&amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} \mathbf{x_t^T} - \mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} - \mu_m \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t^T} + \mu_m \mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) }  {\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
-&amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} \mathbf{x_t^T} - \mu_m^T \mu_m \sum_{t=1}^N P(m|\mathbf{x_t}) - \mu_m\mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) + \mu_m \mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) }  {\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
-&amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} \mathbf{x_t^T} - \mu_m \mu_m^T \sum_{t=1}^N P(m|\mathbf{x_t}) }  {\sum_{t=1}^N P(m|\mathbf{x_t})} \cr
-&amp;= \frac{ \sum_{t=1}^N P(m|\mathbf{x_t}) \mathbf{x_t} \mathbf{x_t^T}}  {\sum_{t=1}^N P(m|\mathbf{x_t})} - \mu_m \mu_m^T \cr
+occupancy_m &amp;= \sum_{t=1}^N P(m|x_t) \cr
+mean\_accumulator_m &amp;= \sum_{t=1}^N P(m|x_t) x_t \cr
+covariance\_ accumulator_m &amp;= \sum_{t=1}^N P(m|x_t) x_t x_t^T
 \end {aligned}
 $$</p>
-<h3 id="estimate-am-diag-gmm">estimate-am-diag-gmm</h3>
-<p>$$
-\begin{matrix}
-diag-gmm \xrightarrow{update \ by} estimate-diag-gmm  \cr
-\downarrow{1\rightarrow*}  \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \downarrow{1\rightarrow*} \cr
-am-diag-gmm  \xrightarrow{update \ by} estimate-am-diag-gmm
-\end{matrix}
-$$</p>
-<p><code>estimate-am-diag-gmm</code>中定义了一个gmm_estimators向量，用于对整个声学模型的所有GMM进行更新。</p>
-<pre><code>for (size_t i = 0; i &lt; gmm_estimators_.size(); i++) {
-  gmm_estimators_[i]-&gt;Update(config, flags, &amp;(am_gmm-&gt;GetPdf(i)), p_obj,
-        p_count);
-...
-</code></pre><h2 id="reference">Reference</h2>
+<p>后验概率$P(m|x_t)$又可以表示为：
+$$
+\begin{aligned}
+P(m|x_t) &amp;= \frac{exp(loglike(\mu_m,\Sigma_m|x_t))}
+{\sum_{n=1}^M exp(loglike(\mu_n,\Sigma_n|x_t)} \cr
+&amp;= softmax(loglike(\mu_m,\Sigma_m|x_t))
+\end{aligned}
+$$
+因此，可以通过计算GMM每一个分量component的对数似然LogLikelihood，再应用softmax来获得对应的后验概率，在此基础上更新GMM参数。</p>
+<p>而第m个分量component的对数似然LogLikelihood可以表示为：
+$$
+loglike_m = gconsts_m +\mu_m^T\Sigma^{-1}_mx - \frac{1}{2}x^T\Sigma_m^{-1}x
+$$
+其中：
+$$
+gconsts_m = logc_m - \frac{D}{2}log2\pi - \frac{1}{2}(log|\Sigma_m| + \mu_m^T\Sigma_m^{-1}\mu_m)
+$$
+故和GMM模型相关的统计量包括：</p>
 <ul>
-<li><a href="http://www.inf.ed.ac.uk/teaching/courses/asr/2019-20/asr02-hmmgmm.pdf">http://www.inf.ed.ac.uk/teaching/courses/asr/2019-20/asr02-hmmgmm.pdf</a></li>
-<li><a href="https://www.cs.toronto.edu/~urtasun/courses/CSC411_Fall16/13_mog.pdf">https://www.cs.toronto.edu/~urtasun/courses/CSC411_Fall16/13_mog.pdf</a></li>
-<li><a href="https://kivy-cn.github.io/Stanford-CS-229-CN/#/Markdown/cs229-notes7b">https://kivy-cn.github.io/Stanford-CS-229-CN/#/Markdown/cs229-notes7b</a></li>
-<li><a href="https://zhuanlan.zhihu.com/p/30483076">https://zhuanlan.zhihu.com/p/30483076</a></li>
-<li><a href="https://notes.funcwj.cn/2017/05/28/kaldi-gmm/">https://notes.funcwj.cn/2017/05/28/kaldi-gmm/</a></li>
+<li>gconsts</li>
+<li>mean_invvars $\mu^T_m\Sigma^{-1}_m$</li>
+<li>inv_vars $\Sigma^{-1}_m$</li>
 </ul>
+<p><a class="link" href="https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bhmm/"  target="_blank" rel="noopener"
+    >HMM</a>可知HMM模型的更新公式如下：
+$$
+a_{ij} = \frac{A_{ij}}{\sum^n_{j=1}A_{ij}}
+$$
+其中，$a_{ij}$为状态$i$到状态$j$的转移概率，$A_{ij}$为状态$i$到状态$j$的转移的频数。</p>
+<h2 id="gmm训练流程">GMM训练流程</h2>
+<p>GMM的训练过程如下：</p>
+<p><a class="link" href="https://imgtu.com/i/6TyPBt"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/23/6TyPBt.png" alt="6TyPBt.png"  /></a></p>
+<h4 id="初始化模型gmm-init-mono">初始化模型gmm-init-mono</h4>
+<ul>
+<li>输入： HMM topo, feat-dim</li>
+<li>输出：0.mdl, tree</li>
+</ul>
+<p>过程：</p>
+<ul>
+<li>初始化全局特征的均值和方差glob_inv_var，glob_mean均为1，大小等于特征维度。如果有输入特征，另外再计算更新。</li>
+<li>读入拓扑结构topo，建立里面所有phone到该phone的pdf class数目的映射。</li>
+<li>构建决策树，只需要根据set.int文件递归的构造树。</li>
+<li>gmm-init-mono构建GMM。GMM数量为set.int中非静音音素行数$\times$3+静音音素行数$\times$5。每个GMM初始只有一个分量，也就是单高斯，均值方差来自之前的glob_inv_var，glob_mean， weight为1，均值方差也都为1，计算常数部分gconsts_。</li>
+<li>将所有gmm模型导入声学模型am_gmm中。最后输出transition和声学模型的文件0.mdl，决策树tree。</li>
+</ul>
+<p><a class="link" href="https://imgtu.com/i/67uutO"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/23/67uutO.jpg" alt="67uutO.jpg"  /></a></p>
+<p>0.mdl中内容如下：</p>
+<p><a class="link" href="https://imgtu.com/i/678TzT"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/23/678TzT.png" alt="678TzT.png"  /></a></p>
+<h4 id="构建训练图compile-train-graphs">构建训练图compile-train-graphs</h4>
+<ul>
+<li>
+<p>目的：训练每句话转换成一个FST结构，输入是音素，输出是整个句子</p>
+</li>
+<li>
+<p>输入：tree ， transition_model ，L.fst(Lexicon)，训练文件标注</p>
+</li>
+<li>
+<p>输出：HCLG.fst</p>
+</li>
+</ul>
+<p>为什么需要训练图？</p>
+<p>kaldi训练HMM模型并不是采用理论中的Baum-Welch算法的软对齐，实践中是使用Viterbi算法进行硬对齐。</p>
+<p>为了获得每一帧对应的状态号作为训练的标签，需要构建一个直线形的状态图。</p>
+<p>在这个图上利用Viterbi算法求得最优路径，同时得到帧与状态的对齐。</p>
+<h4 id="强制对齐align-equal-compiled">强制对齐align-equal-compiled</h4>
+<ul>
+<li>目的：对每一句话，根据这句话的特征和这句话的fst，生成对应的对齐状态序列。训练时需要将标注跟每一帧特征进行对齐，由于现在还没有可以用于对齐的模型，所以采用最简单的方法 &ndash; 均匀对齐</li>
+<li>输入：预编译训练图HCLG.fst、特征</li>
+<li>输出：alignment</li>
+</ul>
+<h4 id="提取特征统计量gmm-acc-stats-ali">提取特征统计量gmm-acc-stats-ali</h4>
+<ul>
+<li>目的：获得中间统计量，每个任务输出到一个acc文件。acc中记录跟HMM 和GMM 训练相关的统计量。
+HMM 相关的统计量：transition state转移次数
+GMM 相关的统计量：每个GMM对应的gconsts，mean_invvars $\mu^T_m\Sigma^{-1}_m$，inv_vars $\Sigma^{-1}_m$</li>
+<li>输入：模型model，特征，对齐alignment</li>
+<li>输出：用于训练的统计量</li>
+</ul>
+<p>过程之道：</p>
+<ul>
+<li>根据对齐结果，用每一个转移的出现次数除以该状态的出现次数就得到了HMM的转移概率。</li>
+<li>在单音素GMM训练中，每一个HMM状态有一个对应的GMM概率密度函数（pdf），所以有多少个HMM状态，就有多少个GMM，也就有多少组GMM参数。</li>
+<li>对齐后找出某一个HMM状态对应的所有观测（比如状态8对应的o2, o3, o4，在kaldi中则是找到某一transition-id对应的所有观测），也就得到了该状态对应的GMM所对应的所有观测。</li>
+<li>知道了该GMM对应的所有观测、该GMM的当前参数，就可以根据GMM参数更新公式更新GMM参数了。</li>
+</ul>
+<h4 id="更新参数gmm-est">更新参数gmm-est</h4>
+<ul>
+<li>目的：（EM算法之M步）
+根据上一次的模型，构建新模型 [[x+1].mdl</li>
+<li>输入：上一步训练后的模型、gmm-acc-stat-ali计算的统计量</li>
+<li>输出：新模型</li>
+</ul>
+<p>过程之道：</p>
+<ul>
+<li>更新HMM转移模型：根据gmm-acc-stats-ali统计的transition-id出现的次数，做一个除法就可以更新转移概率矩阵A。</li>
+<li>更新GMM模型：根据前言提要部分公式计算GMM参数</li>
+</ul>
+<h4 id="迭代训练">迭代训练</h4>
+<p>反复gmm-acc-stats-ali和gmm-est部分。</p>
+<p>需要注意的是GMM模型一开始是单高斯的，随着模型的训练不断分裂出高斯来，最终达到设定的高斯数。</p>
+<p>如何分裂的呢？</p>
+<p>在分裂之前先获取了每个GMM需要增加到的目标gauus数，也就是target_components 。</p>
+<p>获取当前GMM的高斯数current_components。</p>
+<p>进行循环，在每次循环里，先得到所占权重weight最大的高斯，然后将这个高斯的权重weight变为原来的一半。</p>
+<p>增加新的高斯，新高斯的均值方差为之前加上一个随机扰动, 权重weight为原高斯的一半。</p>
+<p>不断迭代直到 current_components == target_components，完成一轮训练，输出新的model。</p>
+<h2 id="reference">Reference</h2>
+<ol>
+<li><a href="https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_1/">https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_1/</a></li>
+<li><a href="https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/">https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/</a></li>
+<li><a href="https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bhmm/">https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bhmm/</a></li>
+</ol>
 
 </section>
 
