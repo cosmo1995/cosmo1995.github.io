@@ -239,12 +239,12 @@ AE0 AE1 AE2					  		        6 7 8
 <span class="n">std</span><span class="o">::</span><span class="n">sort</span><span class="p">(</span><span class="n">phones</span><span class="p">.</span><span class="n">begin</span><span class="p">(),</span> <span class="n">phones</span><span class="p">.</span><span class="n">end</span><span class="p">());</span>
 <span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">int32</span><span class="o">&gt;</span> <span class="n">all_hmm_positions_in</span><span class="p">(</span><span class="n">all_hmm_positions_in</span><span class="p">);</span>
 <span class="n">SortAndUniq</span><span class="p">(</span><span class="o">&amp;</span><span class="n">all_hmm_positions_in</span><span class="p">);</span>
-</code></pre></div><p>读取sets.int中的音素到<code>phone_sets</code>，并将<code>phone_sets</code>中所有音素排序后保存在<code>phones</code>中；读取hmm-position-list参数保存到<code>all_hmm_positions_in</code>中，该参数指定了聚类时所考虑的HMM状态，默认为1，也就是只考虑三状态HMM的中间状态。</p>
+</code></pre></div><p>读取sets.int中的音素到<code>phone_sets</code>，并将<code>phone_sets</code>中所有音素排序后保存在<code>phones</code>中；读取hmm-position-list参数保存到<code>all_hmm_positions_in</code>中，该参数指定了聚类时所考虑的HMM状态，默认为1，也就是只使用HMM中间状态的统计量。</p>
 <div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">BuildTreeStatsType</span> <span class="n">retained_stats</span><span class="p">;</span>
 <span class="n">FilterStatsByKey</span><span class="p">(</span><span class="n">stats</span><span class="p">,</span> <span class="n">kPdfClass</span><span class="p">,</span> <span class="n">all_hmm_positions_in</span><span class="p">,</span>
                  <span class="nb">true</span><span class="p">,</span>  <span class="c1">// retain only the listed positions
 </span><span class="c1"></span>                 <span class="o">&amp;</span><span class="n">retained_stats</span><span class="p">);</span>
-</code></pre></div><p><code>FilterStatsByKey</code>挑选出三音素第二个HMM状态对应的<code>stats</code>保存到<code>retained_stats</code>中，即包含&lt;-1，1&gt;的<code>stats</code>。通过累积统计量部分我们知道，三音素的三个HMM状态都有对应的统计量，但是这里只把与第二个HMM状态相关的统计量留下进行聚类，其他的都暂时扔掉不用。若有100个phone，则有$100^3$个triphone，$3\times100^3$个HMM state，由于我们只保留中间的HMM state，因此<code>retained_stats</code>中只保存了$100^3$个HMM状态及其统计量。</p>
+</code></pre></div><p><code>FilterStatsByKey</code>挑选出HMM中间状态对应的<code>stats</code>保存到<code>retained_stats</code>中，即包含&lt;-1，1&gt;的<code>stats</code>。通过累积统计量部分我们知道，三音素的三个HMM状态都有对应的统计量，但是这里只把与第二个HMM状态相关的统计量留下进行聚类，其他的都暂时扔掉不用。若有100个phone，则有$100^3$个triphone，$3\times100^3$个HMM state，由于我们只保留中间的HMM state，因此<code>retained_stats</code>中只保存了$100^3$个HMM状态及其统计量。</p>
 <div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="n">BuildTreeStatsType</span><span class="o">&gt;</span> <span class="n">split_stats</span><span class="p">;</span>  <span class="c1">// split by phone.
 </span><span class="c1"></span><span class="n">SplitStatsByKey</span><span class="p">(</span><span class="n">retained_stats</span><span class="p">,</span> <span class="n">P</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">split_stats</span><span class="p">);</span>
 </code></pre></div><p><code>SplitStatsByKey</code>根据三音素的中间音素对<code>retained_stats</code>进行划分，中间音素相同的分到一起，保存到<code>split_stats</code>向量中。由参数P指定根据三音素的第几个音素进行划分，因为此处P是1，所以是三音素的中间音素。<code>retained_stats</code>中$100^3$个统计量按照中间音素划分为100部分保存到<code>split_stats</code>中，每一个部分保存着$100^2$个状态及其统计量。</p>
@@ -305,7 +305,7 @@ AE0 AE1 AE2					  		        6 7 8
 </span><span class="c1"></span><span class="p">};</span> 
 </code></pre></div><ul>
 <li><code>Node</code>保存着指向其父亲结点<code>parent</code>和孩子结点<code>children</code>的指针，其中<code>children</code>是一个<code>Node</code>指针类型的vector，vector的大小由<code>TreeClusterOptions</code>中的<code>branch_factor</code>参数指定，这个值默认为2，所以我们这里使用的树是二叉树，每个结点最多只有两个孩子结点。</li>
-<li><code>Node</code>保存着属于该结点的所有统计量之和<code>node_total</code>。统计量就是该结点中的音素对应的所有特征向量的出现次数<code>count_</code>、特征向量之和以及特征向量的平方和，统计量用来计算该结点的似然L(s)。</li>
+<li><code>Node</code>保存着属于该结点的所有统计量之和<code>node_total</code>。统计量就是该结点中的音素对应的所有特征向量的出现次数<code>count_</code>、特征向量之和以及特征向量的平方和，统计量用来计算该结点的似然$L(s)$。</li>
 <li><code>Node</code>还保存着该结点是否是叶子结点<code>is_leaf</code>，以及是叶子结点时在leaf_nodes中的索引和不是叶子结点时在nonleaf_nodes中的索引<code>index</code>。</li>
 <li>如果是叶子结点，保存着<code>leaf</code>对象，<code>leaf</code>成员变量包含：属于该叶子的那些点的统计量<code>points</code>，以及该叶子上拥有的那些点在所有点组成的vector中的索引<code>point_indices</code>（也就是在TreeClusterer对象points成员中的索引）。用<code>best_split</code>保存着对该叶子结点进行最优划分时，获得的最大的似然提升。对该叶子结点划分意味着生成两个新的簇（或者说两个新的孩子结点），<code>assignments</code>中就保存着对该叶子结点进行最优划分后，该叶子结点中的点分别被划分到哪个簇（或者说分别被划分到哪个孩子结点）。</li>
 </ul>
@@ -367,7 +367,7 @@ AE0 AE1 AE2					  		        6 7 8
     <span class="n">ans</span> <span class="o">+=</span> <span class="n">impr</span><span class="p">;</span>
     <span class="k">if</span> <span class="p">(</span><span class="n">impr</span> <span class="o">==</span> <span class="mi">0</span><span class="p">)</span> <span class="k">break</span><span class="p">;</span>
 <span class="p">}</span>
-</code></pre></div><p>再对每个点随机分配到簇中后，循环调用<code>cfg.num_iters</code>次优化聚类函数<code>RefineClusterers</code>，直至优化后的似然不再增加，返回最终的似然值。</p>
+</code></pre></div><p>将每个点随机分配到两个簇中后，循环调用<code>cfg.num_iters</code>次优化聚类函数<code>RefineClusterers</code>调整每个点所属的簇，直至优化后的似然不再增加，返回最终的似然值。</p>
 <p><code>RefineClusterers</code>通过定义了<code>RefineClusterer</code>对象来调整每个点所属的簇，其过程和K-Means类似，具体原理如下。</p>
 <h4 id="refineclusterer对象">RefineClusterer对象</h4>
 <p><code>RefineClusterer</code>的成员变量</p>
@@ -392,8 +392,8 @@ AE0 AE1 AE2					  		        6 7 8
 <span class="n">int32</span> <span class="n">num_points_</span><span class="p">;</span>
 <span class="n">int32</span> <span class="n">t_</span><span class="p">;</span>
 <span class="n">RefineClustersOptions</span> <span class="n">cfg_</span><span class="p">;</span> 
-</code></pre></div><p><code>point_info</code>结构体表示一个&lt;点——簇&gt;的对应信息，包括点对应的簇索引<code>clust</code>、修改次数<code>time</code>和修改引起的似然变化<code>objf</code>。对于每个点，<code>info_</code>保存了<code>top_n-1</code>个似然提升最大的&lt;点——簇&gt;信息，以及当前所属簇的&lt;点——簇&gt;信息，因此<code>point_info</code>的总大小为<code>num_points_</code> * <code>top_n</code>。</p>
-<p>举例来说，若有100个点，top_n为3，则point_info大小为300。前两列为将该点划分到其它簇，其它簇似然提升最大的2(<code>top_n-1</code>)个簇的相关信息，最后一列为该点当前所属簇的相关信息。如下表所示，point0目前在簇0中，将point0分到簇2和簇1中似然提升最大，分别为0.26和0.22，则info中存储信息为第一行所示。</p>
+</code></pre></div><p><code>point_info</code>结构体表示一个&lt;点—簇&gt;的对应信息，包括点对应的簇索引<code>clust</code>、修改次数<code>time</code>和修改引起的似然变化<code>objf</code>。对于每个点，<code>info_</code>保存了<code>top_n-1</code>个似然提升最大的&lt;点—簇&gt;信息，以及当前所属簇的&lt;点—簇&gt;信息，因此<code>point_info</code>的总大小为<code>num_points_</code> * <code>top_n</code>。</p>
+<p>举例来说，若有100个点，top_n为3，则point_info大小为300。前两列为将该点划分到其它簇后，似然提升最大的2(<code>top_n-1</code>)个簇的相关信息，最后一列为该点当前所属簇的相关信息。如下表所示，point0目前在簇0中，将point0分到簇2和簇1中似然提升最大，分别为0.26和0.22，则info中存储信息为第一行所示。</p>
 <p>注意，前两列是按照似然的提升值$\Delta objf$从大到小排序，并不是按照提升后的似然绝对值从大到小排序，表中存储的值是提升后(最后一列为下降后)的似然值。</p>
 <table>
 <thead>

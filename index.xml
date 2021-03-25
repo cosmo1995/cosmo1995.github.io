@@ -167,9 +167,9 @@ $$&lt;/p&gt;
 &lt;li&gt;Lattice：为每个训练句子通过解码生成对应的lattice，来近似MMI分母部分，即Lattice-based MMI&lt;/li&gt;
 &lt;li&gt;N-gram：用统计N-gram表示分母的所有可能路径&lt;/li&gt;
 &lt;/ol&gt;
-&lt;p&gt;对于问题2，答案是肯定的。(公式见&amp;quot;Sequence-discriminative training of deep neural networks&amp;quot;，详细推导可以参考http://placebokkk.github.io/asr/2019/12/24/asr-paper-se-mmi-note.html)。&lt;/p&gt;
+&lt;p&gt;对于问题2，答案是肯定的。(公式见&amp;quot;Sequence-discriminative training of deep neural networks&amp;quot;，详细推导可以参考&lt;a href=&#34;http://placebokkk.github.io/asr/2019/12/24/asr-paper-se-mmi-note.html&#34;&gt;http://placebokkk.github.io/asr/2019/12/24/asr-paper-se-mmi-note.html&lt;/a&gt;)&lt;/p&gt;
 &lt;h2 id=&#34;lattice-based-mmi&#34;&gt;Lattice-based MMI&lt;/h2&gt;
-&lt;p&gt;上面说过，可以通过解码生成每个训练句子对应的lattice，来近似MMI分母部分。解码生成的lattice的示例如下图所示（图示为一个word级别的lattice），在解码过程中，除了保留最优路径之外，我们还将未被解码器剪枝的其他路径也保存下来，并且合并一些相同的前缀和后缀，表示为图的形式。由于lattice生成过程中系列剪枝处理后，其中包含的路径有限，相当于通过识别解码仅仅保留了概率大的词序列$W$，而将大部分小概率的词序列$W$忽略掉。&lt;/p&gt;
+&lt;p&gt;上面说过，可以通过解码生成每个训练句子对应的lattice，来近似MMI分母部分。解码生成的lattice的示例如下图所示（图示为一个word级别的lattice），在解码过程中，除了保留最优路径之外，我们还将未被解码器剪枝的其他近似路径也保存下来，并且合并一些相同的前缀和后缀，表示为图的形式。由于lattice生成过程中系列剪枝处理后，其中包含的路径有限，相当于通过识别解码仅仅保留了概率大的词序列$W$，而将大部分小概率的词序列$W$忽略掉。&lt;/p&gt;
 &lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6GwMTg&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
     &gt;&lt;img src=&#34;https://s3.ax1x.com/2021/03/10/6GwMTg.jpg&#34; alt=&#34;6GwMTg.jpg&#34;  /&gt;&lt;/a&gt;&lt;/p&gt;
 &lt;p&gt;基于DNN-HMM的Lattice-based MMI训练流程：&lt;/p&gt;
@@ -181,19 +181,19 @@ $$&lt;/p&gt;
 &lt;/ol&gt;
 &lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6GMVtU&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
     &gt;&lt;img src=&#34;https://s3.ax1x.com/2021/03/10/6GMVtU.png&#34; alt=&#34;6GMVtU.png&#34;  /&gt;&lt;/a&gt;&lt;/p&gt;
-&lt;p&gt;因为MMI的训练依赖Lattice，Lattice又依赖已经训练好的声学模型，所以在DNN的声学模型中，我们要先基于ML准则先训练好DNN模型，然后做MMI的训练。并且，&lt;strong&gt;Lattice是一个解码过程，其生成代价很高&lt;/strong&gt;，并且只能在CPU上进行解码生成。一般我们只生成一次Lattice，区分性训练的过程中我们并不根据当前更新后的声学模型实时生成Lattice，也就是不使用实时的Lattice做MMI训练。所以在这种方式中，&lt;strong&gt;Lattice是滞后的，和当前的声学模型并不同步&lt;/strong&gt;。&lt;/p&gt;
-&lt;p&gt;区分性训练曾一度是语音识别的研究热点，除了MMI的准则之外，前人还提出过许多其他的区分性准则，如MCE、MPE、sMBR等等，其核心思想是一样的，形式上也大同小异，读者可以阅读文末的参考资料做进一步了解。目前，除了MMI之外，sMBR也比较常用。&lt;/p&gt;
+&lt;p&gt;因为MMI的训练依赖Lattice，Lattice又依赖已经训练好的声学模型，所以在DNN的声学模型中，我们要先基于CE准则训练好DNN模型，然后做MMI的训练。并且，&lt;strong&gt;Lattice是一个解码过程，其生成代价很高&lt;/strong&gt;，并且只能在CPU上进行解码生成。一般我们只生成一次Lattice，区分性训练的过程中我们并不根据当前更新后的声学模型实时生成Lattice，也就是不使用实时的Lattice做MMI训练。所以在这种方式中，&lt;strong&gt;Lattice是滞后的，和当前的声学模型并不同步&lt;/strong&gt;。&lt;/p&gt;
+&lt;p&gt;区分性训练曾一度是语音识别的研究热点，除了MMI的准则之外，前人还提出过许多其他的区分性准则，如MCE、MPE、sMBR等等，其核心思想是一样的，形式上也大同小异目前，除了MMI之外，sMBR也比较常用。&lt;/p&gt;
 &lt;p&gt;上述方法中，分母Lattice的生成需要对训练数据进行逐一解码，太麻烦了，有没有更简单的做法呢？&lt;/p&gt;
 &lt;h2 id=&#34;lattice-free-mmi&#34;&gt;Lattice-free MMI&lt;/h2&gt;
-&lt;p&gt;MMI中分母实际上是在考虑$W$的各种可能，即词序列的各种可能，在语言模型中我们通过统计n-gram的方式表示为概率模型，同样的，我们也可以通过概率统计模型n-gram去表示该分母。假设我们将$W$表示为一个和语音识别解码时类似的语言模型G，并为MMI分母构建一个类似HCLG的解码图，则该解码图中组合了MMI中的声学模型和语言模型的信息。对于任意特征观测$O$，我们将该HCLG当作一个巨大的HMM拓扑结构，在该拓扑结构上进行动态前向后向算法（和Lattice不同，Lattice在前向后向算法时，整个时间序列都已经展开，而这里需要根据观测$O$的长度动态展开成时间序列，和标准的HMM前向后向算法一样），最终可以得到上述所需的y_ut^DEN(s)。&lt;/p&gt;
+&lt;p&gt;MMI中分母实际上是在考虑$W$的各种可能，即词序列的各种可能。在语言模型中我们通过统计n-gram的方式表示为概率模型，同样的，我们也可以通过n-gram去表示该分母。假设我们将$W$表示为一个和解码时类似的语言模型G，并为MMI分母构建一个类似HCLG的解码图，则该解码图中组合了MMI中的声学模型和语言模型的信息。对于任意特征观测$O$，我们将该HCLG当作一个巨大的HMM拓扑结构，在该拓扑结构上进行动态前向后向算法（和Lattice不同，Lattice在前向后向算法时，整个时间序列都已经展开，而这里需要根据观测$O$的长度动态展开成时间序列，和标准的HMM前向后向算法一样）。&lt;/p&gt;
 &lt;p&gt;但是，我们提到$W$一定要是有限的，可枚举的，当MMI分母和语音识别解码图是一样时，即以词Word作为语言模型的单元，一般的语音识别系统词级别在数十万到百万之间，即使做个简单的bi-gram，其复杂度也非常非常高（HCLG的大小），训练代价非常高。&lt;/p&gt;
 &lt;p&gt;为了降低复杂度，考虑以Phone作为语言模型单元。识别系统中Phone的一般在几十个到一百多个，考虑到数据稀疏性，即使做tri-gram或者4-gram复杂度也在合理区间内。以Phone作为建模单元时，MMI的分母图为HCP(没有词典L了)。&lt;/p&gt;
 &lt;p&gt;其中，Phone的训练语料可以由语音识别的训练数据通过对齐生成。合理的控制Phone的MMI分母的大小，可以将其前向后向计算塞进GPU进行计算，也就是将MMI训练迁移到GPU，从而大大提高了MMI的训练速度。&lt;/p&gt;
 &lt;p&gt;基于DNN-HMM的Lattice-free MMI训练流程：&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;训练GMM-HMM，并基于CE(Cross Entropy)训练DNN&lt;/li&gt;
-&lt;li&gt;MMI分母部分的FST前向后向计算直接用音素级别的FST图，并在每次训练后更新状态序列和统计量&lt;/li&gt;
-&lt;li&gt;基于DNN-HMM得到句子的Lattice（FST形式）进行中MMI分子部分的前向后向计算&lt;/li&gt;
+&lt;li&gt;构建音素级别的HCP，作为MMI分母部分&lt;/li&gt;
+&lt;li&gt;DNN对训练句子进行对齐，作为MMI分子部分&lt;/li&gt;
 &lt;li&gt;进行Lattice-Free MMI训练&lt;/li&gt;
 &lt;/ol&gt;
 &lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6GK0FU&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
@@ -269,11 +269,11 @@ $$&lt;/p&gt;
 &lt;/ul&gt;
 &lt;p&gt;第m个高斯分量的协方差矩阵可以描述为：
 $$
-\Sigma^{(m)}=H\Sigma^{(m)}&lt;em&gt;{diag}H^{T}
+\Sigma^{(m)}=H\Sigma^{(m)}_{diag}H^{T}
+$$&lt;/p&gt;
+&lt;p&gt;令$A=H^{-1}$，则有：
 $$
-令$A=H^{-1}$，则有：
-$$
-\Sigma^{(m)-1}=A^{T}\Sigma^{(m-1)}&lt;/em&gt;{diag}A
+\Sigma^{(m)-1}=A^{T}\Sigma^{(m-1)}_{diag}A
 $$
 训练过程为EM算法：&lt;/p&gt;
 &lt;ol&gt;
@@ -287,7 +287,7 @@ $$
 &lt;p&gt;在获得最终的变换矩阵后，转换后的特征重新训练GMM。&lt;/p&gt;
 &lt;h2 id=&#34;speaker-adaptive&#34;&gt;Speaker Adaptive&lt;/h2&gt;
 &lt;p&gt;在训练自动语音识别模型的时候，训练数据和测试数据往往存在不匹配的现象。这些不匹配包括包括说话人特性（说话方式、口音等）及环境特性（如录音设备、房间混响等）。&lt;/p&gt;
-&lt;p&gt;为了解决训练数据和测试数据往往存在不匹配，有两种方法：&lt;/p&gt;
+&lt;p&gt;为了解决训练数据和测试数据间的不匹配，有两种方法：&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;模型空间——修改模型以更好地适应特征=&amp;gt;Adaptation&lt;/li&gt;
 &lt;li&gt;特征空间——变换特征以更好地适应模型=&amp;gt;Normalization&lt;/li&gt;
@@ -299,7 +299,7 @@ $$
 &lt;/ul&gt;
 &lt;p&gt;说话人自适应SA的目的就是在SI（即不需要特定说话人的大量训练数据）的基础上达到SD的错误率。&lt;/p&gt;
 &lt;h3 id=&#34;fmllr&#34;&gt;fMLLR&lt;/h3&gt;
-&lt;p&gt;MLLR有两种变体：unconstrained 和 constrained， MLLR是基于模型空间的方法，constrained MLLR(cMLLR)又叫fMLLR，是基于特征空间的方法。我们主要讨论fMLLR，即对均值和方差应用相同的变换矩阵$\tilde{A}$。
+&lt;p&gt;MLLR有两种形式：unconstrained 和 constrained， MLLR是基于模型空间的方法，constrained MLLR(cMLLR)又叫fMLLR，是基于特征空间的方法。我们主要讨论fMLLR，即对均值和方差应用相同的变换矩阵$\tilde{A}$。
 $$
 \mu^{(sm)} = \tilde{A}^{(s)}\mu^{(m)} +  \tilde{b}^{(s)};\ \Sigma^{(sm)} =  \tilde{A}^{(s)}\Sigma^{(m)} \tilde{A}^{(s)T}
 $$
@@ -466,7 +466,7 @@ $$
 &lt;li&gt;
 &lt;p&gt;读取roots.int，得到&lt;/p&gt;
 &lt;p&gt;1)&lt;code&gt;vector&amp;lt;vector&amp;lt;int&amp;gt;&amp;gt; phone_sets&lt;/code&gt;，其一个元素包含roots.int的一行上的所有音素&lt;/p&gt;
-&lt;p&gt;2)&lt;code&gt;vector&amp;lt;bool&amp;gt; is_shared_root&lt;/code&gt;，其一个元素指明该行的音素是否共享三个HMM状态的决策树树根&lt;/p&gt;
+&lt;p&gt;2)&lt;code&gt;vector&amp;lt;bool&amp;gt; is_shared_root&lt;/code&gt;，其一个元素指明该行音素的HMM状态是否共享决策树树根&lt;/p&gt;
 &lt;p&gt;3)&lt;code&gt;vector&amp;lt;bool&amp;gt; is_split_root&lt;/code&gt;，其一个元素指明是否对该行音素对应的决策树树根进行划分&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
@@ -521,7 +521,7 @@ $$
 &lt;h4 id=&#34;getstubmap&#34;&gt;GetStubMap&lt;/h4&gt;
 &lt;ul&gt;
 &lt;li&gt;作用：构建初始决策树&lt;/li&gt;
-&lt;li&gt;输入：音素中间位置&lt;code&gt;P&lt;/code&gt;、roots.int中每一行音素&lt;code&gt;phone_sets&lt;/code&gt;、每个音素对应的HMM state数&lt;code&gt;phone2num_pdf_classes&lt;/code&gt;、roots.int中每一行的三个HMM state是否共享树根&lt;code&gt;share_roots&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;输入：音素中间位置&lt;code&gt;P&lt;/code&gt;、roots.int中每一行音素&lt;code&gt;phone_sets&lt;/code&gt;、每个音素对应的HMM state数&lt;code&gt;phone2num_pdf_classes&lt;/code&gt;、roots.int中每一行的HMM state是否共享树根&lt;code&gt;share_roots&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;输出：决策树&lt;code&gt;*tree_stub&lt;/code&gt;&lt;/li&gt;
 &lt;/ul&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span class=&#34;n&#34;&gt;EventMap&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;*&lt;/span&gt;&lt;span class=&#34;nf&#34;&gt;GetStubMap&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;int32&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;P&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
@@ -585,8 +585,7 @@ $$
 &lt;p&gt;若该行音素为&lt;code&gt;shared&lt;/code&gt;，则创建叶子结点&lt;code&gt;ConstantEventMap&lt;/code&gt;，其&lt;code&gt;answer_&lt;/code&gt;为&lt;code&gt;num_leaves_out&lt;/code&gt;，结点创建后&lt;code&gt;num_leaves_out++&lt;/code&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;若该行音素为&lt;code&gt;not shared&lt;/code&gt;，则首先获得所有音素的最大HMM state数&lt;code&gt;max_len&lt;/code&gt;，&lt;code&gt;m&lt;/code&gt;中保存每个HMM state的&lt;code&gt;num_leaves_out&lt;/code&gt;，创建&lt;code&gt;TableEventMap&lt;/code&gt;，&lt;/p&gt;
-&lt;p&gt;其&lt;code&gt;key_&lt;/code&gt;为-1，&lt;code&gt;table_&lt;/code&gt;为&lt;code&gt;m&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;若该行音素为&lt;code&gt;not shared&lt;/code&gt;，则首先获得所有音素的最大HMM state数&lt;code&gt;max_len&lt;/code&gt;，&lt;code&gt;m&lt;/code&gt;中保存每个HMM state的&lt;code&gt;num_leaves_out&lt;/code&gt;，创建&lt;code&gt;TableEventMap&lt;/code&gt;，其&lt;code&gt;key_&lt;/code&gt;为-1，&lt;code&gt;table_&lt;/code&gt;为&lt;code&gt;m&lt;/code&gt;&lt;/p&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
 &lt;/li&gt;
@@ -785,12 +784,12 @@ AE0 AE1 AE2					  		        6 7 8
 &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;sort&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;phones&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;begin&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(),&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;phones&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;end&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;());&lt;/span&gt;
 &lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;vector&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;int32&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;all_hmm_positions_in&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;all_hmm_positions_in&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
 &lt;span class=&#34;n&#34;&gt;SortAndUniq&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;all_hmm_positions_in&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;读取sets.int中的音素到&lt;code&gt;phone_sets&lt;/code&gt;，并将&lt;code&gt;phone_sets&lt;/code&gt;中所有音素排序后保存在&lt;code&gt;phones&lt;/code&gt;中；读取hmm-position-list参数保存到&lt;code&gt;all_hmm_positions_in&lt;/code&gt;中，该参数指定了聚类时所考虑的HMM状态，默认为1，也就是只考虑三状态HMM的中间状态。&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;读取sets.int中的音素到&lt;code&gt;phone_sets&lt;/code&gt;，并将&lt;code&gt;phone_sets&lt;/code&gt;中所有音素排序后保存在&lt;code&gt;phones&lt;/code&gt;中；读取hmm-position-list参数保存到&lt;code&gt;all_hmm_positions_in&lt;/code&gt;中，该参数指定了聚类时所考虑的HMM状态，默认为1，也就是只使用HMM中间状态的统计量。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span class=&#34;n&#34;&gt;BuildTreeStatsType&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;retained_stats&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
 &lt;span class=&#34;n&#34;&gt;FilterStatsByKey&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;stats&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;kPdfClass&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;all_hmm_positions_in&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;
                  &lt;span class=&#34;nb&#34;&gt;true&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt;  &lt;span class=&#34;c1&#34;&gt;// retain only the listed positions
 &lt;/span&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;                 &lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;retained_stats&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;FilterStatsByKey&lt;/code&gt;挑选出三音素第二个HMM状态对应的&lt;code&gt;stats&lt;/code&gt;保存到&lt;code&gt;retained_stats&lt;/code&gt;中，即包含&amp;lt;-1，1&amp;gt;的&lt;code&gt;stats&lt;/code&gt;。通过累积统计量部分我们知道，三音素的三个HMM状态都有对应的统计量，但是这里只把与第二个HMM状态相关的统计量留下进行聚类，其他的都暂时扔掉不用。若有100个phone，则有$100^3$个triphone，$3\times100^3$个HMM state，由于我们只保留中间的HMM state，因此&lt;code&gt;retained_stats&lt;/code&gt;中只保存了$100^3$个HMM状态及其统计量。&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;FilterStatsByKey&lt;/code&gt;挑选出HMM中间状态对应的&lt;code&gt;stats&lt;/code&gt;保存到&lt;code&gt;retained_stats&lt;/code&gt;中，即包含&amp;lt;-1，1&amp;gt;的&lt;code&gt;stats&lt;/code&gt;。通过累积统计量部分我们知道，三音素的三个HMM状态都有对应的统计量，但是这里只把与第二个HMM状态相关的统计量留下进行聚类，其他的都暂时扔掉不用。若有100个phone，则有$100^3$个triphone，$3\times100^3$个HMM state，由于我们只保留中间的HMM state，因此&lt;code&gt;retained_stats&lt;/code&gt;中只保存了$100^3$个HMM状态及其统计量。&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-c++&#34; data-lang=&#34;c++&#34;&gt;&lt;span class=&#34;n&#34;&gt;std&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;::&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;vector&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;BuildTreeStatsType&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;&amp;gt;&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;split_stats&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;  &lt;span class=&#34;c1&#34;&gt;// split by phone.
 &lt;/span&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;SplitStatsByKey&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;retained_stats&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;P&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;&amp;amp;&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;split_stats&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;);&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;SplitStatsByKey&lt;/code&gt;根据三音素的中间音素对&lt;code&gt;retained_stats&lt;/code&gt;进行划分，中间音素相同的分到一起，保存到&lt;code&gt;split_stats&lt;/code&gt;向量中。由参数P指定根据三音素的第几个音素进行划分，因为此处P是1，所以是三音素的中间音素。&lt;code&gt;retained_stats&lt;/code&gt;中$100^3$个统计量按照中间音素划分为100部分保存到&lt;code&gt;split_stats&lt;/code&gt;中，每一个部分保存着$100^2$个状态及其统计量。&lt;/p&gt;
@@ -851,7 +850,7 @@ AE0 AE1 AE2					  		        6 7 8
 &lt;/span&gt;&lt;span class=&#34;c1&#34;&gt;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;};&lt;/span&gt; 
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;ul&gt;
 &lt;li&gt;&lt;code&gt;Node&lt;/code&gt;保存着指向其父亲结点&lt;code&gt;parent&lt;/code&gt;和孩子结点&lt;code&gt;children&lt;/code&gt;的指针，其中&lt;code&gt;children&lt;/code&gt;是一个&lt;code&gt;Node&lt;/code&gt;指针类型的vector，vector的大小由&lt;code&gt;TreeClusterOptions&lt;/code&gt;中的&lt;code&gt;branch_factor&lt;/code&gt;参数指定，这个值默认为2，所以我们这里使用的树是二叉树，每个结点最多只有两个孩子结点。&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;Node&lt;/code&gt;保存着属于该结点的所有统计量之和&lt;code&gt;node_total&lt;/code&gt;。统计量就是该结点中的音素对应的所有特征向量的出现次数&lt;code&gt;count_&lt;/code&gt;、特征向量之和以及特征向量的平方和，统计量用来计算该结点的似然L(s)。&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;Node&lt;/code&gt;保存着属于该结点的所有统计量之和&lt;code&gt;node_total&lt;/code&gt;。统计量就是该结点中的音素对应的所有特征向量的出现次数&lt;code&gt;count_&lt;/code&gt;、特征向量之和以及特征向量的平方和，统计量用来计算该结点的似然$L(s)$。&lt;/li&gt;
 &lt;li&gt;&lt;code&gt;Node&lt;/code&gt;还保存着该结点是否是叶子结点&lt;code&gt;is_leaf&lt;/code&gt;，以及是叶子结点时在leaf_nodes中的索引和不是叶子结点时在nonleaf_nodes中的索引&lt;code&gt;index&lt;/code&gt;。&lt;/li&gt;
 &lt;li&gt;如果是叶子结点，保存着&lt;code&gt;leaf&lt;/code&gt;对象，&lt;code&gt;leaf&lt;/code&gt;成员变量包含：属于该叶子的那些点的统计量&lt;code&gt;points&lt;/code&gt;，以及该叶子上拥有的那些点在所有点组成的vector中的索引&lt;code&gt;point_indices&lt;/code&gt;（也就是在TreeClusterer对象points成员中的索引）。用&lt;code&gt;best_split&lt;/code&gt;保存着对该叶子结点进行最优划分时，获得的最大的似然提升。对该叶子结点划分意味着生成两个新的簇（或者说两个新的孩子结点），&lt;code&gt;assignments&lt;/code&gt;中就保存着对该叶子结点进行最优划分后，该叶子结点中的点分别被划分到哪个簇（或者说分别被划分到哪个孩子结点）。&lt;/li&gt;
 &lt;/ul&gt;
@@ -913,7 +912,7 @@ AE0 AE1 AE2					  		        6 7 8
     &lt;span class=&#34;n&#34;&gt;ans&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;+=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;impr&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
     &lt;span class=&#34;k&#34;&gt;if&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;impr&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;==&lt;/span&gt; &lt;span class=&#34;mi&#34;&gt;0&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt; &lt;span class=&#34;k&#34;&gt;break&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
 &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;再对每个点随机分配到簇中后，循环调用&lt;code&gt;cfg.num_iters&lt;/code&gt;次优化聚类函数&lt;code&gt;RefineClusterers&lt;/code&gt;，直至优化后的似然不再增加，返回最终的似然值。&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;将每个点随机分配到两个簇中后，循环调用&lt;code&gt;cfg.num_iters&lt;/code&gt;次优化聚类函数&lt;code&gt;RefineClusterers&lt;/code&gt;调整每个点所属的簇，直至优化后的似然不再增加，返回最终的似然值。&lt;/p&gt;
 &lt;p&gt;&lt;code&gt;RefineClusterers&lt;/code&gt;通过定义了&lt;code&gt;RefineClusterer&lt;/code&gt;对象来调整每个点所属的簇，其过程和K-Means类似，具体原理如下。&lt;/p&gt;
 &lt;h4 id=&#34;refineclusterer对象&#34;&gt;RefineClusterer对象&lt;/h4&gt;
 &lt;p&gt;&lt;code&gt;RefineClusterer&lt;/code&gt;的成员变量&lt;/p&gt;
@@ -938,8 +937,8 @@ AE0 AE1 AE2					  		        6 7 8
 &lt;span class=&#34;n&#34;&gt;int32&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;num_points_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
 &lt;span class=&#34;n&#34;&gt;int32&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;t_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt;
 &lt;span class=&#34;n&#34;&gt;RefineClustersOptions&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;cfg_&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;;&lt;/span&gt; 
-&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;point_info&lt;/code&gt;结构体表示一个&amp;lt;点——簇&amp;gt;的对应信息，包括点对应的簇索引&lt;code&gt;clust&lt;/code&gt;、修改次数&lt;code&gt;time&lt;/code&gt;和修改引起的似然变化&lt;code&gt;objf&lt;/code&gt;。对于每个点，&lt;code&gt;info_&lt;/code&gt;保存了&lt;code&gt;top_n-1&lt;/code&gt;个似然提升最大的&amp;lt;点——簇&amp;gt;信息，以及当前所属簇的&amp;lt;点——簇&amp;gt;信息，因此&lt;code&gt;point_info&lt;/code&gt;的总大小为&lt;code&gt;num_points_&lt;/code&gt; * &lt;code&gt;top_n&lt;/code&gt;。&lt;/p&gt;
-&lt;p&gt;举例来说，若有100个点，top_n为3，则point_info大小为300。前两列为将该点划分到其它簇，其它簇似然提升最大的2(&lt;code&gt;top_n-1&lt;/code&gt;)个簇的相关信息，最后一列为该点当前所属簇的相关信息。如下表所示，point0目前在簇0中，将point0分到簇2和簇1中似然提升最大，分别为0.26和0.22，则info中存储信息为第一行所示。&lt;/p&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;point_info&lt;/code&gt;结构体表示一个&amp;lt;点—簇&amp;gt;的对应信息，包括点对应的簇索引&lt;code&gt;clust&lt;/code&gt;、修改次数&lt;code&gt;time&lt;/code&gt;和修改引起的似然变化&lt;code&gt;objf&lt;/code&gt;。对于每个点，&lt;code&gt;info_&lt;/code&gt;保存了&lt;code&gt;top_n-1&lt;/code&gt;个似然提升最大的&amp;lt;点—簇&amp;gt;信息，以及当前所属簇的&amp;lt;点—簇&amp;gt;信息，因此&lt;code&gt;point_info&lt;/code&gt;的总大小为&lt;code&gt;num_points_&lt;/code&gt; * &lt;code&gt;top_n&lt;/code&gt;。&lt;/p&gt;
+&lt;p&gt;举例来说，若有100个点，top_n为3，则point_info大小为300。前两列为将该点划分到其它簇后，似然提升最大的2(&lt;code&gt;top_n-1&lt;/code&gt;)个簇的相关信息，最后一列为该点当前所属簇的相关信息。如下表所示，point0目前在簇0中，将point0分到簇2和簇1中似然提升最大，分别为0.26和0.22，则info中存储信息为第一行所示。&lt;/p&gt;
 &lt;p&gt;注意，前两列是按照似然的提升值$\Delta objf$从大到小排序，并不是按照提升后的似然绝对值从大到小排序，表中存储的值是提升后(最后一列为下降后)的似然值。&lt;/p&gt;
 &lt;table&gt;
 &lt;thead&gt;
@@ -1273,17 +1272,14 @@ d) 过滤问题集的重复项、空项，生成最终的问题集。&lt;/p&gt;
 &lt;h2 id=&#34;treeacc文件&#34;&gt;treeacc文件&lt;/h2&gt;
 &lt;p&gt;kaldi中上述统计量保存在treeacc文件中，如下：&lt;/p&gt;
 &lt;pre&gt;&lt;code&gt;BTS 9347 EV 4 -1 0 0 0 1 127 2 113
-T GCL 3 0.01  [
--1.023983 8.608648 38.34841 ...
-122.1417 705.353 642.767 ... ]
-EV 4 -1 0 0 0 1 287 2 252
-T GCL 1 0.01  [
--20.32862 25.84675 37.57724 ...
-413.2527 668.0544 1412.049 ... ]
-&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;第1行：BTS 9347表示不同的&lt;code&gt;EventType&lt;/code&gt;个数，EV 4 -1 0 0 0 1 127 2代表一个~，4表示后面有4对&lt;code&gt;&amp;lt;int,int&amp;gt;&lt;/code&gt;pair，-1 0 0 0 1 29 2 134表示当前&lt;code&gt;EventType&lt;/code&gt;为triphone 0/127/113的第0个HMM state。
-第2行：GCL 3表示该&lt;code&gt;EventType&lt;/code&gt;出现的次数为3(对应&lt;code&gt;count_&lt;/code&gt;)； 0.01为&lt;code&gt;var_floor&lt;/code&gt;，表示方差如果小于0.01，则等于0.01。
-第3行：表示当前&lt;code&gt;EventType&lt;/code&gt;对应的特征向量之和
-第4行：表示当前&lt;code&gt;EventType&lt;/code&gt;对应的特征向量平方之和&lt;/p&gt;
+T GCL 3 0.01  
+[-1.023983 8.608648 38.34841 ...]
+[122.1417 705.353 642.767 ... ]
+...
+&lt;/code&gt;&lt;/pre&gt;&lt;p&gt;第1行：BTS 9347表示不同的&lt;code&gt;EventType&lt;/code&gt;个数，EV 4表示后面有4对&lt;code&gt;&amp;lt;int,int&amp;gt;&lt;/code&gt;pair，-1 0 0 0 1 127 2 113表示当前&lt;code&gt;EventType&lt;/code&gt;为triphone 0-127+113的第0个HMM state。&lt;/p&gt;
+&lt;p&gt;第2行：GCL 3表示该&lt;code&gt;EventType&lt;/code&gt;出现的次数为3(对应&lt;code&gt;count_&lt;/code&gt;)； 0.01为&lt;code&gt;var_floor&lt;/code&gt;，表示方差如果小于0.01，则等于0.01。&lt;/p&gt;
+&lt;p&gt;第3行：表示当前&lt;code&gt;EventType&lt;/code&gt;对应的特征向量之和&lt;/p&gt;
+&lt;p&gt;第4行：表示当前&lt;code&gt;EventType&lt;/code&gt;对应的特征向量平方之和&lt;/p&gt;
 &lt;h2 id=&#34;reference&#34;&gt;Reference&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;a href=&#34;http://www.kaldi-asr.org/doc/clustering.html&#34;&gt;http://www.kaldi-asr.org/doc/clustering.html&lt;/a&gt;&lt;/li&gt;
@@ -1310,15 +1306,7 @@ $$
 L=\sum_{t \in T}{\sum_{s \in S}\gamma_s(t) logP(x_t;\mu_S,\Sigma_S)}
 $$
 其中$S$为该结点对应的状态集，$T$为状态集$S$对应的所有帧，$\gamma_s(t)$为帧$x_t$由状态$s$生成的后验概率，$P$为概率分布。&lt;/p&gt;
-&lt;p&gt;若$P$为高斯分布，则有
-$$
-\begin {aligned}
-log P (x_t;\mu_S,\Sigma_S) 
-&amp;amp;= log \frac{1}{(2\pi)^{\frac{D}{2}}{\lvert{\Sigma_S}\rvert}^{\frac{1}{2}}}exp[-\frac{1}{2}(x_t-\mu_S)^T\Sigma_S^{-1}(x_t-\mu_S)] \cr
-&amp;amp;= -\frac{1}{2}[Dlog2\pi + log\lvert{\Sigma_S}\rvert + (x_t-\mu_S)^T\Sigma_S^{-1}(x_t-\mu_S)]
-\end {aligned}
-$$
-那么有：
+&lt;p&gt;若$P$为高斯分布，则有：
 $$
 \begin {aligned}
 L &amp;amp;= -\frac{1}{2} (log[(2\pi)^D|\Sigma_S|] + D) \cdot \sum_{s \in S}\sum_{t \in T} \gamma_s(t) \cr
@@ -1428,9 +1416,10 @@ $$&lt;/p&gt;
 &lt;span class=&#34;p&#34;&gt;}&lt;/span&gt;
 &lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;至此，状态、统计量、决策树都可以描述了，下面可以开始进行统计量的累积。&lt;/p&gt;
 &lt;h2 id=&#34;reference&#34;&gt;Reference&lt;/h2&gt;
-&lt;ul&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.inf.ed.ac.uk/teaching/courses/asr/2020-21/asr07-cdhmm.pdf&#34;&gt;http://www.inf.ed.ac.uk/teaching/courses/asr/2020-21/asr07-cdhmm.pdf&lt;/a&gt;&lt;/li&gt;
 &lt;li&gt;&lt;a href=&#34;https://blog.csdn.net/u010731824/article/details/69668647&#34;&gt;https://blog.csdn.net/u010731824/article/details/69668647&lt;/a&gt;&lt;/li&gt;
-&lt;/ul&gt;
+&lt;/ol&gt;
 </description>
         </item>
         <item>

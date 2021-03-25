@@ -21,7 +21,7 @@ LDA+MLLT 首先对原始的MFCC特征进行拼帧(Frame Splicing)，将相邻的
 steps/train_lda_mllt.sh --cmd &amp;#34;train.cmd&amp;#34; \  --splice-opts &amp;#34;--left-context=3 --right-context=3&amp;#34; \  2500 15000 $data $lang $tri1_ali $tri_2b 在HMM-GMM模型中，通过GMM对HMM的发射概率进行建模。为了减少GMM模型的参数量，我们通常使用对角协方差(diagonal covariance)矩阵，这就要特征的各个维度之间是独立的(independent)。MFCC特征即使通过DCT去相关后仍存在一定的相关性，而拼帧后的特征间的相关性更强了。
 因此将拼接后的帧通过LDA进行降维和去相关。LDA的核心思想为投影后类内方差最小，类间的方差最大，这里的类指的是声学模型的状态(如pdf-id)。
 LDA降维后的特征通过MLLT再次进行去相关，MLLT引入了一种新形式的协方差矩阵，这种方法的每个高斯分量有两个方差矩阵:
- 对角协方差矩阵$\Sigma_{diag}^{(m)}$ 半绑定非对角矩阵$H$，可以在多个高斯分量之间共享  第m个高斯分量的协方差矩阵可以描述为： $$ \Sigma^{(m)}=H\Sigma^{(m)}{diag}H^{T} $$ 令$A=H^{-1}$，则有： $$ \Sigma^{(m)-1}=A^{T}\Sigma^{(m-1)}{diag}A $$ 训练过程为EM算法：</description>
+ 对角协方差矩阵$\Sigma_{diag}^{(m)}$ 半绑定非对角矩阵$H$，可以在多个高斯分量之间共享  第m个高斯分量的协方差矩阵可以描述为： $$ \Sigma^{(m)}=H\Sigma^{(m)}_{diag}H^{T} $$</description>
     </item>
     
     <item>

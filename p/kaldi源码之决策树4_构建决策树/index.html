@@ -212,7 +212,7 @@
 <li>
 <p>读取roots.int，得到</p>
 <p>1)<code>vector&lt;vector&lt;int&gt;&gt; phone_sets</code>，其一个元素包含roots.int的一行上的所有音素</p>
-<p>2)<code>vector&lt;bool&gt; is_shared_root</code>，其一个元素指明该行的音素是否共享三个HMM状态的决策树树根</p>
+<p>2)<code>vector&lt;bool&gt; is_shared_root</code>，其一个元素指明该行音素的HMM状态是否共享决策树树根</p>
 <p>3)<code>vector&lt;bool&gt; is_split_root</code>，其一个元素指明是否对该行音素对应的决策树树根进行划分</p>
 </li>
 <li>
@@ -267,7 +267,7 @@
 <h4 id="getstubmap">GetStubMap</h4>
 <ul>
 <li>作用：构建初始决策树</li>
-<li>输入：音素中间位置<code>P</code>、roots.int中每一行音素<code>phone_sets</code>、每个音素对应的HMM state数<code>phone2num_pdf_classes</code>、roots.int中每一行的三个HMM state是否共享树根<code>share_roots</code></li>
+<li>输入：音素中间位置<code>P</code>、roots.int中每一行音素<code>phone_sets</code>、每个音素对应的HMM state数<code>phone2num_pdf_classes</code>、roots.int中每一行的HMM state是否共享树根<code>share_roots</code></li>
 <li>输出：决策树<code>*tree_stub</code></li>
 </ul>
 <div class="highlight"><pre class="chroma"><code class="language-c++" data-lang="c++"><span class="n">EventMap</span> <span class="o">*</span><span class="nf">GetStubMap</span><span class="p">(</span><span class="n">int32</span> <span class="n">P</span><span class="p">,</span>
@@ -331,8 +331,7 @@
 <p>若该行音素为<code>shared</code>，则创建叶子结点<code>ConstantEventMap</code>，其<code>answer_</code>为<code>num_leaves_out</code>，结点创建后<code>num_leaves_out++</code></p>
 </li>
 <li>
-<p>若该行音素为<code>not shared</code>，则首先获得所有音素的最大HMM state数<code>max_len</code>，<code>m</code>中保存每个HMM state的<code>num_leaves_out</code>，创建<code>TableEventMap</code>，</p>
-<p>其<code>key_</code>为-1，<code>table_</code>为<code>m</code></p>
+<p>若该行音素为<code>not shared</code>，则首先获得所有音素的最大HMM state数<code>max_len</code>，<code>m</code>中保存每个HMM state的<code>num_leaves_out</code>，创建<code>TableEventMap</code>，其<code>key_</code>为-1，<code>table_</code>为<code>m</code></p>
 </li>
 </ul>
 </li>

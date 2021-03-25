@@ -208,15 +208,7 @@ $$
 L=\sum_{t \in T}{\sum_{s \in S}\gamma_s(t) logP(x_t;\mu_S,\Sigma_S)}
 $$
 其中$S$为该结点对应的状态集，$T$为状态集$S$对应的所有帧，$\gamma_s(t)$为帧$x_t$由状态$s$生成的后验概率，$P$为概率分布。</p>
-<p>若$P$为高斯分布，则有
-$$
-\begin {aligned}
-log P (x_t;\mu_S,\Sigma_S) 
-&amp;= log \frac{1}{(2\pi)^{\frac{D}{2}}{\lvert{\Sigma_S}\rvert}^{\frac{1}{2}}}exp[-\frac{1}{2}(x_t-\mu_S)^T\Sigma_S^{-1}(x_t-\mu_S)] \cr
-&amp;= -\frac{1}{2}[Dlog2\pi + log\lvert{\Sigma_S}\rvert + (x_t-\mu_S)^T\Sigma_S^{-1}(x_t-\mu_S)]
-\end {aligned}
-$$
-那么有：
+<p>若$P$为高斯分布，则有：
 $$
 \begin {aligned}
 L &amp;= -\frac{1}{2} (log[(2\pi)^D|\Sigma_S|] + D) \cdot \sum_{s \in S}\sum_{t \in T} \gamma_s(t) \cr
@@ -326,9 +318,10 @@ $$</p>
 <span class="p">}</span>
 </code></pre></div><p>至此，状态、统计量、决策树都可以描述了，下面可以开始进行统计量的累积。</p>
 <h2 id="reference">Reference</h2>
-<ul>
+<ol>
+<li><a href="http://www.inf.ed.ac.uk/teaching/courses/asr/2020-21/asr07-cdhmm.pdf">http://www.inf.ed.ac.uk/teaching/courses/asr/2020-21/asr07-cdhmm.pdf</a></li>
 <li><a href="https://blog.csdn.net/u010731824/article/details/69668647">https://blog.csdn.net/u010731824/article/details/69668647</a></li>
-</ul>
+</ol>
 
 </section>
 

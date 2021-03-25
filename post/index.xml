@@ -68,7 +68,7 @@ LDA+MLLT 首先对原始的MFCC特征进行拼帧(Frame Splicing)，将相邻的
 steps/train_lda_mllt.sh --cmd &amp;#34;train.cmd&amp;#34; \  --splice-opts &amp;#34;--left-context=3 --right-context=3&amp;#34; \  2500 15000 $data $lang $tri1_ali $tri_2b 在HMM-GMM模型中，通过GMM对HMM的发射概率进行建模。为了减少GMM模型的参数量，我们通常使用对角协方差(diagonal covariance)矩阵，这就要特征的各个维度之间是独立的(independent)。MFCC特征即使通过DCT去相关后仍存在一定的相关性，而拼帧后的特征间的相关性更强了。
 因此将拼接后的帧通过LDA进行降维和去相关。LDA的核心思想为投影后类内方差最小，类间的方差最大，这里的类指的是声学模型的状态(如pdf-id)。
 LDA降维后的特征通过MLLT再次进行去相关，MLLT引入了一种新形式的协方差矩阵，这种方法的每个高斯分量有两个方差矩阵:
- 对角协方差矩阵$\Sigma_{diag}^{(m)}$ 半绑定非对角矩阵$H$，可以在多个高斯分量之间共享  第m个高斯分量的协方差矩阵可以描述为： $$ \Sigma^{(m)}=H\Sigma^{(m)}{diag}H^{T} $$ 令$A=H^{-1}$，则有： $$ \Sigma^{(m)-1}=A^{T}\Sigma^{(m-1)}{diag}A $$ 训练过程为EM算法：</description>
+ 对角协方差矩阵$\Sigma_{diag}^{(m)}$ 半绑定非对角矩阵$H$，可以在多个高斯分量之间共享  第m个高斯分量的协方差矩阵可以描述为： $$ \Sigma^{(m)}=H\Sigma^{(m)}_{diag}H^{T} $$</description>
     </item>
     
     <item>
@@ -112,7 +112,7 @@ $x[k]$实际上就是倒谱Cepstrum（这个是一个新造出来的词，把频
       <description>到现在为止，程序acc-tree-stats累积好了构建决策树所需的统计量，程序cluster-phones和compile-questions自动生成好了构建决策树所需的问题集。我们根据sets.int生成好了roots.int文件，那么我们就可以开始构建决策树，对三音素GMM的状态进行绑定。这次笔记的主要内容是讲解Kaldi如何构建决策树，实现对三音素GMM状态的绑定。 在这个笔记中，首先我会介绍构建决策树的主程序build-tree和主函数BuildTree，然后介绍主函数中用到的核心函数GetStubMap和SplitDecisionTree。
 build-tree  作用：构建决策树 输入：累积的统计量treeacc、问题集questions.qst、roots.int、topo 输出：决策树tree  build-tree $context_opts --verbose=1 --max-leaves=$numleaves \  --cluster-thresh=$cluster_thresh $dir/treeacc $lang/phones/roots.int \  $dir/questions.qst $lang/topo $dir/tree   读取roots.int，得到
 1)vector&amp;lt;vector&amp;lt;int&amp;gt;&amp;gt; phone_sets，其一个元素包含roots.int的一行上的所有音素
-2)vector&amp;lt;bool&amp;gt; is_shared_root，其一个元素指明该行的音素是否共享三个HMM状态的决策树树根
+2)vector&amp;lt;bool&amp;gt; is_shared_root，其一个元素指明该行音素的HMM状态是否共享决策树树根
 3)vector&amp;lt;bool&amp;gt; is_split_root，其一个元素指明是否对该行音素对应的决策树树根进行划分
   读取topo文件，得到保存HMM拓扑结构的对象HmmTopology topo
   读取treeacc，得到累积的统计量BuildTreeStatsType stats
@@ -159,7 +159,9 @@ AccumulateTreeStats void AccumulateTreeStats(const TransitionModel &amp;amp;tran
 决策树的每一个结点包含一些状态的集合，我们可以计算该状态集生成对应观测帧的似然。在triphone模型中，将一系列HMM states输入到决策树的根节点中，对这些状态进行提问，根据问题的答案分为左子结点或者右子结点。对于每一个子结点，可以计算该结点的新似然。决策树分类的根据就是使得分裂后的子节点似然之和相比分裂之前增量最大。同时我们通过设置某些阈值来控制决策树何时停止分裂，例如分裂前后似然的增量阈值，结点对应的state occupancy等。
 一般我们会将具有相同中间音素的triphone的同一个位置的所有状态构建一个决策树，如果有63个monophone，那么我们会构建189个决策树(kaldi中这189个决策树会放在一个大的决策树下)。下图为所有中间音素为&amp;quot;zh&amp;quot;的triphone第3个HMM state进行决策树聚类的例子。
 决策树的似然等于每一个叶子结点的似然之和。若$L$为决策树某一个结点的似然，则有 $$ L=\sum_{t \in T}{\sum_{s \in S}\gamma_s(t) logP(x_t;\mu_S,\Sigma_S)} $$ 其中$S$为该结点对应的状态集，$T$为状态集$S$对应的所有帧，$\gamma_s(t)$为帧$x_t$由状态$s$生成的后验概率，$P$为概率分布。
-若$P$为高斯分布，则有 $$ \begin {aligned} log P (x_t;\mu_S,\Sigma_S) &amp;amp;= log \frac{1}{(2\pi)^{\frac{D}{2}}{\lvert{\Sigma_S}\rvert}^{\frac{1}{2}}}exp[-\frac{1}{2}(x_t-\mu_S)^T\Sigma_S^{-1}(x_t-\mu_S)] \cr &amp;amp;= -\frac{1}{2}[Dlog2\pi + log\lvert{\Sigma_S}\rvert + (x_t-\mu_S)^T\Sigma_S^{-1}(x_t-\mu_S)] \end {aligned} $$ 那么有： $$ \begin {aligned} L &amp;amp;= -\frac{1}{2} (log[(2\pi)^D|\Sigma_S|] + D) \cdot \sum_{s \in S}\sum_{t \in T} \gamma_s(t) \cr &amp;amp;= -\frac{1}{2}(Dlog(2\pi) + \sum_{i=1}^D{log\Sigma_{ii}} + D) \cdot \sum_{s \in S}\sum_{t \in T} \gamma_s(t) \end {aligned} $$</description>
+若$P$为高斯分布，则有： $$ \begin {aligned} L &amp;amp;= -\frac{1}{2} (log[(2\pi)^D|\Sigma_S|] + D) \cdot \sum_{s \in S}\sum_{t \in T} \gamma_s(t) \cr &amp;amp;= -\frac{1}{2}(Dlog(2\pi) + \sum_{i=1}^D{log\Sigma_{ii}} + D) \cdot \sum_{s \in S}\sum_{t \in T} \gamma_s(t) \end {aligned} $$
+triphone模型通过决策树分裂时，首先将具有相同中间音素的triphone的同一个位置的所有状态作为根节点，然后生成一系列可选问题集。对每一个叶子结点，选择使得分裂前后的似然增量最大的问题，即选择$\Delta L$最大的问题进行分裂。重复分裂步骤直到不满足设定的阈值。 $$ \Delta L = L(parent) - L(leftchild) - L(rightchild) $$
+根据$L$的计算公式，要想计算决策树某个结点的似然，我们只需要知道该结点对应状态集$S$的协方差$\Sigma_S$，以及状态集中所有状态的state occupancy之和$\sum_{s \in S}\sum_{t \in T} \gamma_s(t)$。</description>
     </item>
     
     <item>

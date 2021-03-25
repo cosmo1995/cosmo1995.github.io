@@ -228,11 +228,11 @@
 </ul>
 <p>第m个高斯分量的协方差矩阵可以描述为：
 $$
-\Sigma^{(m)}=H\Sigma^{(m)}<em>{diag}H^{T}
+\Sigma^{(m)}=H\Sigma^{(m)}_{diag}H^{T}
+$$</p>
+<p>令$A=H^{-1}$，则有：
 $$
-令$A=H^{-1}$，则有：
-$$
-\Sigma^{(m)-1}=A^{T}\Sigma^{(m-1)}</em>{diag}A
+\Sigma^{(m)-1}=A^{T}\Sigma^{(m-1)}_{diag}A
 $$
 训练过程为EM算法：</p>
 <ol>
@@ -246,7 +246,7 @@ $$
 <p>在获得最终的变换矩阵后，转换后的特征重新训练GMM。</p>
 <h2 id="speaker-adaptive">Speaker Adaptive</h2>
 <p>在训练自动语音识别模型的时候，训练数据和测试数据往往存在不匹配的现象。这些不匹配包括包括说话人特性（说话方式、口音等）及环境特性（如录音设备、房间混响等）。</p>
-<p>为了解决训练数据和测试数据往往存在不匹配，有两种方法：</p>
+<p>为了解决训练数据和测试数据间的不匹配，有两种方法：</p>
 <ul>
 <li>模型空间——修改模型以更好地适应特征=&gt;Adaptation</li>
 <li>特征空间——变换特征以更好地适应模型=&gt;Normalization</li>
@@ -258,7 +258,7 @@ $$
 </ul>
 <p>说话人自适应SA的目的就是在SI（即不需要特定说话人的大量训练数据）的基础上达到SD的错误率。</p>
 <h3 id="fmllr">fMLLR</h3>
-<p>MLLR有两种变体：unconstrained 和 constrained， MLLR是基于模型空间的方法，constrained MLLR(cMLLR)又叫fMLLR，是基于特征空间的方法。我们主要讨论fMLLR，即对均值和方差应用相同的变换矩阵$\tilde{A}$。
+<p>MLLR有两种形式：unconstrained 和 constrained， MLLR是基于模型空间的方法，constrained MLLR(cMLLR)又叫fMLLR，是基于特征空间的方法。我们主要讨论fMLLR，即对均值和方差应用相同的变换矩阵$\tilde{A}$。
 $$
 \mu^{(sm)} = \tilde{A}^{(s)}\mu^{(m)} +  \tilde{b}^{(s)};\ \Sigma^{(sm)} =  \tilde{A}^{(s)}\Sigma^{(m)} \tilde{A}^{(s)T}
 $$

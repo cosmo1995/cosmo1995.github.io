@@ -292,17 +292,14 @@
 <h2 id="treeacc文件">treeacc文件</h2>
 <p>kaldi中上述统计量保存在treeacc文件中，如下：</p>
 <pre><code>BTS 9347 EV 4 -1 0 0 0 1 127 2 113
-T GCL 3 0.01  [
--1.023983 8.608648 38.34841 ...
-122.1417 705.353 642.767 ... ]
-EV 4 -1 0 0 0 1 287 2 252
-T GCL 1 0.01  [
--20.32862 25.84675 37.57724 ...
-413.2527 668.0544 1412.049 ... ]
-</code></pre><p>第1行：BTS 9347表示不同的<code>EventType</code>个数，EV 4 -1 0 0 0 1 127 2代表一个~，4表示后面有4对<code>&lt;int,int&gt;</code>pair，-1 0 0 0 1 29 2 134表示当前<code>EventType</code>为triphone 0/127/113的第0个HMM state。
-第2行：GCL 3表示该<code>EventType</code>出现的次数为3(对应<code>count_</code>)； 0.01为<code>var_floor</code>，表示方差如果小于0.01，则等于0.01。
-第3行：表示当前<code>EventType</code>对应的特征向量之和
-第4行：表示当前<code>EventType</code>对应的特征向量平方之和</p>
+T GCL 3 0.01  
+[-1.023983 8.608648 38.34841 ...]
+[122.1417 705.353 642.767 ... ]
+...
+</code></pre><p>第1行：BTS 9347表示不同的<code>EventType</code>个数，EV 4表示后面有4对<code>&lt;int,int&gt;</code>pair，-1 0 0 0 1 127 2 113表示当前<code>EventType</code>为triphone 0-127+113的第0个HMM state。</p>
+<p>第2行：GCL 3表示该<code>EventType</code>出现的次数为3(对应<code>count_</code>)； 0.01为<code>var_floor</code>，表示方差如果小于0.01，则等于0.01。</p>
+<p>第3行：表示当前<code>EventType</code>对应的特征向量之和</p>
+<p>第4行：表示当前<code>EventType</code>对应的特征向量平方之和</p>
 <h2 id="reference">Reference</h2>
 <ul>
 <li><a href="http://www.kaldi-asr.org/doc/clustering.html">http://www.kaldi-asr.org/doc/clustering.html</a></li>
