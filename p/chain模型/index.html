@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='Chain Model'><title>Chain模型</title>
+
+<link rel='canonical' href='https://cosmo1995.github.io/p/chain%E6%A8%A1%E5%9E%8B/'>
+
+<link rel="stylesheet" href="/scss/style.min.css"><meta property='og:title' content='Chain模型'>
+<meta property='og:description' content='Chain Model'>
+<meta property='og:url' content='https://cosmo1995.github.io/p/chain%E6%A8%A1%E5%9E%8B/'>
+<meta property='og:site_name' content='Cosmo'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='kaldi' /><meta property='article:published_time' content='2021-03-11T00:00:00&#43;00:00'/><meta property='article:modified_time' content='2021-03-11T00:00:00&#43;00:00'/>
+<meta name="twitter:title" content="Chain模型">
+<meta name="twitter:description" content="Chain Model">
+    </head>
+    <body class="">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.body.dataset.scheme = 'dark';
+        } else {
+            document.body.dataset.scheme = 'light';
+        }
+    })();
+</script><div class="container main-container flex on-phone--column extended article-page with-toolbar">
+            <aside class="sidebar left-sidebar sticky">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header class="site-info">
+        
+            <figure class="site-avatar">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu874715197ebd8e5cb58e412c943f3434_12926_300x0_resize_q75_box.jpg" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+
+                
+            </figure>
+        
+        <h1 class="site-name"><a href="https://cosmo1995.github.io/">Cosmo</a></h1>
+        <h2 class="site-description">Why not ask the Magic Conch</h2>
+    </header>
+
+    <ol class="menu" id="main-menu">
+        
+        
+        
+
+        <li >
+            <a href='/'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>Home</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/about'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>About</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/archives'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>Archives</span>
+            </a>
+        </li>
+        
+
+        
+            <li id="dark-mode-toggle">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <span>Dark Mode</span>
+            </li>
+        
+    </ol>
+</aside>
+
+            <main class="main full-width">
+    <div id="article-toolbar">
+        <a href="https://cosmo1995.github.io/" class="back-home">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="15 6 9 12 15 18" />
+</svg>
+
+
+
+            <span>Back</span>
+        </a>
+    </div>
+
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/kaldi/" style="background-color: #2a9d8f; color: #fff;">
+                kaldi
+            </a>
+        
+    </header>
+    
+
+    <h2 class="article-title">
+        <a href="/p/chain%E6%A8%A1%E5%9E%8B/">Chain模型</a>
+    </h2>
+
+    
+    <h3 class="article-subtitle">
+        Chain Model
+    </h3>
+    <footer class="article-time">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+        <time class="article-time--published">Mar 11, 2021</time>
+    </footer></div>
+</header>
+
+    <section class="article-content">
+    <h2 id="chain训练流程">Chain训练流程</h2>
+<p>基于chain model的Lattice-free MMI训练流程：</p>
+<p><a class="link" href="https://imgtu.com/i/6GKFiD"  target="_blank" rel="noopener"
+    ><img src="https://s3.ax1x.com/2021/03/10/6GKFiD.png" alt="6GKFiD.png"  /></a></p>
+<ul>
+<li>分子和分母状态序列用FST表示（类似HCLG）</li>
+<li>分母的前向后向计算在GPU中进行</li>
+<li>从训练的alignment中，通过4-gram的phone构建LM，而不是word级别的LM</li>
+<li>帧率降到原来的1/3，训练和解码速度更快（每3帧输出1次），也就是说帧移变成了30ms，而不是10ms</li>
+<li>由于帧率的降低，HMM的结构上做了一些调整，引入了类似CTC里面blank的状态，同时转移概率设为0.5</li>
+<li>无需交叉熵系统初始化，可以从头开始训练</li>
+</ul>
+<h2 id="hmm-topology">HMM topology</h2>
+<p>chain model由于降低了帧率（每帧30ms），因此需要修改HMM拓扑结构。 修改后HMM可以通过一次转移进行遍历（相对于传统模型的3次转移）。 HMM拓扑包含一个仅出现一次的状态Sp，以及一个可以出现零次或多次的状态Sb。</p>
+<p>这种做法实际上是借鉴了CTC的思想，引入了blank用来吸收不确定的边界。但CTC只有一个blank，而chain model中每一个建模单元都有自己的blank。如下图所示：</p>
+<p><a class="link" href="https://imgtu.com/i/6LIVZ6"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/25/6LIVZ6.png" alt="6LIVZ6.png"  /></a></p>
+<p>对应kaldi中的结构定义为：</p>
+<pre><code>&lt;Topology&gt;
+&lt;TopologyEntry&gt;
+&lt;ForPhones&gt;
+1 2 3 4 5 6 7 8 …
+&lt;/ForPhones&gt;
+&lt;State&gt; 0 &lt;ForwardPdfClass&gt; 0 &lt;SelfLoopPdfClass&gt; 1 &lt;Transition&gt; 0 0.5 &lt;Transition&gt; 1 0.5 &lt;/State&gt;
+&lt;State&gt; 1 &lt;/State&gt;
+&lt;/TopologyEntry&gt;
+&lt;/Topology&gt;
+</code></pre><p>在kaldi中，把Sp和Sb看做同一个状态(都对应state 0)，只是pdfclass不同。ForwardPdfClass表示Sp，SelfLoopPdfClass表示Sb。</p>
+<h2 id="chain-model训练">Chain model训练</h2>
+<p>chain model实际上也是一种序列鉴别性训练的方法，所以它也要构造分母fst和分子fst。</p>
+<p>ps：这里不用分母词图(lattice)和分子词图(lattice)的表述，一、因为chain model(lattice free)不需要构建分母词图，而是用类似于HCLG这样的<strong>fst结构代替分母词图</strong>。二、同时chain model为了将每个句子分成一小块chunk，也会把<strong>分子lattice转换成分子fst</strong>(因为fst可以保留时间对齐信息，方便根据时间切分成块)</p>
+<h4 id="一为每个句子构建训练图然后解码得到每个句子的可能对齐结果lattice">一、为每个句子构建训练图，然后解码得到每个句子的可能对齐结果(lattice)</h4>
+<p>这一步类似于构建解码用的HCLG,但解码用的HCLG是所有句子通用的。而我们这里构建的HCLG是根据每个句子的标签构建的，所以图会比较小，每个句子有自己的一个HCLG图。具体构建训练图的方法可参考：<a href="http://kaldi-asr.org/doc/graph_recipe_train.html">http://kaldi-asr.org/doc/graph_recipe_train.html</a>。</p>
+<p>有了训练图之后，我们就可以在上面解码，得到每个句子所有可能的对齐方式。kaldi中将所有可能的对齐用lattice这样的数据结构来保存，这样可以节省存储空间。得到的lattice(CompactLattice)的格式如下：</p>
+<p><a class="link" href="https://imgtu.com/i/6OTzNV"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/25/6OTzNV.png" alt="6OTzNV.png"  /></a></p>
+<p>第一列和第二列是lattice结点编号，第三列是word，接下来的两个数字分别是语言模型概率和声学模型概率，结下来以”_“分隔的每个数字都是每一帧对应的transition-id。</p>
+<p>为什么不是使用Viterbi对齐呢？</p>
+<p>上面的lattice是通过该训练语句生成HCLG作为解码图解码得到的，lattice中包含了训练语句发音的多种对齐方式。也就是说考虑了多种发音组合的情况，比如上图的“规划”这个发音，可以是“gui gui hua <!-- raw HTML omitted --> <!-- raw HTML omitted -->”或”gui gui gui hua <!-- raw HTML omitted -->“等等。</p>
+<h4 id="二构建分母fst">二、构建分母fst</h4>
+<p>1.构建phone级别的语言模型</p>
+<p>构建语言模型必须要有语料，那么phone级别的语料从何而来呢？通过tree-dir中的alignments。</p>
+<pre><code>BAC009S0712W0300 2 1 1 1 1 1 1 1 1 1 1 1 1 1 6290 6289 6289 6289 3856 3855 3855
+3855 4830 4829 4829 4829 4829 2886 2885 2885 2614 2613 2613 2856 2855 2855 2855
+2855 2855 2855 2855 2608 2607 2607 2607 2456 2455 2455 2548 2547 2547 2862 2861
+2861 2861 5936 5935 5935 5935 5935 5935 2340 2339 2339 2339 2592 2591 2591 2591
+2591 2810 2809 2809 2809 2809 2809 1922 1921 1921 1921 5294 5293 5293 5293 3478
+3477 3477 3840 3839 1078 1077 1077 1280 1279 1764 1763 1763 1763 1763 5294 5293
+5293 5293 1954 1953 1953 1953 5150 5149 5149 5149 5149 5149 5149 5149 5149 5149
+2 1 1 1 1 1 1 1 1 1 1 1 1
+</code></pre><p>根据transition-id，我们可以得到每一帧对应的phone，如下：</p>
+<pre><code>BAC009S0712W0300 sil zh ong1 sh ix2 ii iu2 ii ie2 ii iu3 x iang1 ii ing4 g ui1 m o2 d e5 g ui1 h ua4 sil
+</code></pre><p>有了phone级别的训练语料，我们就可以构建phone级别的语言模型P。</p>
+<p>2.构建分母fst——HCP</p>
+<p>chain model的分母fst类似于解码时建立的HCLG图。但是chain model的语言模型是phone级别，所以构图时我们不需要发音词典了，<strong>其实构造的是HCP</strong>(P表示phone LM，<strong>HCP就是fst结构，所以叫分母fst</strong>)。为了限制HCP图的大小，我们使用4元phone LM。值得注意的是：不同的句子是共用同一个HCP图，这一点与传统的序列鉴别性训练不同，传统的序列鉴别性每个句子都有自己的分母lattice。</p>
+<h4 id="三构建分子fst">三、构建分子fst</h4>
+<p>1、将第一步得到的以word为单位的lattice转换成以phone为单位的lattice。</p>
+<p>chain model是在phone-level上进行训练的，所以需要得到以phone为单位的对齐，如下图所示：</p>
+<p><a class="link" href="https://imgtu.com/i/6OqS4P"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/25/6OqS4P.png" alt="6OqS4P.png"  /></a></p>
+<p>2、构建分子fst：将phone-level的lattice转换成fst，同时将transiton-id转换成pdf-id</p>
+<p>lattice与fst的不同是，根据fst中编码了time-alignment信息，可以方便我们根据时间点切分整段音频。为什么要将transiton-id转换成pdf-id？因为声学模型是对pdf-id建模。</p>
+<p><a class="link" href="https://imgtu.com/i/6OqBKe"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/25/6OqBKe.png" alt="6OqBKe.png"  /></a></p>
+<p>第一列和第二列是fst结点的编号，第三列和第四列是<strong>pdf-id</strong>(输出和输出相同，实际上它是FSA)</p>
+<p>同时，在这一步，我们还会以3倍的步幅跳帧进行采样。从这个图我们可以看到跳帧采样的现象，理论上音素sil对应41帧(通过上上张phone leveld的图中sil对应的transition-id数可以得到)，但现在13帧(通过上张图，1和218(1和218都对应到音素sil)连续出现的次数可以得到)。或许看上张图，你还有疑问，为什么pdf-id 218之间还有pdf-id 253呢？这是因为原来的对齐结果不一定是准确的(基于CD-HMM-GMM)，kaldi中提供了–left-tolerance和–right-tolerance两个选项，以phone为单位，允许phone在原来的对齐结果基础上，向前延伸–left-tolerance帧和向后延伸-right-tolerance帧(通常是5帧)。</p>
+<p>到这一步，理论上每个句子的分子fst就构建完成了。</p>
+<p>4、将每个句子的分子fst分成多个小chunk，用于训练</p>
+<p>之所以将整个音频分成chunk，是为了加快训练速度和解码速度。因为fst中有时间对齐信息，所以我们很容易将整段fst分成一小块，如下图所示：</p>
+<p><a class="link" href="https://imgtu.com/i/6OqvMF"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/25/6OqvMF.png" alt="6OqvMF.png"  /></a></p>
+<h2 id="chain-model和传统的序列鉴别性训练mmimpesmbr的区别">chain model和传统的序列鉴别性训练(MMI/MPE/sMBR)的区别</h2>
+<p>基于CD-DNN-HMM的序列鉴别性训练，需要以下几步：</p>
+<p>训练一个基于CE(交叉熵)准则的CD-DNN-HMM模型<strong>作为种子模型</strong>，因为CD-DNN-HMM通常会优于CD-GMM-HMM。然后利用该种子模型，得到基于状态层面的强制对齐作为分子词图。基于一元语言模型构建一个HCLG，然后在HCLG上解码得到每个句子的分母词图。之所以采用一元的语言模型，应该是为了使词图不会太大。</p>
+<p>chain model虽然也是一种序列鉴别性训练，但它的训练流程比较简单：</p>
+<p>chain model不需要事先训练一个CE准则的DNN模型；而是直接使用CD-HMM-GMM模型得到每个句子的对齐结果，然后生成<strong>分子fst</strong>。chain model不需要为每个句子构建<strong>分母lattice</strong>，而是直接使用HCP图(P表示phone LM)。同时，chain model是直接在phone级别上建模的。传统的序列鉴别性训练是在word-level上建模的。</p>
+<p><strong>chain model的优点：</strong></p>
+<p>1、解码速度更快。因为chain model采用拼帧降采样(每三帧取一帧)的方式，也就是说帧移变成了30ms，而不是10ms，所以帧率是传统神经网络声学模型的三分之一；</p>
+<p>2、训练速度更快。不需要预先训练DNN模型，同时省去了分母lattice的生成。</p>
+<h2 id="常见的疑问">常见的疑问</h2>
+<p>1、为什么说chain model是lattice free？</p>
+<p>答：之前的鉴别性训练是需要对每个音频解码得到分母词图(每个音频都有自己对应的词图)。而chain model的分母fst实际上是HCP(P表示发音词典的概率)，也就是说所有音频共享同一个HCP图,<strong>不需要分别解码得到对应的lattice</strong>，所以叫lattice free。</p>
+<p>2、为什么chain model可以采用跳帧降采样的方式训练和解码，而传统的HMM-GMM不行？</p>
+<p>答：<strong>主要跟建模粒度有关</strong>。chain model中的每个phone只有一个state（不考虑blank），所以我们可以认为它的建模单元是phone。而传统的HMM-GMM的每个phone有3或5个state，所以传统的HMM-GMM实际上是对state建模。因为state的建模粒度比较小，采用跳帧的方式时，可能跳过了中间重要的几个state，从而影响识别结果。而phone的建模粒度较大，采用跳帧的方式通常不会跳过phone。</p>
+<p>3、实际处理时(如kaldi)，为什么要将句子分成多个小块(chunk)?</p>
+<p>答：对于非循环模型和非chain模型的情况，分成chunk主要是考虑到我们训练时是利用上下文信息的，比如考虑了前10帧和后10帧，那么每个训练的example需要存储21帧特征，8个example需要存储168帧。如果我们将连续8帧做成一个chunk，那么我们只需要存储28帧(10+8+10)，节省了存储空间。</p>
+<p>对于循环模型或chain模型，网络训练的样本输入必须为sequence，所以nnet3-get-egs的作用简单理解成将句子划分成独立的子序列，每个子序列的长度由chunk_width配置，所以一般这个值比较大150帧，太短的话rnn无法记住历史信息。和nnet1的逻辑不同，nnet3训练单向rnn没有state的传递过程，cell-state的初始化和序列扫描独立的在每个egs内进行，因此必须提供一些额外的context做这个事情，这些context就是脚本中的chunk_left/right_context 。</p>
+<p>4、chain model的建模单元？</p>
+<p>答：chain model使用biphone作为基本的建模单元，而不是我们经常用的triphone。Dan Povey在2016年的interspeech演讲中提到，实验发现biphone的效果稍微好于triphone。同时解码速度更快了，因为phone的数量减少了。</p>
+<h2 id="reference">Reference</h2>
+<ol>
+<li><a href="https://blog.csdn.net/asrgreek/article/details/88102072">https://blog.csdn.net/asrgreek/article/details/88102072</a></li>
+</ol>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/kaldi/">kaldi</a>
+        
+    </section>
+
+
+    </footer>
+
+    
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css"
+    integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"
+    integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4"
+    crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"
+    integrity="sha384-mll67QQFJfxn0IYznZYonOWZ644AWYC+Pt2cHqMaRhXVrursRwvLnLaebdGIlYNa" crossorigin="anonymous"
+    onload="StackLaTeX()"></script>
+
+<script>
+    function StackLaTeX() {
+        renderMathInElement(document.querySelector(`.article-content`), {
+            delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true }
+            ]
+        });
+    }
+</script>
+    
+</article>
+
+    <aside class="related-contents--wrapper">
+    
+    
+</aside>
+
+
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2021 Cosmo
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="2.0.1">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css">
+            </main>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js"
+    integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin="anonymous"></script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

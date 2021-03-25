@@ -301,20 +301,14 @@ $$</p>
 <p>基于chain model的Lattice-free MMI训练流程：</p>
 <p><a class="link" href="https://imgtu.com/i/6GKFiD"  target="_blank" rel="noopener"
     ><img src="https://s3.ax1x.com/2021/03/10/6GKFiD.png" alt="6GKFiD.png"  /></a></p>
-<p>Chain prepare包含：</p>
 <ul>
-<li>bi-phone Tree，决策树的重新生成</li>
-<li>Numerator FST，强制对齐得到分子FST</li>
-<li>Denominator FST，生成HCP得到分母FST</li>
-<li>Fixed chunk，整个音频分成块，加速训练和解码速度</li>
-<li>CE Regularization，使用CE作为第二个Task进行Multi-Task Learning</li>
+<li>分子和分母状态序列用FST表示（类似HCLG）</li>
+<li>分母的前向后向计算在GPU中进行</li>
+<li>从训练的alignment中，通过4-gram的phone构建LM，而不是word级别的LM</li>
+<li>帧率降到原来的1/3，训练和解码速度更快（每3帧输出1次），也就是说帧移变成了30ms，而不是10ms</li>
+<li>由于帧率的降低，HMM的结构上做了一些调整，引入了类似CTC里面blank的状态，同时转移概率设为0.5</li>
+<li>无需交叉熵系统初始化，可以从头开始训练</li>
 </ul>
-<p>chain model：</p>
-<ol>
-<li>HMM拓扑结构改变，从标准的三状态改为单状态的HMM</li>
-<li>训练速度更快，不需要预先训练DNN模型，同时省去了分母lattice的生成。</li>
-<li>解码速度更快，因为chain model采用拼帧降采样(每三帧取一帧)的方式，也就是说帧移变成了30ms，而不是10ms</li>
-</ol>
 <h2 id="总结">总结</h2>
 <p>本文先介绍了基于Lattice的区分性训练，再到LF-MMI，再到chain model，可以看到语音识别的流程在逐步简化。并且，我们在追求进一步的简化，目前看到的工作有：</p>
 <ol>
