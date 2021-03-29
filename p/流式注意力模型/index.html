@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="en-us">
+    <head><meta charset='utf-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1'><meta name='description' content='Streaming Attention Model'><title>流式注意力模型</title>
+
+<link rel='canonical' href='https://cosmo1995.github.io/p/%E6%B5%81%E5%BC%8F%E6%B3%A8%E6%84%8F%E5%8A%9B%E6%A8%A1%E5%9E%8B/'>
+
+<link rel="stylesheet" href="/scss/style.min.css"><meta property='og:title' content='流式注意力模型'>
+<meta property='og:description' content='Streaming Attention Model'>
+<meta property='og:url' content='https://cosmo1995.github.io/p/%E6%B5%81%E5%BC%8F%E6%B3%A8%E6%84%8F%E5%8A%9B%E6%A8%A1%E5%9E%8B/'>
+<meta property='og:site_name' content='Cosmo'>
+<meta property='og:type' content='article'><meta property='article:section' content='Post' /><meta property='article:tag' content='e2e' /><meta property='article:published_time' content='2021-03-26T00:00:00&#43;00:00'/><meta property='article:modified_time' content='2021-03-26T00:00:00&#43;00:00'/>
+<meta name="twitter:title" content="流式注意力模型">
+<meta name="twitter:description" content="Streaming Attention Model">
+    </head>
+    <body class="">
+    <script>
+        (function() {
+            const colorSchemeKey = 'StackColorScheme';
+            if(!localStorage.getItem(colorSchemeKey)){
+                localStorage.setItem(colorSchemeKey, "auto");
+            }
+        })();
+    </script><script>
+    (function() {
+        const colorSchemeKey = 'StackColorScheme';
+        const colorSchemeItem = localStorage.getItem(colorSchemeKey);
+        const supportDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches === true;
+
+        if (colorSchemeItem == 'dark' || colorSchemeItem === 'auto' && supportDarkMode) {
+            
+
+            document.body.dataset.scheme = 'dark';
+        } else {
+            document.body.dataset.scheme = 'light';
+        }
+    })();
+</script><div class="container main-container flex on-phone--column extended article-page with-toolbar">
+            <aside class="sidebar left-sidebar sticky">
+    <button class="hamburger hamburger--spin" type="button" id="toggle-menu" aria-label="Toggle Menu">
+        <span class="hamburger-box">
+            <span class="hamburger-inner"></span>
+        </span>
+    </button>
+
+    <header class="site-info">
+        
+            <figure class="site-avatar">
+                
+                    
+                    
+                    
+                        
+                        <img src="/img/avatar_hu874715197ebd8e5cb58e412c943f3434_12926_300x0_resize_q75_box.jpg" width="300"
+                            height="300" class="site-logo" loading="lazy" alt="Avatar">
+                    
+                
+
+                
+            </figure>
+        
+        <h1 class="site-name"><a href="https://cosmo1995.github.io/">Cosmo</a></h1>
+        <h2 class="site-description">Why not ask the Magic Conch</h2>
+    </header>
+
+    <ol class="menu" id="main-menu">
+        
+        
+        
+
+        <li >
+            <a href='/'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-home" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="5 12 3 12 12 3 21 12 19 12" />
+  <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+  <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+</svg>
+
+
+
+                
+                <span>Home</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/about'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-user" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="7" r="4" />
+  <path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2" />
+</svg>
+
+
+
+                
+                <span>About</span>
+            </a>
+        </li>
+        
+        
+
+        <li >
+            <a href='/archives'>
+                
+                    <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-archive" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <rect x="3" y="4" width="18" height="4" rx="2" />
+  <path d="M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-10" />
+  <line x1="10" y1="12" x2="14" y2="12" />
+</svg>
+
+
+
+                
+                <span>Archives</span>
+            </a>
+        </li>
+        
+
+        
+            <li id="dark-mode-toggle">
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="8" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-toggle-right" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="16" cy="12" r="2" />
+  <rect x="2" y="6" width="20" height="12" rx="6" />
+</svg>
+
+
+
+                <span>Dark Mode</span>
+            </li>
+        
+    </ol>
+</aside>
+
+            <main class="main full-width">
+    <div id="article-toolbar">
+        <a href="https://cosmo1995.github.io/" class="back-home">
+            <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-chevron-left" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <polyline points="15 6 9 12 15 18" />
+</svg>
+
+
+
+            <span>Back</span>
+        </a>
+    </div>
+
+    <article class="main-article">
+    <header class="article-header">
+
+    <div class="article-details">
+    
+    <header class="article-category">
+        
+            <a href="/categories/e2e/" style="background-color: #8e3a9d; color: #fff;">
+                e2e
+            </a>
+        
+    </header>
+    
+
+    <h2 class="article-title">
+        <a href="/p/%E6%B5%81%E5%BC%8F%E6%B3%A8%E6%84%8F%E5%8A%9B%E6%A8%A1%E5%9E%8B/">流式注意力模型</a>
+    </h2>
+
+    
+    <h3 class="article-subtitle">
+        Streaming Attention Model
+    </h3>
+    <footer class="article-time">
+        <svg xmlns="http://www.w3.org/2000/svg" class="icon icon-tabler icon-tabler-clock" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <path stroke="none" d="M0 0h24v24H0z"/>
+  <circle cx="12" cy="12" r="9" />
+  <polyline points="12 7 12 12 15 15" />
+</svg>
+
+
+
+        <time class="article-time--published">Mar 26, 2021</time>
+    </footer></div>
+</header>
+
+    <section class="article-content">
+    <h1 id="端到端模型">端到端模型</h1>
+<p>E2E模型由于将声学模型（AM），发音词典和语言模型（LM）集成到一个神经网络中而简化了训练过程，因此最近已成为语音识别的流行选择。常用的端到端方法有：CTC(Connectionist Temporal Classification)、AED(Attention Encoder Decoder)、RNN-T(Recurrent Neural Network Transducer)。其中，由于AED的训练效率和良好的识别率，AED成为最受欢迎的方法，但是AED不适用于在线流式语音识别。 CTC可以用于在线识别，但是由于其帧独立性假设，一般需要额外的语言模型（LM）或与AED结合才能获得良好的WER结果。 RNN-T既支持流式ASR，又没有帧独立性假设，但是其训练内存消耗较大，并且训练不稳定，往往需要CTC/CE模型初始化。</p>
+<h2 id="transformer">Transformer</h2>
+<p>AED模型的典型代表就是Transformer模型，Transformer一经提出就因为其优秀的识别率获得广泛使用，但是Transformer模型并不适用于在线流式模型，因为：</p>
+<ul>
+<li>Encoder中self-attention和Decoder中encoder-decoder attention 需要完整的语音序列</li>
+<li>时空复杂度$O(T^2)$</li>
+</ul>
+<p><a class="link" href="https://imgtu.com/i/6jMJMV"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/26/6jMJMV.png" alt="6jMJMV.png"  /></a></p>
+<h3 id="encoder-self-attention">Encoder self-attention</h3>
+<p>关于Encoder self-attention，常见的做法包含两种：基于look-ahead的方法和基于chunk的方法如下所示。前者为每个帧设置一个于look-ahead窗口，以获得必要的上下文信息。 但是，延迟时间将随层数线性增加。 基于chunk的方法将语音分割成几个固定长度的chunk，并将它们逐个输入Encoder中，相邻的chunk之间存在重叠以提高性能。</p>
+<p><a class="link" href="https://imgtu.com/i/6jMqeS"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/26/6jMqeS.png" alt="6jMqeS.png"  /></a>　　<a class="link" href="https://imgtu.com/i/6jM2ZD"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/26/6jM2ZD.png" alt="6jM2ZD.png"  /></a></p>
+<p>　　延迟随着层数线性增加  　　　　　　　　　　　　　　　　通过chunk控制延迟</p>
+<p>　　未解决$O(T^2)$复杂度问题　　　　　　　　　　　　　　　$O(T^2)$&ndash;&gt;$O(TW)$　　　</p>
+<p>chunk-based</p>
+<p>基于chunk的方法一般通过设置三角mask矩阵来达到分块的目的。</p>
+<div class="highlight"><pre class="chroma"><code class="language-python" data-lang="python"><span class="k">def</span> <span class="nf">subsequent_mask</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="s2">&#34;cpu&#34;</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">datatype</span><span class="p">):</span>
+    <span class="n">ret</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">device</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">tril</span><span class="p">(</span><span class="n">ret</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">ret</span><span class="p">)</span>
+</code></pre></div><p><a class="link" href="https://imgtu.com/i/6j1JMt"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/26/6j1JMt.png" alt="6j1JMt.png"  /></a></p>
+<h3 id="decode-encoder-decoder-attention">Decode encoder-decoder attention</h3>
+<h4 id="vanilla-attention">Vanilla attention</h4>
+<p>输入序列${x_1,x_2&hellip;x_T}$输入到Encoder中，得到隐藏状态序列$h={h_1,h_2&hellip;h_T}$，$h$一般称之为 memory。Decoder根据memory，输出序列${y_1,y_2&hellip;y_U}$，直到输出&lt;eos&gt;。在计算$y_i$时，将前一个时刻的Decoder状态$s_{i-1}$和隐藏状态序列中每一个值$h_j$通过非线性函数$a(·)$计算相似度$e_{i,j}$。再对输出做softmax获得在memory上的概率分布作为权重值，获得权重后对memory序列加权求和即得到attention。由于memory序列和输入序列值一一对应的，因此这些attention分布会在输出和输入之间建立软对齐。最后，Decoder根据$s_{i-1}$和$c_i$输入$s_i$，并输出$y_i$。</p>
+<p><a class="link" href="https://imgtu.com/i/6j3GY4"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/26/6j3GY4.png" alt="6j3GY4.png"  /></a>
+$$
+\begin{aligned}
+e_{i,j} &amp;= a(s_{i-1},j) \hspace{100cm}　\cr
+\alpha_{i,j} &amp; = \frac{exp(e_{i,j})}{\sum_{k=1}^Texp(e_{i,k})} \cr
+c_i &amp;= \sum_{j=1}^T\alpha_{i,j}h_j \cr
+s_i &amp;= f(s_{i-1},y_{i-1},c_i) \cr
+y_i &amp;= g(s_i,c_i)
+\end{aligned}
+$$</p>
+<h4 id="triggered-attention">Triggered attention</h4>
+<p><a class="link" href="https://imgtu.com/i/6j8EB6"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/26/6j8EB6.png" alt="6j8EB6.png"  /></a></p>
+<p>TA模型由Encoder和Triggered Decoder组成，Triggered Decoder由基于CTC模型的触发机制和基于注意力的Decoder网络组成，两者均将Encoder的输出作为输入。</p>
+<p>CTC模型仅用来生成概率最大的帧级别的对齐序列$Z$，对齐序列$Z$中每个子序列的第一帧即为触发事件，将触发事件外的其余帧均设置为&lt;blank&gt;，即得到触发序列$Z'$。下图中红框表示的触发时间所在的帧。</p>
+<p><a class="link" href="https://imgtu.com/i/6j8N4g"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/26/6j8N4g.png" alt="6j8N4g.png"  /></a></p>
+<p>在计算Encoder-Decoder attention时，只能看到第1帧~(触发事件+lookahead)范围内的所有帧。
+$$
+\begin{aligned}
+for\ &amp;j = 1\ to\ \tau_i: \hspace{100cm}　\cr
+&amp; e_{i,j} = a(s_{i,j}, h_j) \cr
+&amp; \alpha_{i,j} = \frac{exp(e_{i,j})}{\sum_{k=1}^{\tau_i}exp(e_{i,k})} \cr
+&amp;c_i = \sum_{i=1}^{\tau_i} \alpha_{i,j}h_j \cr
+其中，&amp;\tau_i = t_i + \epsilon,\epsilon为lookahead参数,t_i在Z&rsquo;中第i个触发事件所在的帧索引
+\end{aligned}
+$$</p>
+<p><a class="link" href="https://imgtu.com/i/6j8Duq"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/26/6j8Duq.png" alt="6j8Duq.png"  /></a></p>
+<h4 id="hard-monotonic-attention">Hard Monotonic Attention</h4>
+<p><a class="link" href="https://imgtu.com/i/6jGUZ6"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/26/6jGUZ6.png" alt="6jGUZ6.png"  /></a>
+$$
+\begin{aligned}
+for\ &amp;j = t_{i-1}\ to\ T: \hspace{100cm}　\cr
+&amp; e_{i,j} = a(s_{i,j}, h_j) \cr
+&amp; p_{i,j} = \sigma(e_{i,j}) \cr
+&amp; z_{i,j} \thicksim Bernoulli(p_{i,j}) \cr
+&amp; if\ z_{i,j} = 1: \cr
+&amp;\ \ \ \ \ c_i = h_j, t_i = j
+\end{aligned}
+$$
+$e(i,j)$的计算和soft attention是一样的, 而得到$e(i,j)$之后并没有对i时刻的所有$j$进行softmax, 而是独立进行sigmoid, 得到一个独立的概率$p$。这个概率决定了当前时刻attention是attend to $h_j$ ($z_{i,j}=1$)，还是前进一步到$h_{j+1}$($z_{i,j}=0$)。如果前进, 那前进后再次计算$z_{i,j+1}$, 直到$z_{i,j’}=1$ 。</p>
+<p><a class="link" href="https://imgtu.com/i/6jJ9yR"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/26/6jJ9yR.png" alt="6jJ9yR.png"  /></a></p>
+<h4 id="monotonic-chunk-wise-attention">Monotonic Chunk-wise Attention</h4>
+<p>这篇文章是上面那一篇的后续. Hard monotonic attention虽然可以用于流式识别, 但是会导致性能的下降。原因是其相比于soft attention加了两条额外的限制: 1. decoder每次只attend to 一个$h_j$；2. attention是严格单调的。</p>
+<p>解决思路, 一句话来说就是, Hard monotonic attention每次停下来只attend to $h_j$, 即 $c_i=h_j$ ; 而Mocha以停下来的位置为终点, 往前倒推w-1个$h_j$, 在这w个$h_j$内部做soft attention。</p>
+<p><a class="link" href="https://imgtu.com/i/6jsoNj"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/26/6jsoNj.png" alt="6jsoNj.png"  /></a></p>
+<p>$$
+\begin{aligned}
+for\ &amp;j = t_{i-1}\ to\ T: \hspace{100cm}　\cr
+&amp; e_{i,j} = a(s_{i,j}, h_j) \cr
+&amp; p_{i,j} = \sigma(e_{i,j}) \cr
+&amp; if\ p_{i,j} \geq 0.5: \cr
+&amp;\ \ \ \ \ \ v = j -w +1 \cr
+&amp; for\ k=v\ to\ j: \cr
+&amp;\ \ \ \ \ \  u_{i,j} = a(s_{i,j},h_k) \cr
+&amp; c_i = \sum_{k=v}^j \frac{exp(u_{i,k})}{\sum_{l=v}^j exp(u_{i,l})}h_k
+\end{aligned}
+$$</p>
+<p><a class="link" href="https://imgtu.com/i/6jsT4s"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/26/6jsT4s.png" alt="6jsT4s.png"  /></a></p>
+<p>To be continued&hellip;</p>
+<h2 id="reference">Reference</h2>
+<ol>
+<li><a href="http://www.jonathanleroux.org/pdf/Moritz2019ICASSP05.pdf">http://www.jonathanleroux.org/pdf/Moritz2019ICASSP05.pdf</a></li>
+<li><a href="https://arxiv.org/pdf/1704.00784.pdf">https://arxiv.org/pdf/1704.00784.pdf</a></li>
+<li><a href="https://arxiv.org/pdf/1712.05382.pdf">https://arxiv.org/pdf/1712.05382.pdf</a></li>
+<li><a href="https://arxiv.org/pdf/1909.12406.pdf">https://arxiv.org/pdf/1909.12406.pdf</a></li>
+<li><a href="https://arxiv.org/pdf/2003.10369.pdf">https://arxiv.org/pdf/2003.10369.pdf</a></li>
+</ol>
+
+</section>
+
+
+    <footer class="article-footer">
+    
+    <section class="article-tags">
+        
+            <a href="/tags/e2e/">e2e</a>
+        
+    </section>
+
+
+    </footer>
+
+    
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css"
+    integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js"
+    integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4"
+    crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js"
+    integrity="sha384-mll67QQFJfxn0IYznZYonOWZ644AWYC+Pt2cHqMaRhXVrursRwvLnLaebdGIlYNa" crossorigin="anonymous"
+    onload="StackLaTeX()"></script>
+
+<script>
+    function StackLaTeX() {
+        renderMathInElement(document.querySelector(`.article-content`), {
+            delimiters: [
+                { left: "$$", right: "$$", display: true },
+                { left: "$", right: "$", display: false },
+                { left: "\\(", right: "\\)", display: false },
+                { left: "\\[", right: "\\]", display: true }
+            ]
+        });
+    }
+</script>
+    
+</article>
+
+    <aside class="related-contents--wrapper">
+    
+    
+</aside>
+
+
+    
+        
+    
+
+    <footer class="site-footer">
+    <section class="copyright">
+        &copy; 
+        
+            2020 - 
+        
+        2021 Cosmo
+    </section>
+    
+    <section class="powerby">
+        Built with <a href="https://gohugo.io/" target="_blank" rel="noopener">Hugo</a> <br />
+        Theme <b><a href="https://github.com/CaiJimmy/hugo-theme-stack" target="_blank" rel="noopener" data-version="2.0.1">Stack</a></b> designed by <a href="https://jimmycai.com" target="_blank" rel="noopener">Jimmy</a>
+    </section>
+</footer>
+<div class="pswp" tabindex="-1" role="dialog" aria-hidden="true">
+
+    
+    <div class="pswp__bg"></div>
+
+    
+    <div class="pswp__scroll-wrap">
+
+        
+        <div class="pswp__container">
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+            <div class="pswp__item"></div>
+        </div>
+
+        
+        <div class="pswp__ui pswp__ui--hidden">
+
+            <div class="pswp__top-bar">
+
+                
+
+                <div class="pswp__counter"></div>
+
+                <button class="pswp__button pswp__button--close" title="Close (Esc)"></button>
+
+                <button class="pswp__button pswp__button--share" title="Share"></button>
+
+                <button class="pswp__button pswp__button--fs" title="Toggle fullscreen"></button>
+
+                <button class="pswp__button pswp__button--zoom" title="Zoom in/out"></button>
+
+                
+                
+                <div class="pswp__preloader">
+                    <div class="pswp__preloader__icn">
+                        <div class="pswp__preloader__cut">
+                            <div class="pswp__preloader__donut"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pswp__share-modal pswp__share-modal--hidden pswp__single-tap">
+                <div class="pswp__share-tooltip"></div>
+            </div>
+
+            <button class="pswp__button pswp__button--arrow--left" title="Previous (arrow left)">
+            </button>
+
+            <button class="pswp__button pswp__button--arrow--right" title="Next (arrow right)">
+            </button>
+
+            <div class="pswp__caption">
+                <div class="pswp__caption__center"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe-ui-default.min.js"></script>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/default-skin/default-skin.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/photoswipe@4.1.3/dist/photoswipe.css">
+            </main>
+        </div>
+        <script src="https://cdn.jsdelivr.net/npm/node-vibrant@3.1.5/dist/vibrant.min.js"
+    integrity="sha256-5NovOZc4iwiAWTYIFiIM7DxKUXKWvpVEuMEPLzcm5/g=" crossorigin="anonymous"></script><script type="text/javascript" src="/ts/main.js" defer></script>
+<script>
+    (function () {
+        const customFont = document.createElement('link');
+        customFont.href = "https://fonts.googleapis.com/css2?family=Lato:wght@300;400;700&display=swap";
+
+        customFont.type = "text/css";
+        customFont.rel = "stylesheet";
+
+        document.head.appendChild(customFont);
+    }());
+</script>
+
+    </body>
+</html>

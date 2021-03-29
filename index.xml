@@ -6,7 +6,116 @@
         <description>Recent content on Cosmo</description>
         <generator>Hugo -- gohugo.io</generator>
         <language>en-us</language>
-        <lastBuildDate>Fri, 12 Mar 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/index.xml" rel="self" type="application/rss+xml" /><item>
+        <lastBuildDate>Fri, 26 Mar 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/index.xml" rel="self" type="application/rss+xml" /><item>
+        <title>流式注意力模型</title>
+        <link>https://cosmo1995.github.io/p/%E6%B5%81%E5%BC%8F%E6%B3%A8%E6%84%8F%E5%8A%9B%E6%A8%A1%E5%9E%8B/</link>
+        <pubDate>Fri, 26 Mar 2021 00:00:00 +0000</pubDate>
+        
+        <guid>https://cosmo1995.github.io/p/%E6%B5%81%E5%BC%8F%E6%B3%A8%E6%84%8F%E5%8A%9B%E6%A8%A1%E5%9E%8B/</guid>
+        <description>&lt;h1 id=&#34;端到端模型&#34;&gt;端到端模型&lt;/h1&gt;
+&lt;p&gt;E2E模型由于将声学模型（AM），发音词典和语言模型（LM）集成到一个神经网络中而简化了训练过程，因此最近已成为语音识别的流行选择。常用的端到端方法有：CTC(Connectionist Temporal Classification)、AED(Attention Encoder Decoder)、RNN-T(Recurrent Neural Network Transducer)。其中，由于AED的训练效率和良好的识别率，AED成为最受欢迎的方法，但是AED不适用于在线流式语音识别。 CTC可以用于在线识别，但是由于其帧独立性假设，一般需要额外的语言模型（LM）或与AED结合才能获得良好的WER结果。 RNN-T既支持流式ASR，又没有帧独立性假设，但是其训练内存消耗较大，并且训练不稳定，往往需要CTC/CE模型初始化。&lt;/p&gt;
+&lt;h2 id=&#34;transformer&#34;&gt;Transformer&lt;/h2&gt;
+&lt;p&gt;AED模型的典型代表就是Transformer模型，Transformer一经提出就因为其优秀的识别率获得广泛使用，但是Transformer模型并不适用于在线流式模型，因为：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Encoder中self-attention和Decoder中encoder-decoder attention 需要完整的语音序列&lt;/li&gt;
+&lt;li&gt;时空复杂度$O(T^2)$&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6jMJMV&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;&lt;img src=&#34;https://z3.ax1x.com/2021/03/26/6jMJMV.png&#34; alt=&#34;6jMJMV.png&#34;  /&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;encoder-self-attention&#34;&gt;Encoder self-attention&lt;/h3&gt;
+&lt;p&gt;关于Encoder self-attention，常见的做法包含两种：基于look-ahead的方法和基于chunk的方法如下所示。前者为每个帧设置一个于look-ahead窗口，以获得必要的上下文信息。 但是，延迟时间将随层数线性增加。 基于chunk的方法将语音分割成几个固定长度的chunk，并将它们逐个输入Encoder中，相邻的chunk之间存在重叠以提高性能。&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6jMqeS&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;&lt;img src=&#34;https://z3.ax1x.com/2021/03/26/6jMqeS.png&#34; alt=&#34;6jMqeS.png&#34;  /&gt;&lt;/a&gt;　　&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6jM2ZD&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;&lt;img src=&#34;https://z3.ax1x.com/2021/03/26/6jM2ZD.png&#34; alt=&#34;6jM2ZD.png&#34;  /&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;　　延迟随着层数线性增加  　　　　　　　　　　　　　　　　通过chunk控制延迟&lt;/p&gt;
+&lt;p&gt;　　未解决$O(T^2)$复杂度问题　　　　　　　　　　　　　　　$O(T^2)$&amp;ndash;&amp;gt;$O(TW)$　　　&lt;/p&gt;
+&lt;p&gt;chunk-based&lt;/p&gt;
+&lt;p&gt;基于chunk的方法一般通过设置三角mask矩阵来达到分块的目的。&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span class=&#34;k&#34;&gt;def&lt;/span&gt; &lt;span class=&#34;nf&#34;&gt;subsequent_mask&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;size&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;device&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;s2&#34;&gt;&amp;#34;cpu&amp;#34;&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;dtype&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;datatype&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;):&lt;/span&gt;
+    &lt;span class=&#34;n&#34;&gt;ret&lt;/span&gt; &lt;span class=&#34;o&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;torch&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ones&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;size&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;size&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;device&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;device&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;dtype&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;dtype&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+    &lt;span class=&#34;k&#34;&gt;return&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;torch&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;tril&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;(&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ret&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;,&lt;/span&gt; &lt;span class=&#34;n&#34;&gt;out&lt;/span&gt;&lt;span class=&#34;o&#34;&gt;=&lt;/span&gt;&lt;span class=&#34;n&#34;&gt;ret&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;)&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6j1JMt&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;&lt;img src=&#34;https://z3.ax1x.com/2021/03/26/6j1JMt.png&#34; alt=&#34;6j1JMt.png&#34;  /&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h3 id=&#34;decode-encoder-decoder-attention&#34;&gt;Decode encoder-decoder attention&lt;/h3&gt;
+&lt;h4 id=&#34;vanilla-attention&#34;&gt;Vanilla attention&lt;/h4&gt;
+&lt;p&gt;输入序列${x_1,x_2&amp;hellip;x_T}$输入到Encoder中，得到隐藏状态序列$h={h_1,h_2&amp;hellip;h_T}$，$h$一般称之为 memory。Decoder根据memory，输出序列${y_1,y_2&amp;hellip;y_U}$，直到输出&amp;lt;eos&amp;gt;。在计算$y_i$时，将前一个时刻的Decoder状态$s_{i-1}$和隐藏状态序列中每一个值$h_j$通过非线性函数$a(·)$计算相似度$e_{i,j}$。再对输出做softmax获得在memory上的概率分布作为权重值，获得权重后对memory序列加权求和即得到attention。由于memory序列和输入序列值一一对应的，因此这些attention分布会在输出和输入之间建立软对齐。最后，Decoder根据$s_{i-1}$和$c_i$输入$s_i$，并输出$y_i$。&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6j3GY4&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;&lt;img src=&#34;https://z3.ax1x.com/2021/03/26/6j3GY4.png&#34; alt=&#34;6j3GY4.png&#34;  /&gt;&lt;/a&gt;
+$$
+\begin{aligned}
+e_{i,j} &amp;amp;= a(s_{i-1},j) \hspace{100cm}　\cr
+\alpha_{i,j} &amp;amp; = \frac{exp(e_{i,j})}{\sum_{k=1}^Texp(e_{i,k})} \cr
+c_i &amp;amp;= \sum_{j=1}^T\alpha_{i,j}h_j \cr
+s_i &amp;amp;= f(s_{i-1},y_{i-1},c_i) \cr
+y_i &amp;amp;= g(s_i,c_i)
+\end{aligned}
+$$&lt;/p&gt;
+&lt;h4 id=&#34;triggered-attention&#34;&gt;Triggered attention&lt;/h4&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6j8EB6&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;&lt;img src=&#34;https://z3.ax1x.com/2021/03/26/6j8EB6.png&#34; alt=&#34;6j8EB6.png&#34;  /&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;TA模型由Encoder和Triggered Decoder组成，Triggered Decoder由基于CTC模型的触发机制和基于注意力的Decoder网络组成，两者均将Encoder的输出作为输入。&lt;/p&gt;
+&lt;p&gt;CTC模型仅用来生成概率最大的帧级别的对齐序列$Z$，对齐序列$Z$中每个子序列的第一帧即为触发事件，将触发事件外的其余帧均设置为&amp;lt;blank&amp;gt;，即得到触发序列$Z&#39;$。下图中红框表示的触发时间所在的帧。&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6j8N4g&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;&lt;img src=&#34;https://z3.ax1x.com/2021/03/26/6j8N4g.png&#34; alt=&#34;6j8N4g.png&#34;  /&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;在计算Encoder-Decoder attention时，只能看到第1帧~(触发事件+lookahead)范围内的所有帧。
+$$
+\begin{aligned}
+for\ &amp;amp;j = 1\ to\ \tau_i: \hspace{100cm}　\cr
+&amp;amp; e_{i,j} = a(s_{i,j}, h_j) \cr
+&amp;amp; \alpha_{i,j} = \frac{exp(e_{i,j})}{\sum_{k=1}^{\tau_i}exp(e_{i,k})} \cr
+&amp;amp;c_i = \sum_{i=1}^{\tau_i} \alpha_{i,j}h_j \cr
+其中，&amp;amp;\tau_i = t_i + \epsilon,\epsilon为lookahead参数,t_i在Z&amp;rsquo;中第i个触发事件所在的帧索引
+\end{aligned}
+$$&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6j8Duq&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;&lt;img src=&#34;https://z3.ax1x.com/2021/03/26/6j8Duq.png&#34; alt=&#34;6j8Duq.png&#34;  /&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h4 id=&#34;hard-monotonic-attention&#34;&gt;Hard Monotonic Attention&lt;/h4&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6jGUZ6&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;&lt;img src=&#34;https://z3.ax1x.com/2021/03/26/6jGUZ6.png&#34; alt=&#34;6jGUZ6.png&#34;  /&gt;&lt;/a&gt;
+$$
+\begin{aligned}
+for\ &amp;amp;j = t_{i-1}\ to\ T: \hspace{100cm}　\cr
+&amp;amp; e_{i,j} = a(s_{i,j}, h_j) \cr
+&amp;amp; p_{i,j} = \sigma(e_{i,j}) \cr
+&amp;amp; z_{i,j} \thicksim Bernoulli(p_{i,j}) \cr
+&amp;amp; if\ z_{i,j} = 1: \cr
+&amp;amp;\ \ \ \ \ c_i = h_j, t_i = j
+\end{aligned}
+$$
+$e(i,j)$的计算和soft attention是一样的, 而得到$e(i,j)$之后并没有对i时刻的所有$j$进行softmax, 而是独立进行sigmoid, 得到一个独立的概率$p$。这个概率决定了当前时刻attention是attend to $h_j$ ($z_{i,j}=1$)，还是前进一步到$h_{j+1}$($z_{i,j}=0$)。如果前进, 那前进后再次计算$z_{i,j+1}$, 直到$z_{i,j’}=1$ 。&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6jJ9yR&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;&lt;img src=&#34;https://z3.ax1x.com/2021/03/26/6jJ9yR.png&#34; alt=&#34;6jJ9yR.png&#34;  /&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;h4 id=&#34;monotonic-chunk-wise-attention&#34;&gt;Monotonic Chunk-wise Attention&lt;/h4&gt;
+&lt;p&gt;这篇文章是上面那一篇的后续. Hard monotonic attention虽然可以用于流式识别, 但是会导致性能的下降。原因是其相比于soft attention加了两条额外的限制: 1. decoder每次只attend to 一个$h_j$；2. attention是严格单调的。&lt;/p&gt;
+&lt;p&gt;解决思路, 一句话来说就是, Hard monotonic attention每次停下来只attend to $h_j$, 即 $c_i=h_j$ ; 而Mocha以停下来的位置为终点, 往前倒推w-1个$h_j$, 在这w个$h_j$内部做soft attention。&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6jsoNj&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;&lt;img src=&#34;https://z3.ax1x.com/2021/03/26/6jsoNj.png&#34; alt=&#34;6jsoNj.png&#34;  /&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;$$
+\begin{aligned}
+for\ &amp;amp;j = t_{i-1}\ to\ T: \hspace{100cm}　\cr
+&amp;amp; e_{i,j} = a(s_{i,j}, h_j) \cr
+&amp;amp; p_{i,j} = \sigma(e_{i,j}) \cr
+&amp;amp; if\ p_{i,j} \geq 0.5: \cr
+&amp;amp;\ \ \ \ \ \ v = j -w +1 \cr
+&amp;amp; for\ k=v\ to\ j: \cr
+&amp;amp;\ \ \ \ \ \  u_{i,j} = a(s_{i,j},h_k) \cr
+&amp;amp; c_i = \sum_{k=v}^j \frac{exp(u_{i,k})}{\sum_{l=v}^j exp(u_{i,l})}h_k
+\end{aligned}
+$$&lt;/p&gt;
+&lt;p&gt;&lt;a class=&#34;link&#34; href=&#34;https://imgtu.com/i/6jsT4s&#34;  target=&#34;_blank&#34; rel=&#34;noopener&#34;
+    &gt;&lt;img src=&#34;https://z3.ax1x.com/2021/03/26/6jsT4s.png&#34; alt=&#34;6jsT4s.png&#34;  /&gt;&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;To be continued&amp;hellip;&lt;/p&gt;
+&lt;h2 id=&#34;reference&#34;&gt;Reference&lt;/h2&gt;
+&lt;ol&gt;
+&lt;li&gt;&lt;a href=&#34;http://www.jonathanleroux.org/pdf/Moritz2019ICASSP05.pdf&#34;&gt;http://www.jonathanleroux.org/pdf/Moritz2019ICASSP05.pdf&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://arxiv.org/pdf/1704.00784.pdf&#34;&gt;https://arxiv.org/pdf/1704.00784.pdf&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://arxiv.org/pdf/1712.05382.pdf&#34;&gt;https://arxiv.org/pdf/1712.05382.pdf&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://arxiv.org/pdf/1909.12406.pdf&#34;&gt;https://arxiv.org/pdf/1909.12406.pdf&lt;/a&gt;&lt;/li&gt;
+&lt;li&gt;&lt;a href=&#34;https://arxiv.org/pdf/2003.10369.pdf&#34;&gt;https://arxiv.org/pdf/2003.10369.pdf&lt;/a&gt;&lt;/li&gt;
+&lt;/ol&gt;
+</description>
+        </item>
+        <item>
         <title>HMM-GMM和HMM-DNN</title>
         <link>https://cosmo1995.github.io/p/hmm-gmm%E5%92%8Chmm-dnn/</link>
         <pubDate>Fri, 12 Mar 2021 00:00:00 +0000</pubDate>
@@ -154,7 +263,7 @@ $$
 &lt;pre&gt;&lt;code&gt;BAC009S0712W0300 sil zh ong1 sh ix2 ii iu2 ii ie2 ii iu3 x iang1 ii ing4 g ui1 m o2 d e5 g ui1 h ua4 sil
 &lt;/code&gt;&lt;/pre&gt;&lt;p&gt;有了phone级别的训练语料，我们就可以构建phone级别的语言模型P。&lt;/p&gt;
 &lt;p&gt;2.构建分母fst——HCP&lt;/p&gt;
-&lt;p&gt;chain model的分母fst类似于解码时建立的HCLG图。但是chain model的语言模型是phone级别，所以构图时我们不需要发音词典了，&lt;strong&gt;其实构造的是HCP&lt;/strong&gt;(P表示phone LM，&lt;strong&gt;HCP就是fst结构，所以叫分母fst&lt;/strong&gt;)。为了限制HCP图的大小，我们使用4元phone LM。值得注意的是：不同的句子是共用同一个HCP图，这一点与传统的序列鉴别性训练不同，传统的序列鉴别性每个句子都有自己的分母lattice。&lt;/p&gt;
+&lt;p&gt;chain model的分母fst类似于解码时建立的HCLG图。但是chain model的语言模型是phone级别，所以构图时我们不需要发音词典了，&lt;strong&gt;其实构造的是HCP&lt;/strong&gt;(P表示phone LM，&lt;strong&gt;HCP就是fst结构，所以叫分母fst&lt;/strong&gt;)。为了限制HCP图的大小，我们使用4元phone LM。值得注意的是：所有的训练语句共用同一个HCP图，这一点与传统的序列鉴别性训练不同，传统的序列鉴别性每个句子都有自己的分母lattice。&lt;/p&gt;
 &lt;h4 id=&#34;三构建分子fst&#34;&gt;三、构建分子fst&lt;/h4&gt;
 &lt;p&gt;1、将第一步得到的以word为单位的lattice转换成以phone为单位的lattice。&lt;/p&gt;
 &lt;p&gt;chain model是在phone-level上进行训练的，所以需要得到以phone为单位的对齐，如下图所示：&lt;/p&gt;

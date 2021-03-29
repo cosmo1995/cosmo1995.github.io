@@ -6,7 +6,26 @@
     <description>Recent content in Posts on Cosmo</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en-us</language>
-    <lastBuildDate>Fri, 12 Mar 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Fri, 26 Mar 2021 00:00:00 +0000</lastBuildDate><atom:link href="https://cosmo1995.github.io/post/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>流式注意力模型</title>
+      <link>https://cosmo1995.github.io/p/%E6%B5%81%E5%BC%8F%E6%B3%A8%E6%84%8F%E5%8A%9B%E6%A8%A1%E5%9E%8B/</link>
+      <pubDate>Fri, 26 Mar 2021 00:00:00 +0000</pubDate>
+      
+      <guid>https://cosmo1995.github.io/p/%E6%B5%81%E5%BC%8F%E6%B3%A8%E6%84%8F%E5%8A%9B%E6%A8%A1%E5%9E%8B/</guid>
+      <description>端到端模型 E2E模型由于将声学模型（AM），发音词典和语言模型（LM）集成到一个神经网络中而简化了训练过程，因此最近已成为语音识别的流行选择。常用的端到端方法有：CTC(Connectionist Temporal Classification)、AED(Attention Encoder Decoder)、RNN-T(Recurrent Neural Network Transducer)。其中，由于AED的训练效率和良好的识别率，AED成为最受欢迎的方法，但是AED不适用于在线流式语音识别。 CTC可以用于在线识别，但是由于其帧独立性假设，一般需要额外的语言模型（LM）或与AED结合才能获得良好的WER结果。 RNN-T既支持流式ASR，又没有帧独立性假设，但是其训练内存消耗较大，并且训练不稳定，往往需要CTC/CE模型初始化。
+Transformer AED模型的典型代表就是Transformer模型，Transformer一经提出就因为其优秀的识别率获得广泛使用，但是Transformer模型并不适用于在线流式模型，因为：
+ Encoder中self-attention和Decoder中encoder-decoder attention 需要完整的语音序列 时空复杂度$O(T^2)$  
+Encoder self-attention 关于Encoder self-attention，常见的做法包含两种：基于look-ahead的方法和基于chunk的方法如下所示。前者为每个帧设置一个于look-ahead窗口，以获得必要的上下文信息。 但是，延迟时间将随层数线性增加。 基于chunk的方法将语音分割成几个固定长度的chunk，并将它们逐个输入Encoder中，相邻的chunk之间存在重叠以提高性能。
+　
+　延迟随着层数线性增加 通过chunk控制延迟
+　未解决$O(T^2)$复杂度问题　$O(T^2)$&amp;ndash;&amp;gt;$O(TW)$　chunk-based
+基于chunk的方法一般通过设置三角mask矩阵来达到分块的目的。
+def subsequent_mask(size, device=&amp;#34;cpu&amp;#34;, dtype=datatype): ret = torch.ones(size, size, device=device, dtype=dtype) return torch.tril(ret, out=ret) 
+Decode encoder-decoder attention Vanilla attention 输入序列${x_1,x_2&amp;hellip;x_T}$输入到Encoder中，得到隐藏状态序列$h={h_1,h_2&amp;hellip;h_T}$，$h$一般称之为 memory。Decoder根据memory，输出序列${y_1,y_2&amp;hellip;y_U}$，直到输出&amp;lt;eos&amp;gt;。在计算$y_i$时，将前一个时刻的Decoder状态$s_{i-1}$和隐藏状态序列中每一个值$h_j$通过非线性函数$a(·)$计算相似度$e_{i,j}$。再对输出做softmax获得在memory上的概率分布作为权重值，获得权重后对memory序列加权求和即得到attention。由于memory序列和输入序列值一一对应的，因此这些attention分布会在输出和输入之间建立软对齐。最后，Decoder根据$s_{i-1}$和$c_i$输入$s_i$，并输出$y_i$。
+ $$ \begin{aligned} e_{i,j} &amp;amp;= a(s_{i-1},j) \hspace{100cm}　\cr \alpha_{i,j} &amp;amp; = \frac{exp(e_{i,j})}{\sum_{k=1}^Texp(e_{i,k})} \cr c_i &amp;amp;= \sum_{j=1}^T\alpha_{i,j}h_j \cr s_i &amp;amp;= f(s_{i-1},y_{i-1},c_i) \cr y_i &amp;amp;= g(s_i,c_i) \end{aligned} $$</description>
+    </item>
+    
     <item>
       <title>HMM-GMM和HMM-DNN</title>
       <link>https://cosmo1995.github.io/p/hmm-gmm%E5%92%8Chmm-dnn/</link>

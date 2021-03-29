@@ -251,7 +251,7 @@
 <pre><code>BAC009S0712W0300 sil zh ong1 sh ix2 ii iu2 ii ie2 ii iu3 x iang1 ii ing4 g ui1 m o2 d e5 g ui1 h ua4 sil
 </code></pre><p>有了phone级别的训练语料，我们就可以构建phone级别的语言模型P。</p>
 <p>2.构建分母fst——HCP</p>
-<p>chain model的分母fst类似于解码时建立的HCLG图。但是chain model的语言模型是phone级别，所以构图时我们不需要发音词典了，<strong>其实构造的是HCP</strong>(P表示phone LM，<strong>HCP就是fst结构，所以叫分母fst</strong>)。为了限制HCP图的大小，我们使用4元phone LM。值得注意的是：不同的句子是共用同一个HCP图，这一点与传统的序列鉴别性训练不同，传统的序列鉴别性每个句子都有自己的分母lattice。</p>
+<p>chain model的分母fst类似于解码时建立的HCLG图。但是chain model的语言模型是phone级别，所以构图时我们不需要发音词典了，<strong>其实构造的是HCP</strong>(P表示phone LM，<strong>HCP就是fst结构，所以叫分母fst</strong>)。为了限制HCP图的大小，我们使用4元phone LM。值得注意的是：所有的训练语句共用同一个HCP图，这一点与传统的序列鉴别性训练不同，传统的序列鉴别性每个句子都有自己的分母lattice。</p>
 <h4 id="三构建分子fst">三、构建分子fst</h4>
 <p>1、将第一步得到的以word为单位的lattice转换成以phone为单位的lattice。</p>
 <p>chain model是在phone-level上进行训练的，所以需要得到以phone为单位的对齐，如下图所示：</p>
