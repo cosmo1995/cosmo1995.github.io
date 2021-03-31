@@ -200,15 +200,21 @@
     <h2 id="前情回顾">前情回顾</h2>
 <p><a class="link" href="https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_1/"  target="_blank" rel="noopener"
     >GMM1</a>和<a class="link" href="https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bgmm_2/"  target="_blank" rel="noopener"
-    >GMM2</a>可知，GMM模型的更新公式如下：</p>
-<p>$$
+    >GMM2</a>可知，GMM模型的更新公式如下：
+$$
 \begin {aligned}
 &amp;c_m=\frac{occupancy_m}{N} \cr
 &amp;\mu_m=\frac{mean\_accumulator_m} {occupancy_m} \cr
 &amp;\Sigma_m=\frac{covariance\_accumulator_m} {occupancy_m} - \mu_m \mu_m^T
 &amp;\end {aligned}
 $$</p>
-<p>其中，</p>
+<p>故和GMM模型相关的统计量包括：</p>
+<ul>
+<li>occupancy</li>
+<li>mean_accs</li>
+<li>diagvar_accs</li>
+</ul>
+<p>这三个统计量计算公式为：</p>
 <p>$$
 \begin {aligned}
 occupancy_m &amp;= \sum_{t=1}^N P(m|x_t) \cr
@@ -224,7 +230,7 @@ P(m|x_t) &amp;= \frac{exp(loglike(\mu_m,\Sigma_m|x_t))}
 &amp;= softmax(loglike(\mu_m,\Sigma_m|x_t))
 \end{aligned}
 $$
-因此，可以通过计算GMM每一个分量component的对数似然LogLikelihood，再应用softmax来获得对应的后验概率，在此基础上更新GMM参数。</p>
+因此，可以通过计算GMM每一个分量component的对数似然LogLikelihood，再应用softmax来获得对应的后验概率。</p>
 <p>而第m个分量component的对数似然LogLikelihood可以表示为：
 $$
 loglike_m = gconsts_m +\mu_m^T\Sigma^{-1}_mx - \frac{1}{2}x^T\Sigma_m^{-1}x
@@ -232,13 +238,7 @@ $$
 其中：
 $$
 gconsts_m = logc_m - \frac{D}{2}log2\pi - \frac{1}{2}(log|\Sigma_m| + \mu_m^T\Sigma_m^{-1}\mu_m)
-$$
-故和GMM模型相关的统计量包括：</p>
-<ul>
-<li>gconsts</li>
-<li>mean_invvars $\mu^T_m\Sigma^{-1}_m$</li>
-<li>inv_vars $\Sigma^{-1}_m$</li>
-</ul>
+$$</p>
 <p><a class="link" href="https://cosmo1995.github.io/p/kaldi%E6%BA%90%E7%A0%81%E4%B9%8Bhmm/"  target="_blank" rel="noopener"
     >HMM</a>可知HMM模型的更新公式如下：
 $$
@@ -286,7 +286,7 @@ $$
 <h4 id="构建训练图compile-train-graphs">构建训练图compile-train-graphs</h4>
 <ul>
 <li>
-<p>目的：每条训练语句转换成一个FST结构，输入是音素，输出是整个句子</p>
+<p>目的：每条训练语句转换成一个FST结构，即HCLG</p>
 </li>
 <li>
 <p>输入：tree ， 0.mdl ，L.fst(Lexicon)，训练文件标注</p>
@@ -297,43 +297,68 @@ $$
 </ul>
 <p>为什么需要训练图？</p>
 <p>Kaldi训练HMM模型并不是采用理论中的Baum-Welch算法的软对齐，实践中是使用Viterbi算法进行硬对齐。</p>
-<p>为了获得每一帧对应的状态号作为训练的标签，需要构建一个直线形的状态图。</p>
+<p>为了获得每一帧对应的状态号作为训练的标签，需要构建一个线性的状态图。</p>
 <p>在这个图上利用Viterbi算法求得最优路径，同时得到帧与状态的对齐。</p>
-<h4 id="强制对齐align-equal-compiled">强制对齐align-equal-compiled</h4>
+<h4 id="均匀对齐align-equal-compiled">均匀对齐align-equal-compiled</h4>
 <ul>
-<li>目的：对每一句话，根据这句话的特征和这句话的fst，生成对应的对齐状态序列。训练时需要将标注跟每一帧特征进行对齐，由于现在还没有可以用于对齐的模型，所以采用最简单的方法 &ndash; 均匀对齐</li>
+<li>目的：对每一句话，根据这句话的特征和fst，生成对应的对齐状态序列。训练时需要将标注跟每一帧特征进行对齐，由于现在还没有可以用于对齐的模型，所以采用最简单的方法 &ndash; 均匀对齐</li>
 <li>输入：预编译训练图HCLG.fst、特征</li>
 <li>输出：alignment</li>
 </ul>
-<h4 id="提取特征统计量gmm-acc-stats-ali">提取特征统计量gmm-acc-stats-ali</h4>
+<h4 id="计算特征统计量gmm-acc-stats-ali">计算特征统计量gmm-acc-stats-ali</h4>
 <ul>
-<li>目的：获得中间统计量，每个任务输出到一个acc文件。acc中记录跟HMM 和GMM 训练相关的统计量。
-HMM 相关的统计量：transition state转移次数
-GMM 相关的统计量：每个GMM对应的gconsts，mean_invvars $\mu^T_m\Sigma^{-1}_m$，inv_vars $\Sigma^{-1}_m$</li>
-<li>输入：模型model，特征，对齐alignment</li>
-<li>输出：用于训练的统计量</li>
+<li>
+<p>目的：获得中间统计量输出到acc文件</p>
+<p>HMM 相关的统计量：transition state转移次数</p>
+<p>GMM 相关的统计量：GMM每个分量对应的帧数occupancy，均值mean_acc，方差diagvar_acc</p>
+</li>
+<li>
+<p>输入：模型model，特征，对齐alignment</p>
+</li>
+<li>
+<p>输出：用于训练的统计量</p>
+</li>
 </ul>
-<p>过程之道：</p>
+<p>过程：</p>
 <ul>
-<li>根据对齐结果，用每一个转移的出现次数除以该状态的出现次数就得到了HMM的转移概率。</li>
-<li>在单音素GMM训练中，每一个HMM状态有一个对应的GMM概率密度函数（pdf），所以有多少个HMM状态，就有多少个GMM，也就有多少组GMM参数。</li>
-<li>对齐后找出某一个HMM状态对应的所有观测（比如状态8对应的o2, o3, o4，在kaldi中则是找到某一transition-id对应的所有观测），也就得到了该状态对应的GMM所对应的所有观测。</li>
-<li>知道了该GMM对应的所有观测、该GMM的当前参数，就可以根据GMM参数更新公式更新GMM参数了。</li>
+<li>根据对齐结果，用每一个转移的出现次数除以该状态的出现次数就得到了HMM的转移概率</li>
+<li>在单音素GMM训练中，每一个HMM状态有一个对应的GMM概率密度函数（pdf），所以有多少个HMM状态，就有多少个GMM，也就有多少组GMM参数</li>
+<li>对齐后找出某一个HMM状态对应的所有观测（比如状态8对应的o2, o3, o4，在kaldi中则是找到某一transition-id对应的所有观测），也就得到了该状态对应的GMM所对应的所有观测</li>
+<li>读取输入模型的参数$\mu_m\Sigma_m^{-1}$、$\Sigma_m^{-1}$和gconsts，根据前言部分公式计算3个统计量occupancy、mean_acc、diagvar_acc，写入acc文件中</li>
 </ul>
-<h4 id="更新参数gmm-est">更新参数gmm-est</h4>
+<p>acc文件：</p>
+<pre><code>[ 0 342 2 112 115 51 0 2 0 0 1113 112 0 0 0 2615 229 5437 229 240 113 839 113 1624 113 921 135 1508 135 2761 135 ]
+&lt;NUMPDFS&gt; 11 &lt;GMMACCS&gt; &lt;VECSIZE&gt; 39 &lt;NUMCOMPONENTS&gt; 4 &lt;FLAGS&gt; 15 &lt;OCCUPANCY&gt;  [ 166.1804 108.7705 132.3125 163.7366 ]
+&lt;MEANACCS&gt;  [
+-1464.925 -629.8968 -736.6465 ...
+528.845 325.4185 -486.2128 -98...
+814.0786 382.7663 -476.9858 17...
+-1467.504 -649.882 -755.2601 -...
+]
+&lt;DIAGVARACCS&gt;  [
+71015.1 44464.19 12354.01 2277...
+18074.31 12478.59 6716.287 150...
+26938.41 13908.35 6786.24 1655...
+71513.44 44395.06 12158.01 227...
+]
+&lt;/GMMACCS&gt; 
+...
+&lt;total_like&gt; -1765745 &lt;total_frames&gt; 18996
+</code></pre><h4 id="更新参数gmm-est">更新参数gmm-est</h4>
 <ul>
 <li>目的：（EM算法之M步）
 根据上一次的模型，构建新模型 [[x+1].mdl</li>
-<li>输入：上一步训练后的模型、gmm-acc-stat-ali计算的统计量</li>
+<li>输入：上一步训练后的模型、gmm-acc-stat-ali计算的统计量acc文件</li>
 <li>输出：新模型</li>
 </ul>
-<p>过程之道：</p>
+<p>过程：</p>
 <ul>
-<li>更新HMM转移模型：根据gmm-acc-stats-ali统计的transition-id出现的次数，做一个除法就可以更新转移概率矩阵A。</li>
-<li>更新GMM模型：根据前言提要部分公式计算GMM参数</li>
+<li>更新HMM转移模型：根据gmm-acc-stats-ali统计的transition-id出现的次数，做一个除法就可以更新转移概率矩阵A</li>
+<li>更新GMM模型：根据前言部分参数更新公式计算GMM参数$c_m,\mu_m,\Sigma_m$，同时增加GMM分量数</li>
+<li>写入模型：计$\mu_m\Sigma_m^{-1}$、$\Sigma_m^{-1}$和gconsts，写入mdl文件中</li>
 </ul>
 <h4 id="迭代训练">迭代训练</h4>
-<p>反复gmm-acc-stats-ali和gmm-est部分。</p>
+<p>反复对齐、统计、更新模型。</p>
 <p>需要注意的是GMM模型一开始是单高斯的，随着模型的训练不断分裂出高斯来，最终达到设定的高斯数。</p>
 <p>如何分裂的呢？</p>
 <p>在分裂之前先获取了每个GMM需要增加到的目标gauus数，也就是target_components 。</p>

@@ -160,12 +160,12 @@ triphone模型通过决策树分裂时，首先将具有相同中间音素的tri
       <pubDate>Sat, 18 May 2019 00:00:00 +0000</pubDate>
       
       <guid>https://cosmo1995.github.io/p/kaldi%E4%B9%8B%E5%8D%95%E9%9F%B3%E7%B4%A0gmm%E8%AE%AD%E7%BB%83/</guid>
-      <description>前情回顾 GMM1和GMM2可知，GMM模型的更新公式如下：
-$$ \begin {aligned} &amp;amp;c_m=\frac{occupancy_m}{N} \cr &amp;amp;\mu_m=\frac{mean\_accumulator_m} {occupancy_m} \cr &amp;amp;\Sigma_m=\frac{covariance\_accumulator_m} {occupancy_m} - \mu_m \mu_m^T &amp;amp;\end {aligned} $$
-其中，
+      <description>前情回顾 GMM1和GMM2可知，GMM模型的更新公式如下： $$ \begin {aligned} &amp;amp;c_m=\frac{occupancy_m}{N} \cr &amp;amp;\mu_m=\frac{mean\_accumulator_m} {occupancy_m} \cr &amp;amp;\Sigma_m=\frac{covariance\_accumulator_m} {occupancy_m} - \mu_m \mu_m^T &amp;amp;\end {aligned} $$
+故和GMM模型相关的统计量包括：
+ occupancy mean_accs diagvar_accs  这三个统计量计算公式为：
 $$ \begin {aligned} occupancy_m &amp;amp;= \sum_{t=1}^N P(m|x_t) \cr mean\_accumulator_m &amp;amp;= \sum_{t=1}^N P(m|x_t) x_t \cr covariance\_ accumulator_m &amp;amp;= \sum_{t=1}^N P(m|x_t) x_t x_t^T \end {aligned} $$
-后验概率$P(m|x_t)$又可以表示为： $$ \begin{aligned} P(m|x_t) &amp;amp;= \frac{exp(loglike(\mu_m,\Sigma_m|x_t))} {\sum_{n=1}^M exp(loglike(\mu_n,\Sigma_n|x_t)} \cr &amp;amp;= softmax(loglike(\mu_m,\Sigma_m|x_t)) \end{aligned} $$ 因此，可以通过计算GMM每一个分量component的对数似然LogLikelihood，再应用softmax来获得对应的后验概率，在此基础上更新GMM参数。
-而第m个分量component的对数似然LogLikelihood可以表示为： $$ loglike_m = gconsts_m +\mu_m^T\Sigma^{-1}_mx - \frac{1}{2}x^T\Sigma_m^{-1}x $$ 其中： $$ gconsts_m = logc_m - \frac{D}{2}log2\pi - \frac{1}{2}(log|\Sigma_m| + \mu_m^T\Sigma_m^{-1}\mu_m) $$ 故和GMM模型相关的统计量包括：</description>
+后验概率$P(m|x_t)$又可以表示为： $$ \begin{aligned} P(m|x_t) &amp;amp;= \frac{exp(loglike(\mu_m,\Sigma_m|x_t))} {\sum_{n=1}^M exp(loglike(\mu_n,\Sigma_n|x_t)} \cr &amp;amp;= softmax(loglike(\mu_m,\Sigma_m|x_t)) \end{aligned} $$ 因此，可以通过计算GMM每一个分量component的对数似然LogLikelihood，再应用softmax来获得对应的后验概率。
+而第m个分量component的对数似然LogLikelihood可以表示为： $$ loglike_m = gconsts_m +\mu_m^T\Sigma^{-1}_mx - \frac{1}{2}x^T\Sigma_m^{-1}x $$ 其中： $$ gconsts_m = logc_m - \frac{D}{2}log2\pi - \frac{1}{2}(log|\Sigma_m| + \mu_m^T\Sigma_m^{-1}\mu_m) $$</description>
     </item>
     
     <item>
