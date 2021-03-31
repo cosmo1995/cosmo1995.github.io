@@ -256,31 +256,47 @@ $$
 </ul>
 <p>过程：</p>
 <ul>
-<li>初始化全局特征的均值和方差glob_inv_var，glob_mean均为1，大小等于特征维度。如果有输入特征，另外再计算更新。</li>
-<li>读入拓扑结构topo，建立里面所有phone到该phone的pdf class数目的映射。</li>
-<li>构建决策树，只需要根据set.int文件递归的构造树。</li>
-<li>gmm-init-mono构建GMM。GMM数量为set.int中非静音音素行数$\times$3+静音音素行数$\times$5。每个GMM初始只有一个分量，也就是单高斯，均值方差来自之前的glob_inv_var，glob_mean， weight为1，均值方差也都为1，计算常数部分gconsts_。</li>
-<li>将所有gmm模型导入声学模型am_gmm中。最后输出transition和声学模型的文件0.mdl，决策树tree。</li>
+<li>
+<p>读取特征，计算特征的均值和方差，保存到glob_inv_var，glob_mean中</p>
+</li>
+<li>
+<p>读入拓扑结构topo，建立里面所有phone到该phone的pdf class数目的映射</p>
+</li>
+<li>
+<p>构建决策树tree，根据sets.int文件递归地构造树</p>
+</li>
+<li>
+<p>初始化GMM，GMM(pdf)数量为tree中叶子结点数（即sets.int中非静音音素行数$\times$3+静音音素行数$\times$5）。每个GMM初始只有一个分量，也就是单高斯，均值和方差设置为glob_inv_var和glob_mean， weights为1</p>
+</li>
+<li>
+<p>根据topo和tree，初始化transition模型</p>
+</li>
+<li>
+<p>输出transition和声学模型0.mdl，决策树tree</p>
+</li>
 </ul>
 <p><a class="link" href="https://imgtu.com/i/67uutO"  target="_blank" rel="noopener"
     ><img src="https://z3.ax1x.com/2021/03/23/67uutO.jpg" alt="67uutO.jpg"  /></a></p>
 <p>0.mdl中内容如下：</p>
 <p><a class="link" href="https://imgtu.com/i/678TzT"  target="_blank" rel="noopener"
     ><img src="https://z3.ax1x.com/2021/03/23/678TzT.png" alt="678TzT.png"  /></a></p>
+<p>tree:</p>
+<p><a class="link" href="https://imgtu.com/i/cihA6P"  target="_blank" rel="noopener"
+    ><img src="https://z3.ax1x.com/2021/03/30/cihA6P.png" alt="cihA6P.png"  /></a></p>
 <h4 id="构建训练图compile-train-graphs">构建训练图compile-train-graphs</h4>
 <ul>
 <li>
-<p>目的：训练每句话转换成一个FST结构，输入是音素，输出是整个句子</p>
+<p>目的：每条训练语句转换成一个FST结构，输入是音素，输出是整个句子</p>
 </li>
 <li>
-<p>输入：tree ， transition_model ，L.fst(Lexicon)，训练文件标注</p>
+<p>输入：tree ， 0.mdl ，L.fst(Lexicon)，训练文件标注</p>
 </li>
 <li>
 <p>输出：HCLG.fst</p>
 </li>
 </ul>
 <p>为什么需要训练图？</p>
-<p>kaldi训练HMM模型并不是采用理论中的Baum-Welch算法的软对齐，实践中是使用Viterbi算法进行硬对齐。</p>
+<p>Kaldi训练HMM模型并不是采用理论中的Baum-Welch算法的软对齐，实践中是使用Viterbi算法进行硬对齐。</p>
 <p>为了获得每一帧对应的状态号作为训练的标签，需要构建一个直线形的状态图。</p>
 <p>在这个图上利用Viterbi算法求得最优路径，同时得到帧与状态的对齐。</p>
 <h4 id="强制对齐align-equal-compiled">强制对齐align-equal-compiled</h4>
