@@ -238,7 +238,7 @@ $$</p>
 <p>首先针对某一帧$x_t$，考虑单个分量，$loglike$为：</p>
 <p>$$
 \begin {aligned}
-log c_m \mathcal{N} (x_t|\mu_m,\Sigma_m) 
+log c_m \mathcal{N} (x_t;\mu_m,\Sigma_m) 
 &amp;= log \frac{c_m}{(2\pi)^{\frac{D}{2}}{\lvert{\Sigma_m}\rvert}^{\frac{1}{2}}}exp[-\frac{1}{2}(x_t-\mu_m)^T\Sigma_m^{-1}(x_t-\mu_m)] \cr
 &amp;= logc_m-\frac{D}{2}log2\pi-\frac{1}{2}log\lvert{\Sigma_m}\rvert-\frac{1}{2}{x_t^T}\Sigma_m^{-1}x_t-\frac{1}{2}\mu_m^T\Sigma_m^{-1}\mu_m+\mu_m^T\Sigma_m^{-1}x_t
 \end {aligned}
