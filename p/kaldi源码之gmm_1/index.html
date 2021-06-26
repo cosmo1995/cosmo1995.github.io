@@ -232,7 +232,7 @@ $$</p>
 <p>其中，$c_m$为GMM第$m$个分量(component)的混合系数，${\Sigma_m}$是协方差矩阵，${\mu_m}$是均值向量，$D$是数据的维度，并且有$\sum_{m=1}^M {c_m}= 1$。</p>
 <p>对数似然为</p>
 <p>$$
-log\ L(\theta|x) = log\ \prod_{t=1}^N\ f(x_t|\theta) = \sum_{t=1}^N log \sum_{m=1}^{M} c_m \mathcal{N} (x_t;\mu_m,\Sigma_m)
+log\ L(\theta|x) = log\ \prod_{t=1}^N\ p(x_t|\theta) = \sum_{t=1}^N log \sum_{m=1}^{M} c_m \mathcal{N} (x_t;\mu_m,\Sigma_m)
 $$</p>
 <p>其中$N$为帧数。</p>
 <p>首先针对某一帧$x_t$，考虑单个分量，$loglike$为：</p>
