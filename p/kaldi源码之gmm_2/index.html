@@ -200,9 +200,9 @@
     <p>estimate-full-gmm和estimate-diag-gmm用来对GMM进行极大似然估计(MLE)，二者仅在协方差矩阵数据结构不同，下面均以estimate-full-gmm为例。</p>
 <!-- raw HTML omitted -->
 <h2 id="gmm">GMM</h2>
-<p>GMM的概率密度函数为</p>
+<p>GMM的似然函数为</p>
 <p>$$
-p(x|\theta) = \sum_{m=1}^{M} c_m \mathcal{N} (x;\mu_m,\Sigma_m)
+L(\theta|x) = \sum_{m=1}^{M} c_m \mathcal{N} (x;\mu_m,\Sigma_m)
 $$</p>
 <p>其中$c_m$为第$m$个component的混合系数,$\sum_{m=1}^M c_m =1 $。</p>
 <p>定义指示函数$1_{[z_t=m]}$，如果$x_t$来自第m个component，则$1_{[z_t=m]} = 1$，否则$1_{[z_t=m]} = 0$。</p>
