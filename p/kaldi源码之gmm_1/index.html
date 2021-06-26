@@ -224,13 +224,13 @@
 <p>GMM的概率密度函数$(pdf)$为：</p>
 <p>$$
 \begin {aligned}
-f(x;\mu,\Sigma) 
+f(x|\mu,\Sigma) 
 &amp;= \sum_{m=1}^{M} c_m \mathcal{N} (x;\mu_m,\Sigma_m) \cr
 &amp;= \sum_{m=1}^{M}\frac{c_m}{(2\pi)^{\frac{D}{2}}{\lvert{\Sigma_m}\rvert}^{\frac{1}{2}}}exp[-\frac{1}{2}(x -\mu_m)^T\Sigma^{-1}_m(\mathbf x-\mu_m)]
 \end {aligned}
 $$</p>
 <p>其中，$c_m$为GMM第$m$个分量(component)的混合系数，${\Sigma_m}$是协方差矩阵，${\mu_m}$是均值向量，$D$是数据的维度，并且有$\sum_{m=1}^M {c_m}= 1$。</p>
-<p>对于离散语音数据，$f(\mathbf x;\mu,\Sigma)即P(\mathbf x|\mu,\Sigma)$，$loglike$为</p>
+<p>对数似然为</p>
 <p>$$
 log P(x|\mu,\Sigma) = \sum_{t=1}^N log \sum_{m=1}^{M} c_m \mathcal{N} (x_t;\mu_m,\Sigma_m)
 $$</p>
