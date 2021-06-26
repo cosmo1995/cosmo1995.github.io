@@ -202,7 +202,7 @@
 <h2 id="gmm">GMM</h2>
 <p>GMM的似然函数为</p>
 <p>$$
-L(\theta|x) = \sum_{m=1}^{M} c_m \mathcal{N} (x;\mu_m,\Sigma_m)
+L(\theta|x) = \prod^N_{t=1}\ \sum_{m=1}^{M} c_m \mathcal{N} (x;\mu_m,\Sigma_m)
 $$</p>
 <p>其中$c_m$为第$m$个component的混合系数,$\sum_{m=1}^M c_m =1 $。</p>
 <p>定义指示函数$1_{[z_t=m]}$，如果$x_t$来自第m个component，则$1_{[z_t=m]} = 1$，否则$1_{[z_t=m]} = 0$。</p>
